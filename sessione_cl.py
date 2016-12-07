@@ -1189,20 +1189,23 @@ class sessione: # una sessione e` caratterizzata da tanti video
 		if self.justPlotRaw is True:
 			self.overWriteElab = False
 		self.id_name 					= self.name+'_'+self.date+'_'+self.status 
-		self.pickleName 				= DATA_PATH+'/elab_video/'+self.id_name+'.pickle'
-		self.spettroMedName 			= DATA_PATH+'/elab_video/'+self.id_name+'.pdf'
+		self.pickleNameTracking			= DATA_PATH+'/elab_video/'+self.id_name+'.pickle'
+		self.pickleNameSpectrum			= DATA_PATH+'/elab_video/'+self.id_name+'_spectrum.pickle'
+		self.pickleNameTransFun			= DATA_PATH+'/elab_video/'+self.id_name+'_transferFunction.pickle'
+		self.spettroMedName 			= DATA_PATH+'/elab_video/'+self.id_name+'_spectrum.pdf'
 		self.transferFunctionMedName 	= DATA_PATH+'/elab_video/'+self.id_name+'_transferFunction.pdf'
 		self.fig1Name 					= DATA_PATH+'/elab_video/'+self.id_name+'_test_fig1'
 		if go: #  tutto in un colpo solo
-			fatto = self.elaboroFilmati()
-			self.calcoloSpettroMedio()
-			[v.test_fig1(True,self.fig1Name+'_tr'+str(i)+'.pdf') for v,i in zip(self.V,xrange(0,self.V.__len__()))]
+			self.elaboroFilmati()
+			self.doTestFig1()				
+			self.calcoloTransferFunction()  
+			self.calcoloSpettroMedio()		
 
 	def elaboroFilmati(self): 
 		if self.justPlotRaw is False:
 			if self.overWriteElab is False:
-				if os.path.isfile(self.pickleName):
-					print 'il file '+self.pickleName+' esiste'
+				if os.path.isfile(self.pickleNameTracking):
+					print 'il file '+self.pickleNameTracking+' esiste'
 					return False
 		self.resolvePath(self.path)                                   						# identifico quali sono i video da analizzare 
 		print self.path
@@ -1210,26 +1213,39 @@ class sessione: # una sessione e` caratterizzata da tanti video
 		self.saveTracking()
 		return True
 
-	def calcoloTransferFunction(self,evalFigure=True): 
+	def doTestFig1(self):
 		self.loadTracking() # carico i dati
-		self.TF = []
-		self.TF2 = []
-		for v in self.V: # scorro i video
-			traiettorie,nPunti,nCampioni = (v.wst,v.wst.__len__(),v.wst[0].__len__())
-			ingresso = traiettorie[nPunti-1] 
-			Ingresso = (2.0/nCampioni)*np.abs(fft.fft(ingresso))
-			f,Sxx = signal.csd(ingresso,ingresso,2000.0,nperseg=2000,scaling='spectrum')
-			TF = []
-			for t in traiettorie: 
-				f,Syy = signal.csd(t,t,2000.0,nperseg=2000,scaling='density')          #scaling='spectrum'
-				f,Syx = signal.csd(t,ingresso,2000.0,nperseg=2000,scaling='density')
-				f,Sxy = signal.csd(ingresso,t,2000.0,nperseg=2000,scaling='density')
-				H1 = [ syx/sxx  for sxx,syx in zip(Sxx,Syx)]
-				H2 = [ syy/sxy  for syy,sxy in zip(Syy,Sxy)]
-				H = [ np.sqrt(h1*h2) for h1,h2 in zip(H1,H2)]
-				TF.append(np.abs(H))
-			self.TF.append(TF)
-		self.TFM = np.mean(self.TF,axis=0)
+		for v,i in zip(self.V,xrange(0,self.V.__len__())): 
+			fname = self.fig1Name+'_tr'+str(i)+'.pdf'
+			if os.path.isfile(fname):
+				print 'il file '+fname+' esiste'
+			else:
+				v.test_fig1(True,fname) 
+
+	def calcoloTransferFunction(self,evalFigure=True): 
+		if os.path.isfile(self.pickleNameTransFun):
+			print 'il file '+self.pickleNameTransFun+' esiste'
+		else:
+			self.loadTracking() # carico i dati
+			self.TF = []
+			for v in self.V: # scorro i video
+				traiettorie,nPunti,nCampioni = (v.wst,v.wst.__len__(),v.wst[0].__len__())
+				ingresso = traiettorie[nPunti-1] 
+				Ingresso = (2.0/nCampioni)*np.abs(fft.fft(ingresso))
+				f,Sxx = signal.csd(ingresso,ingresso,2000.0,nperseg=2000,scaling='spectrum')
+				TF = []
+				for t in traiettorie: 
+					f,Syy = signal.csd(t,t,2000.0,nperseg=2000,scaling='density')          #scaling='spectrum'
+					f,Syx = signal.csd(t,ingresso,2000.0,nperseg=2000,scaling='density')
+					f,Sxy = signal.csd(ingresso,t,2000.0,nperseg=2000,scaling='density')
+					H1 = [ syx/sxx  for sxx,syx in zip(Sxx,Syx)]
+					H2 = [ syy/sxy  for syy,sxy in zip(Syy,Sxy)]
+					H = [ np.sqrt(h1*h2) for h1,h2 in zip(H1,H2)]
+					TF.append(np.abs(H))
+				self.TF.append(TF)
+			self.TFM = np.mean(self.TF,axis=0)
+			self.saveTransferFunction()
+		self.loadTransferFunction()
 		if evalFigure:
 			f0 = [tf[0] for tf in self.TFM]
 			f = plt.figure()
@@ -1239,39 +1255,52 @@ class sessione: # una sessione e` caratterizzata da tanti video
 			plt.savefig(self.transferFunctionMedName)
 	
 	def calcoloSpettroMedio(self,evalFigure=True):
-		self.loadTracking()
-		spettri = []
-		for v in self.V:
-			spettri.append(v.WSF)
-		self.spettro_medio = np.mean(spettri,axis=0)[0:-1,0:1400]
-		self.freq = self.V[0].freq[:1400]
-		if evalFigure:
-			self.spettroMedio_fig1(True)
-
-	def spettroMedio_fig1(self,salva=False): 
-		ff,a1 = plt.subplots(1)
-		a1.imshow(np.log10(self.spettro_medio),aspect='auto', interpolation="nearest")	
-		rng = xrange(0,self.freq.__len__(),110)
-		idx  = [i for i in rng] 
-		freq = [int(self.freq[i]) for i in rng] 
-		a1.set_xticks(idx)
-		a1.set_xticklabels(freq)
-		a1.set_xlabel('Freq [Hz]')
-		#a1.set_title(self.id_name)
-		if salva:
-			plt.savefig(self.spettroMedName)
+		if os.path.isfile(self.pickleNameSpectrum):
+			print 'il file '+self.pickleNameSpectrum+' esiste'
 		else:
-			plt.show()
+			self.loadTracking()
+			spettri = []
+			for v in self.V:
+				spettri.append(v.WSF)
+			self.spettro_medio = np.mean(spettri,axis=0)
+			self.freq = self.V[0].freq
+			self.saveSpectrum()
+		self.loadSpectrum()	
+		if evalFigure:
+			ff,a1 = plt.subplots(1)
+			a1.imshow(np.log10(self.spettro_medio),aspect='auto', interpolation="nearest")	
+			a1.set_xlabel('Freq [Hz]')
+			#a1.set_title(self.id_name)
+			plt.savefig(self.spettroMedName)
 
 	def resolvePath(self,path):	# trovo gli della sessione richiesta
 		self.aviList = glob.glob(path+'*'+self.status+'*.avi')
 
+	def saveTransferFunction(self): 
+		with open(self.pickleNameTransFun, 'w') as f:
+			pickle.dump([self.TFM], f)	
+
+	def loadTransferFunction(self): 
+		with open(self.pickleNameTransFun, 'rb') as f:
+			data = pickle.load(f)	
+		self.TFM = data[0]
+
+	def saveSpectrum(self): 
+		with open(self.pickleNameSpectrum, 'w') as f:
+			pickle.dump([self.freq,self.spettro_medio], f)	
+
+	def loadSpectrum(self): 
+		with open(self.pickleNameSpectrum, 'rb') as f:
+			data = pickle.load(f)	
+		self.freq          = data[0]
+		self.spettro_medio = data[1]
+
 	def saveTracking(self): 
-		with open(self.pickleName, 'w') as f:
+		with open(self.pickleNameTracking, 'w') as f:
 			pickle.dump([self.V], f)	
 
 	def loadTracking(self): 
-		with open(self.pickleName, 'rb') as f:
+		with open(self.pickleNameTracking, 'rb') as f:
 			data = pickle.load(f)	
 		self.V = data[0]
 
@@ -1576,7 +1605,7 @@ if __name__ == '__main__':
 	#sessione('c31','2Ago_conSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/conSmaltoTrasparente/',(260, 625, 50, 205),35,True,True,True) 
 
 	#TRACKING ACCIAIO 13 APRILE
-	#sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
+	sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
 
 	# ROBA DA DARE AD ALE...
 	#PickleAsciiTimeTrendsConversion() #<-- da finire serve ad alessandro per il modlelo
@@ -1587,8 +1616,8 @@ if __name__ == '__main__':
 
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
-	confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
+	#confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
+	#confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 	#confrontoAddestramento()						
 	#creoSpettriBaffi()								
 	#stampo_lunghezza_whiskers()					
