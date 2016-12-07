@@ -116,8 +116,9 @@ def range_brace(x_min, x_max, mid=0.75,
 class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
-		fromAle='../elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim.txt' #ampvsfreq_D21_rel.txt'  #transffunct_D21_bw1000Hz_sim.txt  #ampvsfreq_D21_damp001.txt
-		a = sessione('d21','12May','_NONcolor_','../ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim.txt' #ampvsfreq_D21_rel.txt'  #transffunct_D21_bw1000Hz_sim.txt  #ampvsfreq_D21_damp001.txt
+		a = sessione('d21','12May','_NONcolor_','/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+
 		a.calcoloTransferFunction(False)
 		spettroVero = a.TFM 
 		spettroSim = np.flipud(np.loadtxt(fromAle))
@@ -143,7 +144,7 @@ class simulatedAndSetup():
 		self.luceBluFiltroPLung = directory+'IMG_0236.JPG'
 		LB=mpimg.imread(self.luceBianca)
 		'''	
-		f.savefig('../elab_video/simulationAndSetup.pdf')
+		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
 		
 	
 
@@ -180,7 +181,7 @@ class creoImageProcessing_Stacked(): #
 	def __init__(self): 
 
 		elabSessione = False
-		s = sessione('d21','12May','_NONcolor_','../ratto1/d2_1/',(310, 629, 50, 210),29,True,elabSessione,False,True) # carico la sessione senza elabolarla
+		s = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,elabSessione,False,True) # carico la sessione senza elabolarla
 		s.resolvePath(s.path)
 		avi = s.aviList[0]
 		v = video(avi,(0,650-340,0,235-100),29,False,False,False)
@@ -204,10 +205,10 @@ class creoImageProcessing_Stacked(): #
 					for k2 in range(-2,2):
 						Frame_Bspline[j+k1][i+k2] = 255
 		if 1: # in caso le salvo
-			cv2.imwrite("../elab_video/ImageProc_Raw.jpg",			Frame_raw)     
-			cv2.imwrite("../elab_video/ImageProc_Blurred.jpg",		Frame_blur)     
-			cv2.imwrite("../elab_video/ImageProc_Thresholded.jpg",	Frame_ths)     
-			cv2.imwrite("../elab_video/ImageProc_Bspline.jpg",		Frame_Bspline)     
+			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Raw.jpg',			Frame_raw)     
+			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Blurred.jpg',		Frame_blur)     
+			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Thresholded.jpg',	Frame_ths)     
+			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Bspline.jpg',		Frame_Bspline)     
 	
 		# plot	
 		Layers = [] 
@@ -253,8 +254,8 @@ class creoImageProcessing_Stacked(): #
 		ax.set_xticks([])
 		ax.set_yticks([])
 		ax.imshow(stacked,cmap='gray')
-		fig.savefig('../elab_video/stacked.png') # <--- serve per la base della figura 2
-		fig.savefig('../elab_video/stacked.pdf')
+		fig.savefig(DATA_PATH+'/elab_video/stacked.png') # <--- serve per la base della figura 2
+		fig.savefig(DATA_PATH+'/elab_video/stacked.pdf')
 
 class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo a video
 	def __init__(self): 
@@ -269,9 +270,9 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 		'''
 		# avro` gia` cambiato quella classe per computare la transfer function?? 
 		'''
-		ba = sessione('c12','12May','_NONcolor_','../ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-		bb = sessione('c22','12May','_NONcolor_','../ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-		bc = sessione('a31','12May','_NONcolor_','../ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		ba = sessione('c12','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		bb = sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		bc = sessione('a31','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 		for baffo in [ba,bb,bc]:
 			baffo.calcoloTransferFunction(False)
 
@@ -403,8 +404,8 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			FS = 20 # la dimensione del font dipende dalla dimensione della figura
 			f1 = plt.figure(figsize=(20,12))
 			a11,a12,a13,a14,a15,a16 = doFigura(a,True, f1)
-			#f1.savefig('../elab_video/DiffSpectra.pdf')
-			f1.savefig('../elab_video/DiffTransferFunction.pdf')
+			#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
+			f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
 
 		else: # NON sara` piu` cosi` questa figura  
 			print a.ROOT, ' len=', a.ROOT.__len__()
@@ -487,8 +488,8 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			f1.tight_layout()
 			#f2.tight_layout()
 			#f2.subplots_adjust(wspace=0.05,hspace=0.6)
-			f1.savefig('../elab_video/OneSpectrum.pdf')
-			f2.savefig('../elab_video/baseFigura5.pdf')
+			f1.savefig(DATA_PATH+'/elab_video/OneSpectrum.pdf')
+			f2.savefig(DATA_PATH+'/elab_video/baseFigura5.pdf')
 
 class mergeComparisonsResults():
 	def __init__(self):
@@ -529,7 +530,7 @@ class mergeComparisonsResults():
 
 		f.tight_layout()
 		f.subplots_adjust(wspace=0.45,hspace=0.6)
-		f.savefig('../elab_video/baseFigura4.pdf')
+		f.savefig(DATA_PATH+'/elab_video/baseFigura4.pdf')
 
 
 	def diagColComp(self,cbd,a51):
@@ -925,7 +926,7 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 
 		# luce bianca - luce blu filtro rosso - luce blu  filtro passa lungo 
 		# 				effetto sulla behavioral performance
-		directory = './'
+		directory = DATA_PATH+'/analisi-baffo/'
 		self.luceBianca 		= directory+'IMG_0239.JPG'
 		self.luceBluFiltroRosso = directory+'IMG_0238.JPG'
 		self.luceBluFiltroPLung = directory+'IMG_0236.JPG'
@@ -955,7 +956,7 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 		fW.tight_layout()
 		fW.subplots_adjust(wspace=0.15,hspace=0.5)
 		if salva:
-			fW.savefig('../elab_video/baseFigura1.pdf',dpi=300)
+			fW.savefig(DATA_PATH+'/elab_video/baseFigura1.pdf',dpi=300)
 		else:
 			plt.show()
 
@@ -964,7 +965,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		self.name			= name
 		self.testType 		= testType
 		self.completeName 	= self.name+'_'+self.testType
-		self.pickleName 	= '../elab_video/'+self.completeName+'.pickle'
+		self.pickleName 	= DATA_PATH+'/elab_video/'+self.completeName+'.pickle'
 		self.doInfoWhiskersFig = True
 		if self.testType == 'diversiTempi':
 			self.doInfoWhiskersFig = False
@@ -981,22 +982,22 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		# modifiche al volo di variabili che non devo precalcolare
 		if self.testType == 'diversiBaffi':
 			self.listaWhisker = [\
-								'../elab_video/a11_12May_',\
-								'../elab_video/c11_12May_',\
-								'../elab_video/c12_12May_',\
-								'../elab_video/c22_12May_',\
-								'../elab_video/d11_12May_',\
-								'../elab_video/c21_12May_',\
-								'../elab_video/c31_12May_',\
-								'../elab_video/d21_12May_',\
-								'../elab_video/d22_12May_',\
-								'../elab_video/a31_12May_',\
-								'../elab_video/b11_12May_',\
-								'../elab_video/c41_12May_',\
+								DATA_PATH+'/elab_video/a11_12May_',\
+								DATA_PATH+'/elab_video/c11_12May_',\
+								DATA_PATH+'/elab_video/c12_12May_',\
+								DATA_PATH+'/elab_video/c22_12May_',\
+								DATA_PATH+'/elab_video/d11_12May_',\
+								DATA_PATH+'/elab_video/c21_12May_',\
+								DATA_PATH+'/elab_video/c31_12May_',\
+								DATA_PATH+'/elab_video/d21_12May_',\
+								DATA_PATH+'/elab_video/d22_12May_',\
+								DATA_PATH+'/elab_video/a31_12May_',\
+								DATA_PATH+'/elab_video/b11_12May_',\
+								DATA_PATH+'/elab_video/c41_12May_',\
 								# 			in d31 e` comparsa una imperfezione dopo la colorazione
-								'../elab_video/d31_12May_',\
-								'../elab_video/a41_12May_',\
-								'../elab_video/c51_12May_',\
+								DATA_PATH+'/elab_video/d31_12May_',\
+								DATA_PATH+'/elab_video/a41_12May_',\
+								DATA_PATH+'/elab_video/c51_12May_',\
 								]
 			# creo le due liste di cose da confrontare
 			self.listaWhisker1 = []
@@ -1026,12 +1027,12 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			self.ROOT =	['@cut','+1h','+2h','+3h','+4h','+5h','+6h','+7h','+1d','@color','+2M','+3M','@polish',\
 						 'a11','c11','c22','d11','c21','c31','d21','d22','a31','b11','c41','d31','a41','c51']
 			'''
-			self.listaWhisker1 =['../elab_video/c31_11May_hour1__NONcolor_.pickle','../elab_video/c31_11May_hour2__NONcolor_.pickle','../elab_video/c31_11May_hour3__NONcolor_.pickle','../elab_video/c31_11May_hour4__NONcolor_.pickle','../elab_video/c31_11May_hour5__NONcolor_.pickle','../elab_video/c31_11May_hour6__NONcolor_.pickle','../elab_video/c31_11May_hour7__NONcolor_.pickle','../elab_video/c31_11May_hour8__NONcolor_.pickle',\
-								'../elab_video/c31_12May__NONcolor_.pickle','../elab_video/c31_12May__color_.pickle','../elab_video/c31_6Jul__color_.pickle','../elab_video/c31_2Ago_senzaSmaltoTrasparente__color_.pickle','../elab_video/c31_2Ago_conSmaltoTrasparente__color_.pickle',\
-								'../elab_video/a11_12May__color_.pickle','../elab_video/c11_12May__color_.pickle','../elab_video/c22_12May__color_.pickle','../elab_video/d11_12May__color_.pickle','../elab_video/c21_12May__color_.pickle','../elab_video/c31_12May__color_.pickle','../elab_video/d21_12May__color_.pickle','../elab_video/d22_12May__color_.pickle','../elab_video/a31_12May__color_.pickle','../elab_video/b11_12May__color_.pickle','../elab_video/c41_12May__color_.pickle','../elab_video/d31_12May__color_.pickle','../elab_video/a41_12May__color_.pickle','../elab_video/c51_12May__color_.pickle']
-			self.listaWhisker2 =['../elab_video/c31_11May_hour1__NONcolor_.pickle','../elab_video/c31_11May_hour2__NONcolor_.pickle','../elab_video/c31_11May_hour3__NONcolor_.pickle','../elab_video/c31_11May_hour4__NONcolor_.pickle','../elab_video/c31_11May_hour5__NONcolor_.pickle','../elab_video/c31_11May_hour6__NONcolor_.pickle','../elab_video/c31_11May_hour7__NONcolor_.pickle','../elab_video/c31_11May_hour8__NONcolor_.pickle',\
-								'../elab_video/c31_12May__NONcolor_.pickle','../elab_video/c31_12May__color_.pickle','../elab_video/c31_6Jul__color_.pickle','../elab_video/c31_2Ago_senzaSmaltoTrasparente__color_.pickle','../elab_video/c31_2Ago_conSmaltoTrasparente__color_.pickle',\
-								'../elab_video/a11_6Jul__color_.pickle','../elab_video/c11_6Jul__color_.pickle','../elab_video/c22_6Jul__color_.pickle','../elab_video/d11_6Jul__color_.pickle','../elab_video/c21_6Jul__color_.pickle','../elab_video/c31_6Jul__color_.pickle','../elab_video/d21_6Jul__color_.pickle','../elab_video/d22_6Jul__color_.pickle','../elab_video/a31_6Jul__color_.pickle','../elab_video/b11_6Jul__color_.pickle','../elab_video/c41_6Jul__color_.pickle','../elab_video/d31_6Jul__color_.pickle','../elab_video/a41_6Jul__color_.pickle','../elab_video/c51_6Jul__color_.pickle']
+			self.listaWhisker1 =[DATA_PATH+'/elab_video/c31_11May_hour1__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour2__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour3__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour4__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour5__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour6__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour7__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour8__NONcolor_.pickle',\
+								DATA_PATH+'/elab_video/c31_12May__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_12May__color_.pickle',DATA_PATH+'/elab_video/c31_6Jul__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_senzaSmaltoTrasparente__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_conSmaltoTrasparente__color_.pickle',\
+								DATA_PATH+'/elab_video/a11_12May__color_.pickle',DATA_PATH+'/elab_video/c11_12May__color_.pickle',DATA_PATH+'/elab_video/c22_12May__color_.pickle',DATA_PATH+'/elab_video/d11_12May__color_.pickle',DATA_PATH+'/elab_video/c21_12May__color_.pickle',DATA_PATH+'/elab_video/c31_12May__color_.pickle',DATA_PATH+'/elab_video/d21_12May__color_.pickle',DATA_PATH+'/elab_video/d22_12May__color_.pickle',DATA_PATH+'/elab_video/a31_12May__color_.pickle',DATA_PATH+'/elab_video/b11_12May__color_.pickle',DATA_PATH+'/elab_video/c41_12May__color_.pickle',DATA_PATH+'/elab_video/d31_12May__color_.pickle',DATA_PATH+'/elab_video/a41_12May__color_.pickle',DATA_PATH+'/elab_video/c51_12May__color_.pickle']
+			self.listaWhisker2 =[DATA_PATH+'/elab_video/c31_11May_hour1__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour2__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour3__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour4__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour5__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour6__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour7__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour8__NONcolor_.pickle',\
+								DATA_PATH+'/elab_video/c31_12May__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_12May__color_.pickle',DATA_PATH+'/elab_video/c31_6Jul__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_senzaSmaltoTrasparente__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_conSmaltoTrasparente__color_.pickle',\
+								DATA_PATH+'/elab_video/a11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c22_6Jul__color_.pickle',DATA_PATH+'/elab_video/d11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c21_6Jul__color_.pickle',DATA_PATH+'/elab_video/c31_6Jul__color_.pickle',DATA_PATH+'/elab_video/d21_6Jul__color_.pickle',DATA_PATH+'/elab_video/d22_6Jul__color_.pickle',DATA_PATH+'/elab_video/a31_6Jul__color_.pickle',DATA_PATH+'/elab_video/b11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c41_6Jul__color_.pickle',DATA_PATH+'/elab_video/d31_6Jul__color_.pickle',DATA_PATH+'/elab_video/a41_6Jul__color_.pickle',DATA_PATH+'/elab_video/c51_6Jul__color_.pickle']
 			self.group1 = ['0  m','12 m','24 m','36 m','48 m','60 m','72 m','84 m','1 day','@color','2 M'] 	# stesso baffo dati nel tempo
 			self.group2 = ['another 2 M']																	# baffi diversi dati prima dopo 2 mesi
 			self.group3 = [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1]								# 0 dati nel tempo 1 dati diversi baffi
@@ -1317,15 +1318,15 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		fW.tight_layout()
 		if salva:
 			format_axes(a1)
-			f1.savefig('../elab_video/'+self.completeName+'WhiskersInfos.pdf')
+			f1.savefig(DATA_PATH+'/elab_video/'+self.completeName+'WhiskersInfos.pdf')
 			format_axes(a2)
 			format_axes(a4)
-			#f1.savefig('../elab_video/'+self.completeName+'_corr_binary.pdf')
-			f2.savefig('../elab_video/'+self.completeName+'_corr_real.pdf')
-			#f3.savefig('../elab_video/'+self.completeName+'_err_binary.pdf')
-			f4.savefig('../elab_video/'+self.completeName+'_err_real.pdf')
-			f5.savefig('../elab_video/'+self.completeName+'_err_corr_diags.pdf')
-			fW.savefig('../elab_video/'+self.completeName+'_Whole.pdf')
+			#f1.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_corr_binary.pdf')
+			f2.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_corr_real.pdf')
+			#f3.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_err_binary.pdf')
+			f4.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_err_real.pdf')
+			f5.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_err_corr_diags.pdf')
+			fW.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_Whole.pdf')
 		else:
 			plt.show()
 
@@ -1506,12 +1507,12 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		f5.tight_layout()
 		fW.tight_layout()
 		if salva:
-			f1.savefig('../elab_video/'+self.completeName+'_TimeTrendInfos_DPM.pdf')
-			f2.savefig('../elab_video/'+self.completeName+'_TimeTrendInfos_CORR2.pdf')
-			#f3.savefig('../elab_video/'+self.completeName+'_TwoMonths_CORR2.pdf')
-			#f4.savefig('../elab_video/'+self.completeName+'_TwoMonths_CORR2.pdf')
-			f5.savefig('../elab_video/'+self.completeName+'_err_corr_diags.pdf')
-			fW.savefig('../elab_video/'+self.completeName+'_Whole.pdf')
+			f1.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_TimeTrendInfos_DPM.pdf')
+			f2.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_TimeTrendInfos_CORR2.pdf')
+			#f3.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_TwoMonths_CORR2.pdf')
+			#f4.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_TwoMonths_CORR2.pdf')
+			f5.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_err_corr_diags.pdf')
+			fW.savefig(DATA_PATH+'/elab_video/'+self.completeName+'_Whole.pdf')
 		else:
 			plt.show()
 
@@ -1613,11 +1614,11 @@ class sessione: # una sessione e` caratterizzata da tanti video
 		self.overWriteElab = overWriteElab
 		if self.justPlotRaw is True:
 			self.overWriteElab = False
-		self.id_name 	= self.name+'_'+self.date+'_'+self.status 
-		self.pickleName = '../elab_video/'+self.id_name+'.pickle'
-		self.spettroMedName = '../elab_video/'+self.id_name+'.pdf'
-		self.transferFunctionMedName = '../elab_video/'+self.id_name+'_transferFunction.pdf'
-		self.fig1Name = '../elab_video/'+self.id_name+'_test_fig1'
+		self.id_name 					= self.name+'_'+self.date+'_'+self.status 
+		self.pickleName 				= DATA_PATH+'/elab_video/'+self.id_name+'.pickle'
+		self.spettroMedName 			= DATA_PATH+'/elab_video/'+self.id_name+'.pdf'
+		self.transferFunctionMedName 	= DATA_PATH+'/elab_video/'+self.id_name+'_transferFunction.pdf'
+		self.fig1Name 					= DATA_PATH+'/elab_video/'+self.id_name+'_test_fig1'
 		if go: #  tutto in un colpo solo
 			fatto = self.elaboroFilmati()
 			self.calcoloSpettroMedio()
@@ -1936,90 +1937,100 @@ class video: # ogni fideo va elaborato
 
 # i test vanno qui
 if __name__ == '__main__': 
+	
+	# definitiamo i PATH come varaibili globali
+	global ELAB_PATH 
+	global DATA_PATH 
+	ELAB_PATH = os.path.abspath(__file__)[:-len(os.path.basename(__file__))] # io sono qui
+	DATA_PATH = '/media/jaky/DATI BAFFO/'
+	print '~~~~~~~~~~~~\nNOTA BENE:'
+	print 'ELAB_PATH = '+ELAB_PATH
+	print 'DATA_PATH = '+DATA_PATH
+	print '~~~~~~~~~~~~\n:'
 
 	# ---- PRE - PROCESSING ---- #
 	# TRACKING 11 MAGGIO -- c31 nel tempo -- 
-	#sessione('c31','11May_hour1','_NONcolor_','../ratto1/c3_1/11May2016/_hour1_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour2','_NONcolor_','../ratto1/c3_1/11May2016/_hour2_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour3','_NONcolor_','../ratto1/c3_1/11May2016/_hour3_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour4','_NONcolor_','../ratto1/c3_1/11May2016/_hour4_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour5','_NONcolor_','../ratto1/c3_1/11May2016/_hour5_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour6','_NONcolor_','../ratto1/c3_1/11May2016/_hour6_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour7','_NONcolor_','../ratto1/c3_1/11May2016/_hour7_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour8','_NONcolor_','../ratto1/c3_1/11May2016/_hour8_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour1','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour1_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour2','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour2_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour3','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour3_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour4','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour4_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour5','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour5_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour6','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour6_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour7','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour7_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour8','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour8_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
 	# TRACKING 12 MAGGIO
-	#sessione('a11','12May','_NONcolor_','../ratto1/a1_1/',(280, 630, 0, 200),29,True)
-	#sessione('a11','12May','_color_','../ratto1/a1_1/',(280, 625, 0, 200),33,True) 		# tracking molto bello
-	#sessione('a31','12May','_NONcolor_','../ratto1/a3_1/',(450, 629, 145, 210),32,True)
-	#sessione('a31','12May','_color_','../ratto1/a3_1/',(450, 638, 145, 230),32,True)  		# tracking molto bello
-	#sessione('a41','12May','_NONcolor_','../ratto1/a4_1/',(542, 634, 0, 245),29,True)
-	#sessione('a41','12May','_color_','../ratto1/a4_1/',(542, 635, 0, 245),28,True)
-	#sessione('c11','12May','_NONcolor_','../ratto1/c1_1/',(186, 630, 0, 245),33,True)
-	#sessione('c11','12May','_color_','../ratto1/c1_1/',(186, 632, 0, 150),33,True)
-	#sessione('c21','12May','_NONcolor_','../ratto1/c2_1/',(242, 617, 0, 245),32,True)
-	#sessione('c21','12May','_color_','../ratto1/c2_1/',(242, 614, 0, 120),32,True)  		# tracking molto bello
-	#sessione('c31','12May','_NONcolor_','../ratto1/c3_1/',(331, 625, 120, 245),32,True)   	# tracking molto bello
-	#sessione('c31','12May','_color_','../ratto1/c3_1/',(331, 625, 150, 245),32,True) 		# l'inquadratura ogni tanto perde la punta del baffo! 
-	#sessione('c51','12May','_NONcolor_','../ratto1/c5_1/',(480, 630, 120, 220),30,True)   	# tracking molto bello
-	#sessione('c51','12May','_color_','../ratto1/c5_1/',(480, 625, 130, 240),30,True)   	# tracking molto bello
-	#sessione('d21','12May','_NONcolor_','../ratto1/d2_1/',(310, 629, 50, 210),29,True)		# tracking molto bello
-	#sessione('d21','12May','_color_','../ratto1/d2_1/',(310, 629, 120, 240),30,True)		# tracking molto bello
-	#sessione('d31','12May','_NONcolor_','../ratto1/d3_1/',(423, 625, 140, 245),29,True)
-	#sessione('d31','12May','_color_','../ratto1/d3_1/',(423, 622, 120, 215),32,True)		# e` comparsa una imperfezione...
-	#sessione('b11','12May','_NONcolor_','../ratto1/b1_1/',(430, 620, 120, 245),32,True)   	
-	#sessione('b11','12May','_color_','../ratto1/b1_1/',(460, 675, 120, 215),30,True)	   	
-	#sessione('c12','12May','_NONcolor_','../ratto1/c1_2/',(310, 640, 70, 235),30,True)    	
-	#sessione('c12','12May','_color_','../ratto1/c1_2/',(310, 640, 70, 235),30,True)	   
-	#sessione('c22','12May','_NONcolor_','../ratto1/c2_2/',(280, 655, 30, 205),30,True)	
-	#sessione('c22','12May','_color_','../ratto1/c2_2/',(260, 635, 20, 235),30,True)	
-	#sessione('c41','12May','_NONcolor_','../ratto1/c4_1/',(390, 640, 50, 175),29,True)	
-	#sessione('c41','12May','_color_','../ratto1/c4_1/',(390, 640, 90, 245),32,True)	
-	#sessione('d11','12May','_NONcolor_','../ratto1/d1_1/',(90, 635, 20, 245),32,True)	
-	#sessione('d11','12May','_color_','../ratto1/d1_1/',(110, 615, 20, 245),32,True)   	   
-	#sessione('d22','12May','_NONcolor_','../ratto1/d2_2/',(210, 635, 20, 245),30,True)	
-	#sessione('d22','12May','_color_','../ratto1/d2_2/',(210, 625, 20, 205),30,True)	
+	#sessione('a11','12May','_NONcolor_',DATA_PATH+'/ratto1/a1_1/',(280, 630, 0, 200),29,True)
+	#sessione('a11','12May','_color_',DATA_PATH+'/ratto1/a1_1/',(280, 625, 0, 200),33,True) 		# tracking molto bello
+	#sessione('a31','12May','_NONcolor_',DATA_PATH+'/ratto1/a3_1/',(450, 629, 145, 210),32,True)
+	#sessione('a31','12May','_color_',DATA_PATH+'/ratto1/a3_1/',(450, 638, 145, 230),32,True)  		# tracking molto bello
+	#sessione('a41','12May','_NONcolor_',DATA_PATH+'/ratto1/a4_1/',(542, 634, 0, 245),29,True)
+	#sessione('a41','12May','_color_',DATA_PATH+'/ratto1/a4_1/',(542, 635, 0, 245),28,True)
+	#sessione('c11','12May','_NONcolor_',DATA_PATH+'/ratto1/c1_1/',(186, 630, 0, 245),33,True)
+	#sessione('c11','12May','_color_',DATA_PATH+'/ratto1/c1_1/',(186, 632, 0, 150),33,True)
+	#sessione('c21','12May','_NONcolor_',DATA_PATH+'/ratto1/c2_1/',(242, 617, 0, 245),32,True)
+	#sessione('c21','12May','_color_',DATA_PATH+'/ratto1/c2_1/',(242, 614, 0, 120),32,True)  		# tracking molto bello
+	#sessione('c31','12May','_NONcolor_',DATA_PATH+'/ratto1/c3_1/',(331, 625, 120, 245),32,True)   	# tracking molto bello
+	#sessione('c31','12May','_color_',DATA_PATH+'/ratto1/c3_1/',(331, 625, 150, 245),32,True) 		# l'inquadratura ogni tanto perde la punta del baffo! 
+	#sessione('c51','12May','_NONcolor_',DATA_PATH+'/ratto1/c5_1/',(480, 630, 120, 220),30,True)   	# tracking molto bello
+	#sessione('c51','12May','_color_',DATA_PATH+'/ratto1/c5_1/',(480, 625, 130, 240),30,True)   	# tracking molto bello
+	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True)		# tracking molto bello
+	#sessione('d21','12May','_color_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 120, 240),30,True)		# tracking molto bello
+	#sessione('d31','12May','_NONcolor_',DATA_PATH+'/ratto1/d3_1/',(423, 625, 140, 245),29,True)
+	#sessione('d31','12May','_color_',DATA_PATH+'/ratto1/d3_1/',(423, 622, 120, 215),32,True)		# e` comparsa una imperfezione...
+	#sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/b1_1/',(430, 620, 120, 245),32,True)   	
+	#sessione('b11','12May','_color_',DATA_PATH+'/ratto1/b1_1/',(460, 675, 120, 215),30,True)	   	
+	#sessione('c12','12May','_NONcolor_',DATA_PATH+'/ratto1/c1_2/',(310, 640, 70, 235),30,True)    	
+	#sessione('c12','12May','_color_',DATA_PATH+'/ratto1/c1_2/',(310, 640, 70, 235),30,True)	   
+	#sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/c2_2/',(280, 655, 30, 205),30,True)	
+	#sessione('c22','12May','_color_',DATA_PATH+'/ratto1/c2_2/',(260, 635, 20, 235),30,True)	
+	#sessione('c41','12May','_NONcolor_',DATA_PATH+'/ratto1/c4_1/',(390, 640, 50, 175),29,True)	
+	#sessione('c41','12May','_color_',DATA_PATH+'/ratto1/c4_1/',(390, 640, 90, 245),32,True)	
+	#sessione('d11','12May','_NONcolor_',DATA_PATH+'/ratto1/d1_1/',(90, 635, 20, 245),32,True)	
+	#sessione('d11','12May','_color_',DATA_PATH+'/ratto1/d1_1/',(110, 615, 20, 245),32,True)   	   
+	#sessione('d22','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_2/',(210, 635, 20, 245),30,True)	
+	#sessione('d22','12May','_color_',DATA_PATH+'/ratto1/d2_2/',(210, 625, 20, 205),30,True)	
 
 	# TRACKING 6 LUGLIO 
-	#sessione('a11','6Jul','_color_','../ratto1/6Luglio/a1_1/',(250+105, 605+105, 0, 200),32,True,True,False)
-	#sessione('a31','6Jul','_color_','../ratto1/6Luglio/a3_1/',(450+105, 618+105, 0, 200),32,True,True,False)
-	#sessione('a41','6Jul','_color_','../ratto1/6Luglio/a4_1/',(540+105, 635+105, 0, 200),30,True,True,False)
-	#sessione('c11','6Jul','_color_','../ratto1/6Luglio/c1_1/',(170+100, 635+100, 0, 240),32,True,True,False)
-	#sessione('c21','6Jul','_color_','../ratto1/6Luglio/c2_1/',(260+100, 615+100, 0, 200),32,True,True,False)
-	#sessione('c31','6Jul','_color_','../ratto1/c3_1/5Jul2016/',(230+100, 530+100, 0, 200),29,True,True,False)
-	#sessione('c51','6Jul','_color_','../ratto1/6Luglio/c5_1/',(480+100, 635+100, 0, 200),32,True,True,False)
-	#sessione('d21','6Jul','_color_','../ratto1/6Luglio/d2_1/',(300+100, 615+100, 0, 200),29,True,True,False)
-	#sessione('d31','6Jul','_color_','../ratto1/6Luglio/d3_1/',(410+100, 612+100, 100, 230),29,True,True,False)
-	#sessione('b11','6Jul','_color_','../ratto1/6Luglio/b1_1/',(430+100, 610+100, 100, 230),29,True,True,False)
-	#sessione('c12','6Jul','_color_','../ratto1/6Luglio/c1_2/',(270+100, 620+100, 100, 240),29,True,True,False)
-	#sessione('c22','6Jul','_color_','../ratto1/6Luglio/c2_2/',(220+100, 615+100, 0, 240),32,True,True,False)
-	#sessione('c41','6Jul','_color_','../ratto1/6Luglio/c4_1/',(390+100, 625+100, 100, 200),32,True,True,False)
-	#sessione('d11','6Jul','_color_','../ratto1/6Luglio/d1_1/',(90+100, 620+100, 0, 200),32,True,True,False)
-	#sessione('d22','6Jul','_color_','../ratto1/6Luglio/d2_2/',(210+100, 610+100, 0, 200),29,True,True,False)
+	#sessione('a11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/a1_1/',(250+105, 605+105, 0, 200),32,True,True,False)
+	#sessione('a31','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/a3_1/',(450+105, 618+105, 0, 200),32,True,True,False)
+	#sessione('a41','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/a4_1/',(540+105, 635+105, 0, 200),30,True,True,False)
+	#sessione('c11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c1_1/',(170+100, 635+100, 0, 240),32,True,True,False)
+	#sessione('c21','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c2_1/',(260+100, 615+100, 0, 200),32,True,True,False)
+	#sessione('c31','6Jul','_color_',DATA_PATH+'/ratto1/c3_1/5Jul2016/',(230+100, 530+100, 0, 200),29,True,True,False)
+	#sessione('c51','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c5_1/',(480+100, 635+100, 0, 200),32,True,True,False)
+	#sessione('d21','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d2_1/',(300+100, 615+100, 0, 200),29,True,True,False)
+	#sessione('d31','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d3_1/',(410+100, 612+100, 100, 230),29,True,True,False)
+	#sessione('b11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/b1_1/',(430+100, 610+100, 100, 230),29,True,True,False)
+	#sessione('c12','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c1_2/',(270+100, 620+100, 100, 240),29,True,True,False)
+	#sessione('c22','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c2_2/',(220+100, 615+100, 0, 240),32,True,True,False)
+	#sessione('c41','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c4_1/',(390+100, 625+100, 100, 200),32,True,True,False)
+	#sessione('d11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d1_1/',(90+100, 620+100, 0, 200),32,True,True,True)
+	#sessione('d22','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d2_2/',(210+100, 610+100, 0, 200),29,True,True,False)
 	
 	#TRACKING 2 AGOSTO
-	#sessione('c31','2Ago_senzaSmaltoTrasparente','_color_','../ratto1/c3_1/senzaSmaltoTrasparente/',(300, 660, 50, 205),35,True) 
-	#sessione('c31','2Ago_conSmaltoTrasparente','_color_','../ratto1/c3_1/conSmaltoTrasparente/',(260, 625, 50, 205),35,True) 
+	#sessione('c31','2Ago_senzaSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/senzaSmaltoTrasparente/',(300, 660, 50, 205),35,True,True,True) 
+	#sessione('c31','2Ago_conSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/conSmaltoTrasparente/',(260, 625, 50, 205),35,True,True,True) 
 
 	#TRACKING ACCIAIO 13 APRILE
-	#sessione('filo_acciaio','13Apr','_NONcolor_','../ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
+	#sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
+
+	# ROBA DA DARE AD ALE...
+	#PickleAsciiTimeTrendsConversion() #<-- da finire serve ad alessandro per il modlelo
 
 	# CALCOLO TRANSFER FUNCTION POST TRACKING
-	#a = sessione('d21','12May','_NONcolor_','../ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+	#a = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 	#a.calcoloTransferFunction(True)
-		
-
 
 	# ---- POST - PROCESSING ---- #
-	#sessione('d21','12May','_NONcolor_','../ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	#confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    # XXX TODO XXX NON SALVO LE INFO WHISKER XXX XXX
+	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
+	confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 	#confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
-	#confrontoAddestramento()
-	#creoSpettriBaffi()
-	#creoImageProcessing_Stacked() 
-	#stampo_lunghezza_whiskers()
-	#mergeComparisonsResults()
-	#PickleAsciiTimeTrendsConversion() #<-- da finire serve ad alessandro per il modlelo
-	#simulatedAndSetup()
+	#confrontoAddestramento()						
+	#creoSpettriBaffi()								
+	#stampo_lunghezza_whiskers()					
+	#mergeComparisonsResults()						
+	#simulatedAndSetup() 							
+	#creoImageProcessing_Stacked()					
 	print 'stampo per far fare qualcosa al main'
 
 
