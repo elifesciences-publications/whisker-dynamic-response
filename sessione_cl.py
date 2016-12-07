@@ -1244,19 +1244,9 @@ class sessione: # una sessione e` caratterizzata da tanti video
 		for v in self.V:
 			spettri.append(v.WSF)
 		self.spettro_medio = np.mean(spettri,axis=0)[0:-1,0:1400]
-		#self.smoothSpettro(spettri)
 		self.freq = self.V[0].freq[:1400]
 		if evalFigure:
 			self.spettroMedio_fig1(True)
-
-	def smoothSpettro(self,spettri): 
-		print self.spettro_medio.__len__()
-		for i in xrange(0,self.spettro_medio.__len__()): 	# lungo il baffo
-			win_dim = 5
-			self.spettro_medio[i] = signal.medfilt(self.spettro_medio[i],win_dim)
-		for i in xrange(0,self.spettro_medio[0].__len__()): # lungo le frequenze
-			win_dim = 15
-			self.spettro_medio[:,i] = signal.medfilt(self.spettro_medio[:,i],win_dim)
 
 	def spettroMedio_fig1(self,salva=False): 
 		ff,a1 = plt.subplots(1)
