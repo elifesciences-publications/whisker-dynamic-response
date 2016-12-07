@@ -1114,13 +1114,6 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 				self.DIFF_PERC_MAT[i1,i2] = norma/np.sqrt(data_c.__len__())			# normalizzo la norma per il suo valore massimo, ovvero sqrt(dim)
 				print ' ',i2,
 
-	def mean_confidence_interval(self,data, confidence=0.95):
-		a = 1.0*np.array(data)
-		n = len(a)
-		m, se = np.mean(a), stats.sem(a)
-		h = se * stats.t._ppf((1+confidence)/2., n-1)
-		return m, m-h, m+h
-
 	def calcoloTransferFunctionMedia(self,Videos):
 		TFS = []
 		for v in self.V: # scorro i video
@@ -1605,7 +1598,7 @@ if __name__ == '__main__':
 	#sessione('c31','2Ago_conSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/conSmaltoTrasparente/',(260, 625, 50, 205),35,True,True,True) 
 
 	#TRACKING ACCIAIO 13 APRILE
-	sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
+	#sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
 
 	# ROBA DA DARE AD ALE...
 	#PickleAsciiTimeTrendsConversion() #<-- da finire serve ad alessandro per il modlelo
@@ -1616,7 +1609,7 @@ if __name__ == '__main__':
 
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	#confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
+	confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 	#confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 	#confrontoAddestramento()						
 	#creoSpettriBaffi()								
