@@ -971,6 +971,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		self.pickleEndTracking		= '.pickle'
 		self.pickleEndSpectrum		= '_spectrum.pickle'
 		self.pickleEndTransFun		= '_transferFunction.pickle'
+		self.pickleEndTransFunTip	= '_transferFunctionTip.txt' # per Ale per fare l'ottimizzazione del modello in COMSOL
 		self.pickleNameInfoWhiskers = DATA_PATH+'/elab_video/'+self.completeName+'_infoWhiskers.pickle'
 		self.integrale_lunghezza = []
 		self.integrale_absAngolo = []
@@ -1117,6 +1118,15 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			self.doComparisons()
 
 
+	def saveTipTF(self): # per Ale per fare l'ottimizzazione del modello in COMSOL
+		def loadTF(fname): 
+			with open(fname, 'rb') as f:
+				return pickle.load(f)[0]
+		for lW1 in self.listaWhisker1: # non color
+			loadTipTF = loadTF(lW1+self.pickleEndTransFun)[0,:]
+			TipTF = [(f,tf) for f,tf in zip(xrange(0,len(loadTipTF)),loadTipTF) ]
+			np.savetxt(lW1+self.pickleEndTransFunTip,TipTF)
+	
 	def checkBaseTracking(self): # alcune misure vengono male, non e` che dipende da un errore nella stima della base?
 		def loadTracking(fname): 
 			with open(fname, 'rb') as f:
@@ -1705,6 +1715,15 @@ class video: # ogni fideo va elaborato
 		print 'stampami questo!'
 
 
+def funTemporaneoConfrontoBaffiSimulatiTraLoro(): #FIXME TODO mettere nelle figure opportunamente
+	CORR2 = np.loadtxt('/media/jaky/DATI BAFFO/elab_video/simulatedWhisker_byAle/comparisonSimWhiskers_CORR2_visualInspection.txt') 
+	f = plt.figure()
+	a1 = f.add_subplot(1,1,1)
+	cax1 = a1.imshow(CORR2,aspect='equal', interpolation="nearest",clim=(0,1))	
+	cbar1 = f.colorbar(cax1,ax=a1)
+	plt.show()
+
+
 # i test vanno qui
 if __name__ == '__main__': 
 	
@@ -1791,14 +1810,16 @@ if __name__ == '__main__':
 	#a = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 	#a.calcoloTransferFunction(True)
 
-	# CONTROLLO BASE STIMOLO PER OGNI WHISKER
+	# CONTROLLO BASE STIMOLO PER OGNI WHISKER E RISPOSTA IN FREQUENZA DELLA PUNTA
 	#a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
 	#a.checkBaseTracking()
+	#a.saveTipTF() # per Ale per fare l'ottimizzazione del modello in COMSOL
+	funTemporaneoConfrontoBaffiSimulatiTraLoro() #FIXME TODO mettere nelle figure opportunamente
 	
 
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	if 1:
+	if 0:
 		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 		db.compareWhiskers('spettri')
@@ -1811,6 +1832,7 @@ if __name__ == '__main__':
 	#mergeComparisonsResults()						
 	#simulatedAndSetup() 							
 	#creoImageProcessing_Stacked()					
+	
 	print 'stampo per far fare qualcosa al main'
 
 
