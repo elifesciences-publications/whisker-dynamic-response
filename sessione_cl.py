@@ -494,11 +494,14 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 class mergeComparisonsResults():
 	def __init__(self):
 
+		typeComparison = 'transferFunction'  # 'spettri' # 
+
 		# carico dati
 		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)
-		a.compareWhiskers()
+		a.loadWhiskersInfo()
+		a.compareWhiskers(typeComparison) 
 		b = confrontoBaffiDiversi('baffi_12May','diversiTempi',False)    
-		b.compareWhiskers()
+		b.compareWhiskers(typeComparison) 
 
 		# axes arrangements
 		f = plt.figure(figsize=(10,6))
@@ -530,7 +533,7 @@ class mergeComparisonsResults():
 
 		f.tight_layout()
 		f.subplots_adjust(wspace=0.45,hspace=0.6)
-		f.savefig(DATA_PATH+'/elab_video/baseFigura4.pdf')
+		f.savefig(DATA_PATH+'/elab_video/baseFigura4_'+typeComparison+'.pdf')
 
 
 	def diagColComp(self,cbd,a51):
@@ -962,26 +965,25 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 
 class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 	def __init__(self,name,testType,stampoFigura):
-		self.name			= name
-		self.testType 		= testType
-		self.completeName 	= self.name+'_'+self.testType
-		self.pickleName 	= DATA_PATH+'/elab_video/'+self.completeName+'.pickle'
-		self.doInfoWhiskersFig = True
-		if self.testType == 'diversiTempi':
-			self.doInfoWhiskersFig = False
-		print 'self.doInfoWhiskersFig = ',self.doInfoWhiskersFig 
+		self.name					= name
+		self.testType 				= testType
+		self.completeName 			= self.name+'_'+self.testType
+		self.pickleEndTracking		= '.pickle'
+		self.pickleEndSpectrum		= '_spectrum.pickle'
+		self.pickleEndTransFun		= '_transferFunction.pickle'
+		self.pickleNameInfoWhiskers = DATA_PATH+'/elab_video/'+self.completeName+'_infoWhiskers.pickle'
 		self.integrale_lunghezza = []
 		self.integrale_absAngolo = []
 
-		if os.path.isfile(self.pickleName):
-			print 'il file '+self.pickleName+' esiste'
-			self.loadWhiskers()
+		#if os.path.isfile(self.pickleName):
+		#	print 'il file '+self.pickleName+' esiste'
+		#	self.loadWhiskers()
 
 		# modifiche al volo di variabili che non devo precalcolare
 		if self.testType == 'diversiBaffi':
 			self.listaWhisker = [\
-								DATA_PATH+'/elab_video/a11_12May_',\
-								DATA_PATH+'/elab_video/c11_12May_',\
+								#DATA_PATH+'/elab_video/a11_12May_',\
+								#DATA_PATH+'/elab_video/c11_12May_',\
 								DATA_PATH+'/elab_video/c12_12May_',\
 								DATA_PATH+'/elab_video/c22_12May_',\
 								DATA_PATH+'/elab_video/d11_12May_',\
@@ -993,17 +995,17 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 								DATA_PATH+'/elab_video/b11_12May_',\
 								DATA_PATH+'/elab_video/c41_12May_',\
 								# 			in d31 e` comparsa una imperfezione dopo la colorazione
-								DATA_PATH+'/elab_video/d31_12May_',\
-								DATA_PATH+'/elab_video/a41_12May_',\
-								DATA_PATH+'/elab_video/c51_12May_',\
+								#DATA_PATH+'/elab_video/d31_12May_',\
+								#DATA_PATH+'/elab_video/a41_12May_',\
+								#DATA_PATH+'/elab_video/c51_12May_',\
 								]
 			# creo le due liste di cose da confrontare
 			self.listaWhisker1 = []
 			self.listaWhisker2 = []
 			for lW in self.listaWhisker:
-				self.listaWhisker1.append(lW+'_NONcolor_.pickle')
+				self.listaWhisker1.append(lW+'_NONcolor_')
 			for lW in self.listaWhisker:
-				self.listaWhisker2.append(lW+'_color_.pickle')
+				self.listaWhisker2.append(lW+'_color_')
 			
 			self.group1 = ['$A1_L$','$C1_L$','$C1_R$','$C2_R$','$D1_L$']
 			self.group2 = ['$C2_L$','$C3_L$','$D2_L$','$D2_R$']
@@ -1025,12 +1027,65 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			self.ROOT =	['@cut','+1h','+2h','+3h','+4h','+5h','+6h','+7h','+1d','@color','+2M','+3M','@polish',\
 						 'a11','c11','c22','d11','c21','c31','d21','d22','a31','b11','c41','d31','a41','c51']
 			'''
-			self.listaWhisker1 =[DATA_PATH+'/elab_video/c31_11May_hour1__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour2__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour3__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour4__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour5__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour6__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour7__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour8__NONcolor_.pickle',\
-								DATA_PATH+'/elab_video/c31_12May__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_12May__color_.pickle',DATA_PATH+'/elab_video/c31_6Jul__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_senzaSmaltoTrasparente__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_conSmaltoTrasparente__color_.pickle',\
-								DATA_PATH+'/elab_video/a11_12May__color_.pickle',DATA_PATH+'/elab_video/c11_12May__color_.pickle',DATA_PATH+'/elab_video/c22_12May__color_.pickle',DATA_PATH+'/elab_video/d11_12May__color_.pickle',DATA_PATH+'/elab_video/c21_12May__color_.pickle',DATA_PATH+'/elab_video/c31_12May__color_.pickle',DATA_PATH+'/elab_video/d21_12May__color_.pickle',DATA_PATH+'/elab_video/d22_12May__color_.pickle',DATA_PATH+'/elab_video/a31_12May__color_.pickle',DATA_PATH+'/elab_video/b11_12May__color_.pickle',DATA_PATH+'/elab_video/c41_12May__color_.pickle',DATA_PATH+'/elab_video/d31_12May__color_.pickle',DATA_PATH+'/elab_video/a41_12May__color_.pickle',DATA_PATH+'/elab_video/c51_12May__color_.pickle']
-			self.listaWhisker2 =[DATA_PATH+'/elab_video/c31_11May_hour1__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour2__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour3__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour4__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour5__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour6__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour7__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_11May_hour8__NONcolor_.pickle',\
-								DATA_PATH+'/elab_video/c31_12May__NONcolor_.pickle',DATA_PATH+'/elab_video/c31_12May__color_.pickle',DATA_PATH+'/elab_video/c31_6Jul__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_senzaSmaltoTrasparente__color_.pickle',DATA_PATH+'/elab_video/c31_2Ago_conSmaltoTrasparente__color_.pickle',\
-								DATA_PATH+'/elab_video/a11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c22_6Jul__color_.pickle',DATA_PATH+'/elab_video/d11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c21_6Jul__color_.pickle',DATA_PATH+'/elab_video/c31_6Jul__color_.pickle',DATA_PATH+'/elab_video/d21_6Jul__color_.pickle',DATA_PATH+'/elab_video/d22_6Jul__color_.pickle',DATA_PATH+'/elab_video/a31_6Jul__color_.pickle',DATA_PATH+'/elab_video/b11_6Jul__color_.pickle',DATA_PATH+'/elab_video/c41_6Jul__color_.pickle',DATA_PATH+'/elab_video/d31_6Jul__color_.pickle',DATA_PATH+'/elab_video/a41_6Jul__color_.pickle',DATA_PATH+'/elab_video/c51_6Jul__color_.pickle']
+			self.listaWhisker1 = [	DATA_PATH+'/elab_video/c31_11May_hour1__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour2__NONcolor_',\
+								  	DATA_PATH+'/elab_video/c31_11May_hour3__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour4__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour5__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour6__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour7__NONcolor_',
+									DATA_PATH+'/elab_video/c31_11May_hour8__NONcolor_',\
+									\
+									DATA_PATH+'/elab_video/c31_12May__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_12May__color_',\
+									DATA_PATH+'/elab_video/c31_6Jul__color_',\
+									DATA_PATH+'/elab_video/c31_2Ago_senzaSmaltoTrasparente__color_',\
+									DATA_PATH+'/elab_video/c31_2Ago_conSmaltoTrasparente__color_',\
+									\
+									DATA_PATH+'/elab_video/a11_12May__color_',\
+									DATA_PATH+'/elab_video/c11_12May__color_',\
+									DATA_PATH+'/elab_video/c22_12May__color_',\
+									DATA_PATH+'/elab_video/d11_12May__color_',\
+									DATA_PATH+'/elab_video/c21_12May__color_',\
+									DATA_PATH+'/elab_video/c31_12May__color_',\
+									DATA_PATH+'/elab_video/d21_12May__color_',\
+									DATA_PATH+'/elab_video/d22_12May__color_',\
+									DATA_PATH+'/elab_video/a31_12May__color_',\
+									DATA_PATH+'/elab_video/b11_12May__color_',\
+									DATA_PATH+'/elab_video/c41_12May__color_',\
+									DATA_PATH+'/elab_video/d31_12May__color_',\
+									DATA_PATH+'/elab_video/a41_12May__color_',\
+									DATA_PATH+'/elab_video/c51_12May__color_']
+			self.listaWhisker2 = [	DATA_PATH+'/elab_video/c31_11May_hour1__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour2__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour3__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour4__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour5__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour6__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour7__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_11May_hour8__NONcolor_',\
+									\
+									DATA_PATH+'/elab_video/c31_12May__NONcolor_',\
+									DATA_PATH+'/elab_video/c31_12May__color_',\
+									DATA_PATH+'/elab_video/c31_6Jul__color_',\
+									DATA_PATH+'/elab_video/c31_2Ago_senzaSmaltoTrasparente__color_',\
+									DATA_PATH+'/elab_video/c31_2Ago_conSmaltoTrasparente__color_',\
+									\
+									DATA_PATH+'/elab_video/a11_6Jul__color_',\
+									DATA_PATH+'/elab_video/c11_6Jul__color_',\
+									DATA_PATH+'/elab_video/c22_6Jul__color_',\
+									DATA_PATH+'/elab_video/d11_6Jul__color_',\
+									DATA_PATH+'/elab_video/c21_6Jul__color_',\
+									DATA_PATH+'/elab_video/c31_6Jul__color_',\
+									DATA_PATH+'/elab_video/d21_6Jul__color_',\
+									DATA_PATH+'/elab_video/d22_6Jul__color_',\
+									DATA_PATH+'/elab_video/a31_6Jul__color_',\
+									DATA_PATH+'/elab_video/b11_6Jul__color_',\
+									DATA_PATH+'/elab_video/c41_6Jul__color_',\
+									DATA_PATH+'/elab_video/d31_6Jul__color_',\
+									DATA_PATH+'/elab_video/a41_6Jul__color_',\
+									DATA_PATH+'/elab_video/c51_6Jul__color_']
+
 			self.group1 = ['0  m','12 m','24 m','36 m','48 m','60 m','72 m','84 m','1 day','@color','2 M'] 	# stesso baffo dati nel tempo
 			self.group2 = ['another 2 M']																	# baffi diversi dati prima dopo 2 mesi
 			self.group3 = [0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1]								# 0 dati nel tempo 1 dati diversi baffi
@@ -1053,6 +1108,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 				err5
 			for l,m,n in zip(self.listaWhisker1, self.listaWhisker2, self.ROOT):
 				print l,m,n
+				
 		else:
 			print 'questo test NON esiste. Correggere self.testType'
 			return
@@ -1060,12 +1116,73 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		if stampoFigura:
 			self.doComparisons()
 
+
+	def checkBaseTracking(self): # alcune misure vengono male, non e` che dipende da un errore nella stima della base?
+		def loadTracking(fname): 
+			with open(fname, 'rb') as f:
+				return pickle.load(f)[0]
+		for lW1,lW2 in zip(self.listaWhisker1,self.listaWhisker2): # non color
+			noncolorTrack = loadTracking(lW1+self.pickleEndTracking)
+			colorTrack    = loadTracking(lW2+self.pickleEndTracking)
+			noncolorBaseTrack = []
+			colorBaseTrack = []
+			baseVarNoncolor = []
+			baseVarColor = []
+			for v1,v2 in zip(noncolorTrack,colorTrack): # scorro i video
+				traiettorie,nPunti,nCampioni = (v1.wst,v1.wst.__len__(),v1.wst[0].__len__())
+				base = traiettorie[nPunti-1]
+				baseVarNoncolor.append(np.var(base))
+				noncolorBaseTrack.append(base)
+				traiettorie,nPunti,nCampioni = (v2.wst,v2.wst.__len__(),v2.wst[0].__len__())
+				base = traiettorie[nPunti-1]
+				baseVarColor.append(np.var(base))
+				colorBaseTrack.append(base)
+			print lW1, np.mean(baseVarNoncolor)
+			print lW2, np.mean(baseVarColor)
+			print '\n~~~~~~~~~~~~~~\n'
+			f = plt.figure()
+			a1 = f.add_subplot(2,1,1)	
+			a2 = f.add_subplot(2,1,2)	
+			a1.plot(np.asarray(noncolorBaseTrack).T)
+			a2.plot(np.asarray(colorBaseTrack).T)
+			a1.set_title(lW1)
+			lW = lW1[:-len('__NONcolor_')]
+			plt.savefig(lW1+'mecojoni.pdf')
+			#colorTrack
+			#
+		
+
 	def doComparisons(self):
+		# carico o calcolo le informazioni geometriche del whisker - self.getInfoWhiskers
+		def loadSessionVideos(fname):
+			with open(fname, 'rb') as f:
+				return pickle.load(f)[0][0] # prendo il primo fra i video
+		if self.testType == 'diversiBaffi':
+			if os.path.isfile(self.pickleNameInfoWhiskers):
+				self.loadWhiskersInfo()
+			else:
+				for lW1 in self.listaWhisker1: # le due liste sono ridondanti
+					v = loadSessionVideos(lW1+self.pickleEndTracking)
+					#print v.avi[0:10] 	# NON voglio ricalcolare tutto, ma potrebbero esserci path sbagliati nei pickle. 
+										# li correggo a manazza
+					if v.avi[0:10] == '../ratto1/': # lasciare per cortesia tutta la stringa per capire cosa faccio
+						v.avi = v.avi[10:] 			 # eliminato quel prefisso
+						v.avi = DATA_PATH+'/ratto1/'+v.avi # aggiunto il nuovo prefisso
+					#print lW1+self.pickleEndTracking
+					#print v.avi
+					if v.avi.find('_NONcolor')>-1:
+						self.getInfoWhiskers(v) 	# calcolo le informazioni sul baffo dalla deformata
+				#print self.integrale_lunghezza
+				self.saveWhiskersInfo()
+				self.loadWhiskersInfo()
+
+
+		'''	
 		if not os.path.isfile(self.pickleName):
 			self.saveWhiskers()
 			self.loadWhiskers()
+		'''
 		self.compareWhiskers()
-			
 
 	def getInfoWhiskers(self,video):
 		print 'elaboro la deformata da questo video: ',video.avi
@@ -1090,30 +1207,93 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		self.integrale_lunghezza.append(l)
 		self.integrale_absAngolo.append(s1-angle0)
 
-	def compareWhiskers(self):
+	def compareWhiskers(self,var2compare='transferFunction'): #'spettri'):  #
+		def loadPickle(fname):
+			with open(fname, 'rb') as f:
+				return pickle.load(f)	
+
+		if var2compare == 'spettri': # pickleEndSpectrum indici: lista sessioni - variabili (freq,spectrum) - dimensioni variabile... 
+			lista1 = [loadPickle(f+self.pickleEndSpectrum) for f in self.listaWhisker1]
+			lista2 = [loadPickle(f+self.pickleEndSpectrum) for f in self.listaWhisker2]
+			print len(lista1), len(lista1[0][1]), len(lista1[0][1][0]) 
+			var2compare1 = [l[1][:,:800] for l in lista1]
+			var2compare2 = [l[1][:,:800] for l in lista2]
+		elif var2compare == 'transferFunction': 
+			lista1 = [loadPickle(f+self.pickleEndTransFun) for f in self.listaWhisker1]
+			lista2 = [loadPickle(f+self.pickleEndTransFun) for f in self.listaWhisker2]
+			var2compare1 = [l[0][:,:350] for l in lista1] # fino a 350Hz
+			var2compare2 = [l[0][:,:350] for l in lista2] # fino a 350Hz
+		else: 
+			print 'quale variabile si vuole comparare?'
+			errore
+		self.CORR2_undyed 	= self.comparisonKernel(var2compare1,var2compare1)
+		self.CORR2_dyed 	= self.comparisonKernel(var2compare2,var2compare2)
+		self.CORR2 			= self.comparisonKernel(var2compare1,var2compare2)
+
+
+		# FIXME!!!
+
+		f = plt.figure()
+		a1 = f.add_subplot(2,2,1)
+		a2 = f.add_subplot(2,2,2)
+		a3 = f.add_subplot(2,2,3)
+		a4 = f.add_subplot(2,2,4)
+		a1.imshow(self.CORR2_undyed,aspect='equal', interpolation="nearest",clim=(0,1))
+		a2.imshow(self.CORR2       ,aspect='equal', interpolation="nearest",clim=(0,1))
+		a3.imshow(self.CORR2_dyed  ,aspect='equal', interpolation="nearest",clim=(0,1))
+		a4.plot(([M[i] for M,i in zip(self.CORR2,xrange(0,len(self.CORR2)))]))
+
+		plt.savefig(DATA_PATH+'/elab_video/maialedeh'+var2compare+self.testType+'.pdf')
+		
+
+	def comparisonKernel(self,var1,var2): 
+		N = var1.__len__()
+		CORR2 = np.zeros((N,N))
+		print N
+		for i in xrange(0,var1.__len__()):
+			for j in xrange(0,var2.__len__()): 
+				CORR = np.corrcoef( var1[i].reshape(-1),\
+									var2[j].reshape(-1))[0,1]
+				CORR2[i,j] = np.power(CORR,2) 
+		return CORR2
+
+		'''
 		N = self.ROOT.__len__()
-		self.CORR2 			= np.zeros((N,N))
-		self.CORR2_undyed	= np.zeros((N,N))
-		self.CORR2_dyed		= np.zeros((N,N))
-		self.DIFF_PERC_MAT  = np.ones((N,N))
+		CORR2 			= np.zeros((N,N))
+		CORR2_undyed	= np.zeros((N,N))
+		CORR2_dyed		= np.zeros((N,N))
+		DIFF_PERC_MAT  = np.ones((N,N))
 		for i1 in xrange(0,N):
 			print '\n baffo da confrontare = ', self.ROOT[i1], i1 
-			data_c = data_c_i1  = self.AvSp_col[i1].reshape(-1)
-			data_nc_i1 = self.AvSp_ncol[i1].reshape(-1)
+			data_c = data_c_i1  = var2[i1].reshape(-1)
+			data_nc_i1 = var1[i1].reshape(-1)
 			for i2 in xrange(0,N):
-				data_c_i2  = self.AvSp_col[i2].reshape(-1)
-				data_nc = data_nc_i2 = self.AvSp_ncol[i2].reshape(-1)
+				data_c_i2  = var2[i2].reshape(-1)
+				data_nc = data_nc_i2 = var1[i2].reshape(-1)
 				# CORR2	
-				self.CORR2[i1,i2] = np.power(np.corrcoef(data_c,data_nc)[0,1],2) 	# calcolo il quadrato cosi` la metrica va da 0 ad 1 
-				self.CORR2_undyed[i1,i2] = np.power(np.corrcoef(data_nc_i1,data_nc_i2)[0,1],2) # confronto solo non colorati
-				self.CORR2_dyed[i1,i2]   = np.power(np.corrcoef(data_c_i1,data_c_i2)[0,1],2) # confronto solo colorati
+				CORR2[i1,i2] = np.power(np.corrcoef(data_c,data_nc)[0,1],2) 	# calcolo il quadrato cosi` la metrica va da 0 ad 1 
+				CORR2_undyed[i1,i2] = np.power(np.corrcoef(data_nc_i1,data_nc_i2)[0,1],2) # confronto solo non colorati
+				CORR2_dyed[i1,i2]   = np.power(np.corrcoef(data_c_i1,data_c_i2)[0,1],2) # confronto solo colorati
 				# DIFF_PERC_MAT
 				data_c /= np.max(data_c)
 				data_nc /= np.max(data_nc)
 				norma = np.sqrt(np.sum(np.power(data_c - data_nc,2))) 				# questa e` la norma
-				self.DIFF_PERC_MAT[i1,i2] = norma/np.sqrt(data_c.__len__())			# normalizzo la norma per il suo valore massimo, ovvero sqrt(dim)
+				DIFF_PERC_MAT[i1,i2] = norma/np.sqrt(data_c.__len__())			# normalizzo la norma per il suo valore massimo, ovvero sqrt(dim)
 				print ' ',i2,
+		return (CORR2,CORR2_undyed,CORR2_dyed), DIFF_PERC_MAT # la diff e` obsoleta...
+		'''	
 
+	def saveWhiskersInfo(self):
+		with open(self.pickleNameInfoWhiskers, 'w') as f:
+			pickle.dump([self.integrale_lunghezza,self.integrale_absAngolo], f)	
+
+	def loadWhiskersInfo(self):
+		with open(self.pickleNameInfoWhiskers, 'rb') as f:
+			self.integrale_lunghezza, self.integrale_absAngolo = pickle.load(f)
+
+
+
+	'''
 	def calcoloTransferFunctionMedia(self,Videos):
 		TFS = []
 		for v in self.V: # scorro i video
@@ -1167,6 +1347,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		with open(pickleName,'rb') as f:
 			toLoad = pickle.load(f)
 		return toLoad[idVar]
+	'''
 
 class sessione: # una sessione e` caratterizzata da tanti video
 	def __init__(self,whiskerName,recordingDate,colorNonColor_status,path,ROI,videoThs,videoShow=True,go=True,justPlotRaw=False,overWriteElab=False):	
@@ -1228,6 +1409,9 @@ class sessione: # una sessione e` caratterizzata da tanti video
 				f,Sxx = signal.csd(ingresso,ingresso,2000.0,nperseg=2000,scaling='spectrum')
 				TF = []
 				for t in traiettorie: 
+					if 0: # provo a togliere la media
+						t = t-ingresso
+						t = t-np.mean(t)
 					f,Syy = signal.csd(t,t,2000.0,nperseg=2000,scaling='density')          #scaling='spectrum'
 					f,Syx = signal.csd(t,ingresso,2000.0,nperseg=2000,scaling='density')
 					f,Sxy = signal.csd(ingresso,t,2000.0,nperseg=2000,scaling='density')
@@ -1401,7 +1585,7 @@ class video: # ogni fideo va elaborato
 		Frame = Frame[10:-1,1:-1]   											# tolgo il frame number
 		Frame = cv2.cvtColor(Frame, cv2.COLOR_BGR2GRAY) 						# transformo in scala di grigi
 		Frameb = Frame
-		Frame_blur = cv2.medianBlur(Frameb,3)  											# se filtro l'immagine qui aiuta 
+		Frame_blur = Frameb #cv2.medianBlur(Frameb,3)  											# se filtro l'immagine qui aiuta 
 		Frame_ths = cv2.threshold(Frame_blur,self.videoThs,255,cv2.THRESH_BINARY)[1]  	# soglia e divido 
 		self.puntiBaffoEquidistanziati(self.doROI(Frame_ths),fn,N,3) 					# calcolo i punti sul Frame
 		return Frameb,Frame_blur,Frame_ths
@@ -1416,7 +1600,7 @@ class video: # ogni fideo va elaborato
 		for c in xrange(0,N):
 			self.wst[c][fn] = y[c] # qui sto raccogliendo i dati
 		if 1: # cambiare il frame serve solo per il plot 
-			frame/=10 #3.0 
+			frame/=3 #10.0 
 			for i,j in zip(x,y): 
 				if not np.isnan(j):
 					frame[j][i] = 255
@@ -1505,8 +1689,9 @@ class video: # ogni fideo va elaborato
 		window = (1.0/0.54)*signal.hamming(nCampioni) # coefficiente di ragguaglio = 0.54
 		spettri_abs = np.zeros((nPunti,nCampioni/2)) 
 		spettri_phs = np.zeros((nPunti,nCampioni/2)) 
-		traiettorie = [t-traiettorie[nPunti-1] for t in traiettorie] # osservo dal punto di vista dello shaker
-		traiettorie = [window*(t-np.mean(t)) for t in traiettorie] # finestro usando hamming
+		if 0: # provo a non togliere il riferimento alla base
+			traiettorie = [t-traiettorie[nPunti-1] for t in traiettorie] # osservo dal punto di vista dello shaker
+			traiettorie = [window*(t-np.mean(t)) for t in traiettorie] # finestro usando hamming
 		return self.fft_whisker(traiettorie,nCampioni)
 
 	def fft_whisker(self,x,Np): 
@@ -1536,7 +1721,7 @@ if __name__ == '__main__':
 
 	# ---- PRE - PROCESSING ---- #
 	# TRACKING 11 MAGGIO -- c31 nel tempo -- 
-	#sessione('c31','11May_hour1','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour1_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
+	#sessione('c31','11May_hour1','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour1_/',(331, 625, 120, 245),32,True)   	# tracking molto bello
 	#sessione('c31','11May_hour2','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour2_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
 	#sessione('c31','11May_hour3','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour3_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
 	#sessione('c31','11May_hour4','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour4_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
@@ -1545,8 +1730,8 @@ if __name__ == '__main__':
 	#sessione('c31','11May_hour7','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour7_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
 	#sessione('c31','11May_hour8','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour8_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
 	# TRACKING 12 MAGGIO
-	#sessione('a11','12May','_NONcolor_',DATA_PATH+'/ratto1/a1_1/',(280, 630, 0, 200),29,True)
-	#sessione('a11','12May','_color_',DATA_PATH+'/ratto1/a1_1/',(280, 625, 0, 200),33,True) 		# tracking molto bello
+	sessione('a11','12May','_NONcolor_',DATA_PATH+'/ratto1/a1_1/',(280, 630, 0, 200),32,True) #,True,False,True)
+	#sessione('a11','12May','_color_',DATA_PATH+'/ratto1/a1_1/',(280, 625, 0, 200),33,True,True,False,True) 		# tracking molto bello
 	#sessione('a31','12May','_NONcolor_',DATA_PATH+'/ratto1/a3_1/',(450, 629, 145, 210),32,True)
 	#sessione('a31','12May','_color_',DATA_PATH+'/ratto1/a3_1/',(450, 638, 145, 230),32,True)  		# tracking molto bello
 	#sessione('a41','12May','_NONcolor_',DATA_PATH+'/ratto1/a4_1/',(542, 634, 0, 245),29,True)
@@ -1590,12 +1775,12 @@ if __name__ == '__main__':
 	#sessione('c12','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c1_2/',(270+100, 620+100, 100, 240),29,True,True,False)
 	#sessione('c22','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c2_2/',(220+100, 615+100, 0, 240),32,True,True,False)
 	#sessione('c41','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c4_1/',(390+100, 625+100, 100, 200),32,True,True,False)
-	#sessione('d11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d1_1/',(90+100, 620+100, 0, 200),32,True,True,True)
+	#sessione('d11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d1_1/',(90+100, 620+100, 0, 200),32,True,True,False)
 	#sessione('d22','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d2_2/',(210+100, 610+100, 0, 200),29,True,True,False)
 	
 	#TRACKING 2 AGOSTO
-	#sessione('c31','2Ago_senzaSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/senzaSmaltoTrasparente/',(300, 660, 50, 205),35,True,True,True) 
-	#sessione('c31','2Ago_conSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/conSmaltoTrasparente/',(260, 625, 50, 205),35,True,True,True) 
+	#sessione('c31','2Ago_senzaSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/senzaSmaltoTrasparente/',(300, 660, 50, 205),35,True,True,False) 
+	#sessione('c31','2Ago_conSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/conSmaltoTrasparente/',(260, 625, 50, 205),35,True,True,False) 
 
 	#TRACKING ACCIAIO 13 APRILE
 	#sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
@@ -1607,10 +1792,16 @@ if __name__ == '__main__':
 	#a = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 	#a.calcoloTransferFunction(True)
 
+	# CONTROLLO BASE STIMOLO PER OGNI WHISKER
+	#a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
+	#a.checkBaseTracking()
+	
+
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
-	#confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
+	if 1:
+		confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
+		confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 	#confrontoAddestramento()						
 	#creoSpettriBaffi()								
 	#stampo_lunghezza_whiskers()					
@@ -1618,7 +1809,6 @@ if __name__ == '__main__':
 	#simulatedAndSetup() 							
 	#creoImageProcessing_Stacked()					
 	print 'stampo per far fare qualcosa al main'
-
 
 
 
