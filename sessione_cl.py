@@ -1207,7 +1207,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		self.integrale_lunghezza.append(l)
 		self.integrale_absAngolo.append(s1-angle0)
 
-	def compareWhiskers(self,var2compare='transferFunction'): #'spettri'):  #
+	def compareWhiskers(self,var2compare='spettri'):  #
 		def loadPickle(fname):
 			with open(fname, 'rb') as f:
 				return pickle.load(f)	
@@ -1231,8 +1231,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		self.CORR2 			= self.comparisonKernel(var2compare1,var2compare2)
 
 
-		# FIXME!!!
-
+	def plotComparisons(self,var2compare='spettri'): 
 		f = plt.figure()
 		a1 = f.add_subplot(2,2,1)
 		a2 = f.add_subplot(2,2,2)
@@ -1689,7 +1688,7 @@ class video: # ogni fideo va elaborato
 		window = (1.0/0.54)*signal.hamming(nCampioni) # coefficiente di ragguaglio = 0.54
 		spettri_abs = np.zeros((nPunti,nCampioni/2)) 
 		spettri_phs = np.zeros((nPunti,nCampioni/2)) 
-		if 0: # provo a non togliere il riferimento alla base
+		if 1: # provo a non togliere il riferimento alla base
 			traiettorie = [t-traiettorie[nPunti-1] for t in traiettorie] # osservo dal punto di vista dello shaker
 			traiettorie = [window*(t-np.mean(t)) for t in traiettorie] # finestro usando hamming
 		return self.fft_whisker(traiettorie,nCampioni)
@@ -1730,8 +1729,8 @@ if __name__ == '__main__':
 	#sessione('c31','11May_hour7','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour7_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
 	#sessione('c31','11May_hour8','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour8_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
 	# TRACKING 12 MAGGIO
-	sessione('a11','12May','_NONcolor_',DATA_PATH+'/ratto1/a1_1/',(280, 630, 0, 200),32,True) #,True,False,True)
-	#sessione('a11','12May','_color_',DATA_PATH+'/ratto1/a1_1/',(280, 625, 0, 200),33,True,True,False,True) 		# tracking molto bello
+	#sessione('a11','12May','_NONcolor_',DATA_PATH+'/ratto1/a1_1/',(280, 630, 0, 200),32,True) #,True,False,True)
+	#sessione('a11','12May','_color_',DATA_PATH+'/ratto1/a1_1/',(280, 625, 0, 200),33,True) #,True,False,True) 		# tracking molto bello
 	#sessione('a31','12May','_NONcolor_',DATA_PATH+'/ratto1/a3_1/',(450, 629, 145, 210),32,True)
 	#sessione('a31','12May','_color_',DATA_PATH+'/ratto1/a3_1/',(450, 638, 145, 230),32,True)  		# tracking molto bello
 	#sessione('a41','12May','_NONcolor_',DATA_PATH+'/ratto1/a4_1/',(542, 634, 0, 245),29,True)
@@ -1800,8 +1799,12 @@ if __name__ == '__main__':
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
 	if 1:
-		confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
-		confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
+		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
+		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
+		db.compareWhiskers('spettri')
+		db.plotComparisons('spettri')
+		db.compareWhiskers('transferFunction')
+		db.plotComparisons('transferFunction')
 	#confrontoAddestramento()						
 	#creoSpettriBaffi()								
 	#stampo_lunghezza_whiskers()					
