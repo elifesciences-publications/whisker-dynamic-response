@@ -975,6 +975,9 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		self.pickleNameInfoWhiskers = DATA_PATH+'/elab_video/'+self.completeName+'_infoWhiskers.pickle'
 		self.integrale_lunghezza = []
 		self.integrale_absAngolo = []
+		self.angle010 = [] 
+		self.angle0100 = [] 
+		self.deflessione = []
 
 		#if os.path.isfile(self.pickleName):
 		#	print 'il file '+self.pickleName+' esiste'
@@ -983,8 +986,8 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		# modifiche al volo di variabili che non devo precalcolare
 		if self.testType == 'diversiBaffi':
 			self.listaWhisker = [\
-								#DATA_PATH+'/elab_video/a11_12May_',\
-								#DATA_PATH+'/elab_video/c11_12May_',\
+								DATA_PATH+'/elab_video/a11_12May_',\
+								DATA_PATH+'/elab_video/c11_12May_',\
 								DATA_PATH+'/elab_video/c12_12May_',\
 								DATA_PATH+'/elab_video/c22_12May_',\
 								DATA_PATH+'/elab_video/d11_12May_',\
@@ -1117,6 +1120,161 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		if stampoFigura:
 			self.doComparisons()
 
+	def checkTipTracking(self,TrialNumber=5,baffo='a11'): # controllo il baffo a11
+		def loadTracking(fname): 
+			with open(fname, 'rb') as f:
+				return pickle.load(f)[0]
+		def evalFFT(x):
+			nCampioni = len(x)
+			window = (1.0/0.54)*signal.hamming(nCampioni) # coefficiente di ragguaglio = 0.54
+			x = window*(x-np.mean(x))
+			X = fft.fft(x)
+			return (2.0/nCampioni)*np.abs(X[0:nCampioni/2])
+			
+		trovato_baffo = False
+		for lW1,lW2 in zip(self.listaWhisker1,self.listaWhisker2): # non color, color
+			if lW1.find(baffo)>=0:
+				trovato_baffo = True
+				break
+		if trovato_baffo:
+			noncolorTrack = loadTracking(lW1+self.pickleEndTracking)
+			colorTrack    = loadTracking(lW2+self.pickleEndTracking)
+		for k,v1,v2 in zip(xrange(0,len(colorTrack)),noncolorTrack,colorTrack): # scorro i video
+			if k==TrialNumber:
+				traiettorie,nPunti,nCampioni = (v1.wst,v1.wst.__len__(),v1.wst[0].__len__())
+				tipNc  = traiettorie[0]
+				baseNc = traiettorie[99]
+				TIPNc  = evalFFT(tipNc)
+				traiettorie,nPunti,nCampioni = (v2.wst,v2.wst.__len__(),v2.wst[0].__len__())
+				tipC   = traiettorie[0]
+				baseC  = traiettorie[99]
+				TIPC   = evalFFT(tipC)
+				
+		f  = plt.figure()
+		a1 = f.add_subplot(1,2,1) 
+		a2 = f.add_subplot(1,2,2) 
+		#a1.plot(baseNc)
+		#a1.plot(baseC)
+		a1.plot(tipNc)
+		a1.plot(tipC)
+		a2.plot(TIPNc)
+		a2.plot(TIPC)
+		plt.show() 
+
+
+ 
+	def checkTF(self,TrialNumber=5,baffo='a11'): # controllo il baffo a11
+		def getBaseThisWhisker(baffo,TrialNumber): 
+			for lW1 in self.listaWhisker1: 
+				if lW1.find(baffo)>=0:
+					break
+			noncolorTrack = loadTracking(lW1+self.pickleEndTracking)
+			for k,v1,v2 in zip(xrange(0,len(colorTrack)),noncolorTrack,colorTrack): # scorro i video
+				if k==TrialNumber:
+					traiettorie,nPunti,nCampioni = (v1.wst,v1.wst.__len__(),v1.wst[0].__len__())
+					base = traiettorie[nPunti-1] 
+			return base
+			
+		def evalFFT(x):
+			nCampioni = len(x)
+			window = (1.0/0.54)*signal.hamming(nCampioni) # coefficiente di ragguaglio = 0.54
+			x = window*(x-np.mean(x))
+			X = fft.fft(x)
+			return (2.0/nCampioni)*np.abs(X[0:nCampioni/2])
+		def evalTF(v,newBase=None):
+			traiettorie,nPunti,nCampioni = (v.wst,v.wst.__len__(),v.wst[0].__len__())
+			base = ingresso = traiettorie[nPunti-1] 
+			tip  = traiettorie[0]
+			if newBase is not None:
+				base = ingresso = newBase
+			Ingresso = (2.0/nCampioni)*np.abs(fft.fft(ingresso))
+			f,Sxx = signal.csd(ingresso,ingresso,2000.0,nperseg=2000,scaling='spectrum')
+			TF = []
+			for t in traiettorie: 
+				#t = t-np.mean(t)
+				f,Syy = signal.csd(t,t,2000.0,nperseg=2000,scaling='density')          #scaling='spectrum'
+				f,Syx = signal.csd(t,ingresso,2000.0,nperseg=2000,scaling='density')
+				f,Sxy = signal.csd(ingresso,t,2000.0,nperseg=2000,scaling='density')
+				H1 = [ syx/sxx  for sxx,syx in zip(Sxx,Syx)]
+				H2 = [ syy/sxy  for syy,sxy in zip(Syy,Sxy)]
+				H = [ np.sqrt(h1*h2) for h1,h2 in zip(H1,H2)]
+				TF.append(np.asarray(np.abs(H)))
+			return TF,base,tip
+
+		def loadTracking(fname): 
+			with open(fname, 'rb') as f:
+				return pickle.load(f)[0]
+
+		def loadTF(fname): 
+			with open(fname, 'rb') as f:
+				return pickle.load(f)[0]
+		trovato = False
+		for lW1,lW2 in zip(self.listaWhisker1,self.listaWhisker2): 
+			if lW1.find(baffo)>=0:
+				trovato = True
+				break
+		if trovato:
+			if 0: #carico la TF
+				TF_NC = loadTF(lW1+self.pickleEndTransFun)
+				TF_C  = loadTF(lW2+self.pickleEndTransFun)
+			else: # computo la TF o lo spettro
+				noncolorTrack = loadTracking(lW1+self.pickleEndTracking)
+				colorTrack    = loadTracking(lW2+self.pickleEndTracking)
+				for k,v1,v2 in zip(xrange(0,len(colorTrack)),noncolorTrack,colorTrack): # scorro i video
+					if k==TrialNumber:
+						if 0: # transfer function
+							TF_NC,base,tip = evalTF(v1)
+							base_c31 = getBaseThisWhisker('c31',TrialNumber)
+							base_baffo = getBaseThisWhisker(baffo,TrialNumber)
+							for b in [base_c31,base_baffo]:
+								b -= np.mean(b)
+							TF_C,base2,tip2  = evalTF(v1,base_c31)
+						else: # spettro
+							TF_NC = []
+							TF_C  = []
+							traiettorie,nPunti,nCampioni = (v1.wst,v1.wst.__len__(),v1.wst[0].__len__())
+							base = traiettorie[nPunti-1] 
+							tip  = traiettorie[0]
+							for t in traiettorie: 
+								T = evalFFT(t)
+								TF_NC.append(T)
+							traiettorie,nPunti,nCampioni = (v2.wst,v2.wst.__len__(),v2.wst[0].__len__())
+							base2 = traiettorie[nPunti-1] 
+							tip2  = traiettorie[0]
+							TIP = evalFFT(tip)
+							TIP2 = evalFFT(tip2)
+							for t in traiettorie: 
+								T = evalFFT(t)
+								TF_C.append(T)
+							TF_NC = np.asarray(TF_NC)
+							TF_C  = np.asarray(TF_C)
+							
+				
+			
+			f = plt.figure()
+			a1 = f.add_subplot(1,2,1)
+			#a2 = f.add_subplot(1,3,2)
+			a3 = f.add_subplot(1,2,2)
+			#a21 = f.add_subplot(2,1,1)
+			#a22 = f.add_subplot(2,1,2)
+			a1.imshow(np.log10(TF_NC),aspect='auto', interpolation="nearest",cmap='RdBu_r')#'OrRd')
+			#a2.imshow(np.log10(TF_C) ,aspect='auto', interpolation="nearest",cmap='RdBu_r')#'OrRd')
+			a3.plot(TIP  ,'b')
+			a3.plot(TIP2 ,'r')
+			#a3.plot(base ,'b')
+			#a3.plot(base2,'r')
+			#a3.plot(base-base2)
+			#a21.plot(TF_NC[99,:]  ,'b')	
+			#a21.plot(TF_C[99,:]   ,'r')	
+			#a22.plot(TF_NC[0,:]   ,'b')	
+			#a22.plot(TF_C[0,:]    ,'r')	
+			
+			
+			plt.show()
+		else: 
+			print 'baffo non pervenuto'
+			
+				
 
 	def saveTipTF(self): # per Ale per fare l'ottimizzazione del modello in COMSOL
 		def loadTF(fname): 
@@ -1131,7 +1289,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		def loadTracking(fname): 
 			with open(fname, 'rb') as f:
 				return pickle.load(f)[0]
-		for lW1,lW2 in zip(self.listaWhisker1,self.listaWhisker2): # non color
+		for lW1,lW2 in zip(self.listaWhisker1,self.listaWhisker2): # non color, color
 			noncolorTrack = loadTracking(lW1+self.pickleEndTracking)
 			colorTrack    = loadTracking(lW2+self.pickleEndTracking)
 			noncolorBaseTrack = []
@@ -1160,8 +1318,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			plt.savefig(lW1+'mecojoni.pdf')
 			#colorTrack
 			#
-		
-
+	
 	def doComparisons(self):
 		# carico o calcolo le informazioni geometriche del whisker - self.getInfoWhiskers
 		def loadSessionVideos(fname):
@@ -1206,16 +1363,32 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		X,Y = (X/px_mm, Y/px_mm)
 		l=0  # integrale lunghezza
 		s1=0 # integrale angolo normalizzato
+		deflessione = []
 		for i in xrange(1,X.__len__()):
 			x, xp = (X[i],X[i-1])
 			y, yp = (Y[i],Y[i-1])
 			dwhisk = np.sqrt(np.power(x-xp,2)+np.power(y-yp,2))
 			angle = np.arcsin((y-yp)/dwhisk)*dwhisk # e se lo pesassi con il delta baffo?
+			deflessione.append(angle)
 			l += dwhisk 
 			s1 += np.abs(angle)
-		angle0 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
+		def distanza2Punti(p1,p2): # clear what it is...
+			x1,y1 = p1
+			x2,y2 = p2
+			x12 = np.power(x2-x1,2)
+			y12 = np.power(y2-y1,2)
+			return np.sqrt(x12+y12) 
+		def angoloMedio(d,dy): # d is distance, dy is the difference between y coordinates of two points
+			return np.arcsin(dy/d)*(180./np.pi) # in degree
+		angle010  = angoloMedio(distanza2Punti((X[90],Y[90]),(X[99],Y[99])), Y[99]-Y[90])	
+		angle0100 = angoloMedio(distanza2Punti((X[0] ,Y[0]) ,(X[99],Y[99])), Y[99]-Y[0])	
+		#angle010 = np.arcsin((Y[10]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
+		#angle0100 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
+		self.angle010.append(angle010)
+		self.angle0100.append(angle0100)
+		self.deflessione.append(deflessione)
 		self.integrale_lunghezza.append(l)
-		self.integrale_absAngolo.append(s1-angle0)
+		self.integrale_absAngolo.append(s1-self.angle0100)
 
 	def compareWhiskers(self,var2compare='spettri'):  #
 		def loadPickle(fname):
@@ -1292,71 +1465,19 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		return (CORR2,CORR2_undyed,CORR2_dyed), DIFF_PERC_MAT # la diff e` obsoleta...
 		'''	
 
+
+	def infoWhiskerDisplay(self): 
+		d = [d[0] for d in self.deflessione]
+		for i,j,k in zip(self.ROOT,self.angle0100,self.angle010):
+			print i,j,k
+
 	def saveWhiskersInfo(self):
 		with open(self.pickleNameInfoWhiskers, 'w') as f:
-			pickle.dump([self.integrale_lunghezza,self.integrale_absAngolo], f)	
+			pickle.dump([self.integrale_lunghezza,self.integrale_absAngolo,self.angle010,self.angle0100,self.deflessione], f)	
 
 	def loadWhiskersInfo(self):
 		with open(self.pickleNameInfoWhiskers, 'rb') as f:
-			self.integrale_lunghezza, self.integrale_absAngolo = pickle.load(f)
-
-
-
-	'''
-	def calcoloTransferFunctionMedia(self,Videos):
-		TFS = []
-		for v in self.V: # scorro i video
-			traiettorie,nPunti,nCampioni = (v.wst,v.wst.__len__(),v.wst[0].__len__())
-			ingresso = traiettorie[nPunti-1] 
-			Ingresso = (2.0/nCampioni)*np.abs(fft.fft(ingresso))
-			f,Sxx = signal.csd(ingresso,ingresso,2000.0,nperseg=2000,scaling='spectrum')
-			TF = []
-			for t in traiettorie: 
-				f,Syy = signal.csd(t,t,2000.0,nperseg=2000,scaling='density')          #scaling='spectrum'
-				f,Syx = signal.csd(t,ingresso,2000.0,nperseg=2000,scaling='density')
-				f,Sxy = signal.csd(ingresso,t,2000.0,nperseg=2000,scaling='density')
-				H1 = [ syx/sxx  for sxx,syx in zip(Sxx,Syx)]
-				H2 = [ syy/sxy  for syy,sxy in zip(Syy,Sxy)]
-				H = [ np.sqrt(h1*h2) for h1,h2 in zip(H1,H2)]
-				TF.append(np.abs(H))
-			TFS.append(TF)
-		return np.mean(TFS,axis=0)
-
-	def calcoloSpettroMedio(self,Videos):
-		spettri = []
-		for v,i in zip(Videos,xrange(0,Videos.__len__())):
-			# gia che ci sono prendiamo i dati sul primo frame
-			#print v.wst.__len__()   	# 100
-			#print v.wst[0].__len__()	# 4500
-			#v.wst[:,0]	# <-- primo frame 
-			if self.doInfoWhiskersFig:
-				if i==0 and v.avi.find('_NONcolor')>-1:
-					self.getInfoWhiskers(v) 	# calcolo le informazioni sul baffo dalla deformata
-			spettri.append(v.WSF) 
-		return np.mean(spettri,axis=0)[0:-1,0:1400]
-
-	def saveWhiskers(self):
-		self.AvSp_ncol = []
-		self.AvSp_col = []
-		for lW1,lW2 in zip(self.listaWhisker1,self.listaWhisker2):
-			SM = self.calcoloSpettroMedio(self.getOneOnlyVar(lW1))
-			self.AvSp_ncol.append(SM)
-			if lW1 == lW2: # XXX questa cosa succede per come e` scritto il codice per self.testType == 'diversiTempi'
-				self.AvSp_col.append(SM)
-			else:
-				self.AvSp_col.append(self.calcoloSpettroMedio(self.getOneOnlyVar(lW2)))
-		with open(self.pickleName, 'w') as f:
-			pickle.dump([self.ROOT, self.AvSp_col, self.AvSp_ncol, self.integrale_lunghezza, self.integrale_absAngolo, self.group1, self.group2, self.group3, self.group4], f)	
-
-	def loadWhiskers(self):
-		with open(self.pickleName, 'rb') as f:
-			self.ROOT, self.AvSp_col, self.AvSp_ncol, self.integrale_lunghezza, self.integrale_absAngolo, self.group1, self.group2, self.group3, self.group4 = pickle.load(f)
-
-	def getOneOnlyVar(self,pickleName,idVar=0):
-		with open(pickleName,'rb') as f:
-			toLoad = pickle.load(f)
-		return toLoad[idVar]
-	'''
+			self.integrale_lunghezza, self.integrale_absAngolo,self.angle010,self.angle0100,self.deflessione = pickle.load(f)
 
 class sessione: # una sessione e` caratterizzata da tanti video
 	def __init__(self,whiskerName,recordingDate,colorNonColor_status,path,ROI,videoThs,videoShow=True,go=True,justPlotRaw=False,overWriteElab=False):	
@@ -1811,10 +1932,12 @@ if __name__ == '__main__':
 	#a.calcoloTransferFunction(True)
 
 	# CONTROLLO BASE STIMOLO PER OGNI WHISKER E RISPOSTA IN FREQUENZA DELLA PUNTA
-	#a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
+	a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
+	a.checkTF(6)
+	#a.checkTipTracking() 
 	#a.checkBaseTracking()
 	#a.saveTipTF() # per Ale per fare l'ottimizzazione del modello in COMSOL
-	funTemporaneoConfrontoBaffiSimulatiTraLoro() #FIXME TODO mettere nelle figure opportunamente
+	#funTemporaneoConfrontoBaffiSimulatiTraLoro() # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
 	
 
 	# ---- POST - PROCESSING ---- #
@@ -1822,6 +1945,7 @@ if __name__ == '__main__':
 	if 0:
 		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
+		db.infoWhiskerDisplay()
 		db.compareWhiskers('spettri')
 		db.plotComparisons('spettri')
 		db.compareWhiskers('transferFunction')
