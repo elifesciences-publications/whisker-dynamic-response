@@ -986,8 +986,8 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		# modifiche al volo di variabili che non devo precalcolare
 		if self.testType == 'diversiBaffi':
 			self.listaWhisker = [\
-								DATA_PATH+'/elab_video/a11_12May_',\
-								DATA_PATH+'/elab_video/c11_12May_',\
+								#DATA_PATH+'/elab_video/a11_12May_',\
+								#DATA_PATH+'/elab_video/c11_12May_',\
 								DATA_PATH+'/elab_video/c12_12May_',\
 								DATA_PATH+'/elab_video/c22_12May_',\
 								DATA_PATH+'/elab_video/d11_12May_',\
@@ -1415,15 +1415,19 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 
 
 	def plotComparisons(self,var2compare='spettri'): 
-		f = plt.figure()
+		f = plt.figure(figsize=(10,10))
 		a1 = f.add_subplot(2,2,1)
 		a2 = f.add_subplot(2,2,2)
 		a3 = f.add_subplot(2,2,3)
 		a4 = f.add_subplot(2,2,4)
 		a1.imshow(self.CORR2_undyed,aspect='equal', interpolation="nearest",clim=(0,1))
+		a1.set_title('undyed vs undyed')
 		a2.imshow(self.CORR2       ,aspect='equal', interpolation="nearest",clim=(0,1))
+		a2.set_title('undyed vs dyed')
 		a3.imshow(self.CORR2_dyed  ,aspect='equal', interpolation="nearest",clim=(0,1))
+		a3.set_title('dyed vs dyed')
 		a4.plot(([M[i] for M,i in zip(self.CORR2,xrange(0,len(self.CORR2)))]))
+		a4.set_title('color effect')
 
 		plt.savefig(DATA_PATH+'/elab_video/maialedeh'+var2compare+self.testType+'.pdf')
 		
@@ -1577,7 +1581,14 @@ class sessione: # una sessione e` caratterizzata da tanti video
 			ff,a1 = plt.subplots(1)
 			a1.imshow(np.log10(self.spettro_medio),aspect='auto', interpolation="nearest")	
 			a1.set_xlabel('Freq [Hz]')
-			#a1.set_title(self.id_name)
+			V = [0,200,400,600,800,1000]
+			i = []
+			for v in V:
+				print v
+				m = [np.abs(f-v) for f in self.freq]
+				i.append(m.index(min(m)))
+			a1.set_xticks(i)
+			a1.set_xticklabels(V)
 			plt.savefig(self.spettroMedName)
 
 	def resolvePath(self,path):	# trovo gli della sessione richiesta
@@ -1842,8 +1853,7 @@ def funTemporaneoConfrontoBaffiSimulatiTraLoro(): #FIXME TODO mettere nelle figu
 	a1 = f.add_subplot(1,1,1)
 	cax1 = a1.imshow(CORR2,aspect='equal', interpolation="nearest",clim=(0,1))	
 	cbar1 = f.colorbar(cax1,ax=a1)
-	plt.show()
-
+	plt.savefig(DATA_PATH+'elab_video/simulatedWhisker_byAle/comparisonSimWhiskers_CORR2_visualInspection.pdf')
 
 # i test vanno qui
 if __name__ == '__main__': 
@@ -1932,17 +1942,17 @@ if __name__ == '__main__':
 	#a.calcoloTransferFunction(True)
 
 	# CONTROLLO BASE STIMOLO PER OGNI WHISKER E RISPOSTA IN FREQUENZA DELLA PUNTA
-	a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
-	a.checkTF(6)
+	#a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
+	#a.checkTF(6)
 	#a.checkTipTracking() 
 	#a.checkBaseTracking()
 	#a.saveTipTF() # per Ale per fare l'ottimizzazione del modello in COMSOL
-	#funTemporaneoConfrontoBaffiSimulatiTraLoro() # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
+	funTemporaneoConfrontoBaffiSimulatiTraLoro() # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
 	
 
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	if 0:
+	if 1:
 		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 		db.infoWhiskerDisplay()
