@@ -1102,7 +1102,6 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		self.pickleEndSpectrum		= '_spectrum.pickle'
 		self.pickleEndTransFun		= '_transferFunction.pickle'
 		self.pickleEndTransFunTip	= '_transferFunctionTip.txt' # per Ale per fare l'ottimizzazione del modello in COMSOL
-		self.pickleNameInfoWhiskers = DATA_PATH+'/elab_video/'+self.completeName+'_infoWhiskers.pickle'
 		self.integrale_lunghezza = []
 		self.integrale_absAngolo = []
 		self.angle010 = [] 
@@ -1248,7 +1247,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			return
 
 		if doCompare:
-			self.doComparisons()
+			self.compareWhiskers()
 
 	def checkTipTracking(self,TrialNumber=5,baffo='a11'): # controllo il baffo a11
 		def loadTracking(fname): 
@@ -1451,79 +1450,6 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			#colorTrack
 			#
 	
-	def doComparisons(self):
-		# carico o calcolo le informazioni geometriche del whisker - self.getInfoWhiskers
-		def loadSessionVideos(fname):
-			with open(fname, 'rb') as f:
-				return pickle.load(f)[0][0] # prendo il primo fra i video
-		if self.testType == 'diversiBaffi':
-			if 0: #os.path.isfile(self.pickleNameInfoWhiskers):
-				self.loadWhiskersInfo()
-			else:
-				for lW1 in self.listaWhisker1: # le due liste sono ridondanti
-					v = loadSessionVideos(lW1+self.pickleEndTracking)
-					print v.avi[0:10] 	# NON voglio ricalcolare tutto, ma potrebbero esserci path sbagliati nei pickle. 
-										# li correggo a manazza
-					if v.avi[0:10] == '../ratto1/': # lasciare per cortesia tutta la stringa per capire cosa faccio
-						v.avi = v.avi[10:] 			 # eliminato quel prefisso
-						v.avi = DATA_PATH+'/ratto1/'+v.avi # aggiunto il nuovo prefisso
-					print v.avi 	
-					#print lW1+self.pickleEndTracking
-					#print v.avi
-					#if v.avi.find('_NONcolor')>-1:
-					#	self.getInfoWhiskers(v) 	# calcolo le informazioni sul baffo dalla deformata
-				#print self.integrale_lunghezza
-				cristo
-				self.saveWhiskersInfo()
-				self.loadWhiskersInfo()
-
-
-		'''	
-		if not os.path.isfile(self.pickleName):
-			self.saveWhiskers()
-			self.loadWhiskers()
-		'''
-		self.compareWhiskers()
-
-	def getInfoWhiskers(self,video):
-		print 'elaboro la deformata da questo video: ',video.avi
-		X,Y = video.getBeamShape()
-		nans, x = np.isnan(X), lambda z: z.nonzero()[0]
-		X[nans] = np.interp(x(nans), x(~nans), X[~nans])	
-		nans, x = np.isnan(Y), lambda z: z.nonzero()[0]
-		Y[nans] = np.interp(x(nans), x(~nans), Y[~nans])	
-		px_mm = 6.9 # calcolato con matlab, inquadratura fissa
-					# 1 mm sono circa 7 pixel
-		X,Y = (X/px_mm, Y/px_mm)
-		l=0  # integrale lunghezza
-		s1=0 # integrale angolo normalizzato
-		deflessione = []
-		for i in xrange(1,X.__len__()):
-			x, xp = (X[i],X[i-1])
-			y, yp = (Y[i],Y[i-1])
-			dwhisk = np.sqrt(np.power(x-xp,2)+np.power(y-yp,2))
-			angle = np.arcsin((y-yp)/dwhisk)*dwhisk # e se lo pesassi con il delta baffo?
-			deflessione.append(angle)
-			l += dwhisk 
-			s1 += np.abs(angle)
-		def distanza2Punti(p1,p2): # clear what it is...
-			x1,y1 = p1
-			x2,y2 = p2
-			x12 = np.power(x2-x1,2)
-			y12 = np.power(y2-y1,2)
-			return np.sqrt(x12+y12) 
-		def angoloMedio(d,dy): # d is distance, dy is the difference between y coordinates of two points
-			return np.arcsin(dy/d)*(180./np.pi) # in degree
-		angle010  = angoloMedio(distanza2Punti((X[90],Y[90]),(X[99],Y[99])), Y[99]-Y[90])	
-		angle0100 = angoloMedio(distanza2Punti((X[0] ,Y[0]) ,(X[99],Y[99])), Y[99]-Y[0])	
-		#angle010 = np.arcsin((Y[10]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
-		#angle0100 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
-		self.angle010.append(angle010)
-		self.angle0100.append(angle0100)
-		self.deflessione.append(deflessione)
-		self.integrale_lunghezza.append(l)
-		self.integrale_absAngolo.append(s1-self.angle0100)
-
 	def compareWhiskers(self,var2compare='spettri'):  #
 		def loadPickle(fname):
 			with open(fname, 'rb') as f:
@@ -1603,19 +1529,6 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		return (CORR2,CORR2_undyed,CORR2_dyed), DIFF_PERC_MAT # la diff e` obsoleta...
 		'''	
 
-
-	def infoWhiskerDisplay(self): 
-		d = [d[0] for d in self.deflessione]
-		for i,j,k in zip(self.ROOT,self.angle0100,self.angle010):
-			print i,j,k
-
-	def saveWhiskersInfo(self):
-		with open(self.pickleNameInfoWhiskers, 'w') as f:
-			pickle.dump([self.integrale_lunghezza,self.integrale_absAngolo,self.angle010,self.angle0100,self.deflessione], f)	
-
-	def loadWhiskersInfo(self):
-		with open(self.pickleNameInfoWhiskers, 'rb') as f:
-			self.integrale_lunghezza, self.integrale_absAngolo,self.angle010,self.angle0100,self.deflessione = pickle.load(f)
 
 class sessione: # una sessione e` caratterizzata da tanti video
 	def __init__(self,whiskerName,recordingDate,colorNonColor_status,path,ROI,videoThs,videoShow=True,go=True,justPlotRaw=False,overWriteElab=False):	
@@ -2089,17 +2002,16 @@ if __name__ == '__main__':
 
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	if 0:
+	if 1:
 		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
-		db.infoWhiskerDisplay()
 		db.compareWhiskers('spettri')
 		db.plotComparisons('spettri')
 		db.compareWhiskers('transferFunction')
 		db.plotComparisons('transferFunction')
 	#confrontoAddestramento()						
 	#creoSpettriBaffi()								
-	stampo_lunghezza_whiskers()					
+	#stampo_lunghezza_whiskers()					
 	#mergeComparisonsResults()						
 	#simulatedAndSetup() 							
 	#creoImageProcessing_Stacked()					
