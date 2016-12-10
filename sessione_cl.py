@@ -259,20 +259,152 @@ class creoImageProcessing_Stacked(): #
 
 class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo a video
 	def __init__(self): 
-		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)
-		for w,l in zip(a.ROOT,a.integrale_lunghezza):
-			print w, ' : ', l
+		self.FILEs = [\
+				DATA_PATH+"/ratto1/a1_1/0951_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/a3_1/1011_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/a4_1/1056_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/b1_1/1033_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/c1_1/1251_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/c1_2/0215_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/c2_1/0114_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/c2_2/0133_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/c3_1/11May2016/1054_110516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/c4_1/0236_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/c5_1/0442_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/d1_1/0504_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/d2_1/0525_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/d2_2/0547_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/d3_1/0625_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/delta_1/0847_120516_NONcolor_trial1.avi",
+				DATA_PATH+"/ratto1/gamma_1/1012_120516_NONcolor_trial1.avi"]
+		self.NAMEs = [\
+			"a1_1",
+			"a3_1",
+			"a4_1",
+			"b1_1",
+			"c1_1",
+			"c1_2",
+			"c2_1",
+			"c2_2",
+			"c3_1",
+			"c4_1",
+			"c5_1",
+			"d1_1",
+			"d2_1",
+			"d2_2",
+			"d3_1",
+			"delta_1",
+			"gamma_1"
+				]
+		self.ROIs = [\
+				# ordine imshow come y-x
+				(315,621,64,193), # a11
+				(490,630,173,210), # a31
+				(565,636,137,196), # a41
+				(453,625,186,239), # b11
+				(217,638,172,206), # c11
+				(334,644,98,213), # c12
+				(393,623,149,220), # c21
+				(272,664,101,162), # c22
+				(348,626,177,212), # c31
+				(450,643,106,138), # c41
+				(500,635,185,204), # c51
+				(246,642,122,185), # d11
+				(336,629,115,192), # d21
+				(360,637,91,165), # d22
+				(427,624,166,238), # d31
+				(348,741,10,238), # delta1
+				(337,755,123,173), # gamma1
+				]
+		self.dasistemare()
+	def dasistemare(self):
+		FILEs = self.FILEs
+		NAMEs = self.NAMEs
+		ROIs = self.ROIs
+		px_mm = 6.9 # calcolato con matlab, inquadratura fissa
+					# 1 mm sono circa 7 pixel
+		lunghezza = []
+		somma_angolo = []
+		V = video('pippo',(0,0,0,0),0,False,False,False) # mi servono due metodi
+		for filen,nameW,roi in zip(FILEs,NAMEs,ROIs):
+			# scelgo i dati
+			cap = cv2.VideoCapture(filen)
+			name = DATA_PATH+'/elab_video/'+nameW+'.jpg'
+			c = 0
+			while(cap.isOpened()):
+				c += 1
+				ret, frame = cap.read()
+				gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
+				if c == 10: #2: # prima un si vede na sega 
+					print 'conosco asta, calcolo features del baffo'
+					#cv2.imshow('gray',gray)
+					#gray = cv2.medianBlur(gray,3)
+					gray = cv2.threshold(gray,33,255,cv2.THRESH_BINARY)[1]#int(1.25*np.median(frame)),255,cv2.THRESH_BINARY)[1]
+					gray = gray[roi[2]:roi[3],roi[0]:roi[1]]
+					#plt.imshow(gray,aspect='auto', interpolation="nearest")
+					X,Y = V.get_whisker(gray)
+					Xb,Yb = V.norm_whisker(X,Y,100,3)
+					X = []
+					Y = []
+					#print len(frame)
+					#print len(frame[0])
+					#print len(frame[0][0])
+					idx_nan = []
+					for k,x,y in zip(xrange(0,len(Xb)),Xb,Yb):
+						if not np.isnan(x*y):
+							frame[np.round(y)+roi[2]][np.round(x)+roi[0]][:] = 0
+							X.append(Xb[k])
+							Y.append(Yb[k])
+					X = np.asarray(X)
+					Y = np.asarray(Y)
+					x,y,w,h = ( roi[0]		 ,roi[2],\
+								roi[1]-roi[0],roi[3]-roi[2])
+					cv2.rectangle(frame, (x,y), (x+w,y+h), 255, 2)
+					cv2.imwrite(name, frame)     # save frame as JPEG file
+					#
+					X,Y = (X/px_mm, Y/px_mm)
+					if 1:	
+						l=0  # integrale lunghezza
+						s1=0 # integrale angolo
+						s2=0 # integrale angolo normalizzato
+						for i in xrange(1,X.__len__()):
+							x, xp = (X[i],X[i-1])
+							y, yp = (Y[i],Y[i-1])
+							dwhisk = np.sqrt(np.power(x-xp,2)+np.power(y-yp,2))
+							angle = np.arcsin((y-yp)/dwhisk)*dwhisk # e se lo pesassi con il delta baffo?
+							l += dwhisk 
+							s1 += np.abs(angle)
+						angle0 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
+						lunghezza.append(l)
+						somma_angolo.append(s1-angle0)
+					break
+			cap.release()
+			cv2.destroyAllWindows()
+		# stampo a video le lunghezze
+		for l,sa,n in zip(lunghezza,somma_angolo,NAMEs):
+			print n, l
+		# scatter con nomi di baffo
+		plt.scatter(lunghezza,somma_angolo)
+		plt.xlabel('length')
+		plt.ylabel('|abs|')
+		for l,sa,n in zip(lunghezza,somma_angolo,NAMEs):
+			plt.annotate(n,(l,sa)) 
+		plt.savefig(DATA_PATH+'/elab_video/featuresWhiskersScatter.pdf')
+
 
 class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 	def __init__(self): 
 		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False) # per le lunghezze dei baffi 
+		a.loadWhiskersInfo()
 		# calcolo le transfer functions dato che non sono salvate... 
 		'''
 		# avro` gia` cambiato quella classe per computare la transfer function?? 
 		'''
-		ba = sessione('c12','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		ba = sessione('d11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 		bb = sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-		bc = sessione('a31','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		bc = sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 		for baffo in [ba,bb,bc]:
 			baffo.calcoloTransferFunction(False)
 
@@ -303,9 +435,9 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				g2_to_plot /= np.max(g2_to_plot)
 				g3_to_plot /= np.max(g3_to_plot)
 			else: # transfer function
-				g1 = ba.TFM[:,:350]
-				g2 = bb.TFM[:,:350]
-				g3 = bc.TFM[:,:350]
+				g1 = ba.TFM
+				g2 = bb.TFM
+				g3 = bc.TFM
 				g1_to_plot = np.log10(g1)
 				g2_to_plot = np.log10(g2)
 				g3_to_plot = np.log10(g3)
@@ -331,19 +463,19 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				cax4 = a4.imshow(d12,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 				cax5 = a5.imshow(d13,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 				cbar1 = f.colorbar(cax1,ax=a1)
-				cbar1.set_ticks(np.arange(0,1.1,.1))
+				cbar1.set_ticks(np.arange(-4,5.1,.1))
 				cbar1.ax.tick_params(labelsize=FS)
 				cbar2 = f.colorbar(cax2,ax=a2)
-				cbar2.set_ticks(np.arange(0,1.1,.1))
+				cbar2.set_ticks(np.arange(-4,5.1,.1))
 				cbar2.ax.tick_params(labelsize=FS)
 				cbar3 = f.colorbar(cax3,ax=a3)
-				cbar3.set_ticks(np.arange(0,1.1,.1))
+				cbar3.set_ticks(np.arange(-4,5.1,.1))
 				cbar3.ax.tick_params(labelsize=FS)
 				cbar4 = f.colorbar(cax4,ax=a4)
-				cbar4.set_ticks(np.arange(0,1.1,.1))
+				cbar4.set_ticks(np.arange(-4,5.1,.1))
 				cbar4.ax.tick_params(labelsize=FS)
 				cbar5 = f.colorbar(cax5,ax=a5)
-				cbar5.set_ticks(np.arange(0,1.1,.1))
+				cbar5.set_ticks(np.arange(-4,5.1,.1))
 				cbar5.ax.tick_params(labelsize=FS)
 				#
 				def shorten(l):
@@ -355,18 +487,13 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				a4.set_title('W1-W2',fontsize=FS)
 				a5.set_title('W1-W3',fontsize=FS)
 				a5.set_xlabel('Frequency [Hz]',fontsize=FS)
-				idx = [freq.index(0),freq.index(100),freq.index(200),freq.index(300)]
-				for a in (a1,a2,a3,a4,a5):
-					a.set_yticks([])
-					a.set_xticks(idx)
-					a.set_xticklabels([freq[i] for i in idx])
 				a1.set_ylabel(r'Base        $\longrightarrow$         tip',fontsize=FS)
 
 				# scatter
 				g1r = np.reshape(g1,g1.__len__()*g1[0].__len__())
 				g2r = np.reshape(g2,g1.__len__()*g1[0].__len__())
 				g3r = np.reshape(g3,g1.__len__()*g1[0].__len__())
-				idx = np.random.permutation(len(g1r))[0:10000]
+				idx = np.random.permutation(len(g1r))[0:20000]
 				w13 = a6.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='#dbc65e',color='#dbc65e', alpha=0.4, rasterized=True)
 				w12 = a6.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='#ef725f',color='#ef725f',marker='x', alpha=0.4, rasterized=True)
 				a6.legend((w12,w13), ('similar','diverse'), scatterpoints=1,markerscale=2, loc='upper left',fontsize=FS)
@@ -374,7 +501,7 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				def getLine(g,h): 
 					slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
 					r2 = r_value**2
-					xv = [a for a in np.arange(0,1.1,.1)]
+					xv = [a for a in np.arange(min(h),max(h),.1)]
 					yv = [a*slope+intercept for a in xv]
 					if np.sign(intercept)>0:
 						segno='+'
@@ -386,12 +513,12 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				x13,y13,r13,pp13 = getLine(g3r,g1r)
 				a6.plot(x12,y12,color='#6d2a2a')
 				a6.plot(x13,y13,color='#6d622a')
-				a6.text(0.28,0.6,pp12,fontsize=14)
-				a6.text(0.5,0.31,pp13,fontsize=14)
+				a6.text(9,10,pp12,fontsize=14)
+				a6.text(8,6,pp13,fontsize=14)
 				for spine in ('top','bottom','left','right'):
 					a6.spines[spine].set_visible(False)
-				#a6.set_xlim([0,1])
-				#a6.set_ylim([0,1])
+				a6.set_xlim([min(g1r),max(g1r)])
+				a6.set_ylim([min(g1r),max(g1r)])
 				a6.tick_params(labelsize=FS) 
 				a1.tick_params(labelsize=FS) 
 				a2.tick_params(labelsize=FS) 
@@ -499,6 +626,8 @@ class mergeComparisonsResults():
 		# carico dati
 		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)
 		a.loadWhiskersInfo()
+		print a.integrale_lunghezza
+		QUALCOSANONTORNACONLELUNGHEZZE
 		a.compareWhiskers(typeComparison) 
 		b = confrontoBaffiDiversi('baffi_12May','diversiTempi',False)    
 		b.compareWhiskers(typeComparison) 
@@ -597,6 +726,7 @@ class mergeComparisonsResults():
 		lengths = [lengths[i] for i in l_sort] 
 		# riordino la matrice di interesse
 		CORR2 = cbd.CORR2
+		print len(CORR2), len(cbd.integrale_lunghezza)
 		for i in xrange(0,CORR2.__len__()): 
 			j = l_sort[i]
 			cbd.CORR2[j] = CORR2[i]
@@ -964,7 +1094,7 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 			plt.show()
 
 class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
-	def __init__(self,name,testType,stampoFigura):
+	def __init__(self,name,testType,doCompare):
 		self.name					= name
 		self.testType 				= testType
 		self.completeName 			= self.name+'_'+self.testType
@@ -1117,7 +1247,7 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			print 'questo test NON esiste. Correggere self.testType'
 			return
 
-		if stampoFigura:
+		if doCompare:
 			self.doComparisons()
 
 	def checkTipTracking(self,TrialNumber=5,baffo='a11'): # controllo il baffo a11
@@ -1233,12 +1363,14 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 							TF_NC = []
 							TF_C  = []
 							traiettorie,nPunti,nCampioni = (v1.wst,v1.wst.__len__(),v1.wst[0].__len__())
+							traiettorie = [t[1000:-1000] for t in traiettorie] # test Gibbs rimuovendo i bordi https://en.wikipedia.org/wiki/Gibbs_phenomenon 
 							base = traiettorie[nPunti-1] 
 							tip  = traiettorie[0]
 							for t in traiettorie: 
 								T = evalFFT(t)
 								TF_NC.append(T)
 							traiettorie,nPunti,nCampioni = (v2.wst,v2.wst.__len__(),v2.wst[0].__len__())
+							traiettorie = [t[1000:-1000] for t in traiettorie]
 							base2 = traiettorie[nPunti-1] 
 							tip2  = traiettorie[0]
 							TIP = evalFFT(tip)
@@ -1325,21 +1457,23 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			with open(fname, 'rb') as f:
 				return pickle.load(f)[0][0] # prendo il primo fra i video
 		if self.testType == 'diversiBaffi':
-			if os.path.isfile(self.pickleNameInfoWhiskers):
+			if 0: #os.path.isfile(self.pickleNameInfoWhiskers):
 				self.loadWhiskersInfo()
 			else:
 				for lW1 in self.listaWhisker1: # le due liste sono ridondanti
 					v = loadSessionVideos(lW1+self.pickleEndTracking)
-					#print v.avi[0:10] 	# NON voglio ricalcolare tutto, ma potrebbero esserci path sbagliati nei pickle. 
+					print v.avi[0:10] 	# NON voglio ricalcolare tutto, ma potrebbero esserci path sbagliati nei pickle. 
 										# li correggo a manazza
 					if v.avi[0:10] == '../ratto1/': # lasciare per cortesia tutta la stringa per capire cosa faccio
 						v.avi = v.avi[10:] 			 # eliminato quel prefisso
 						v.avi = DATA_PATH+'/ratto1/'+v.avi # aggiunto il nuovo prefisso
+					print v.avi 	
 					#print lW1+self.pickleEndTracking
 					#print v.avi
-					if v.avi.find('_NONcolor')>-1:
-						self.getInfoWhiskers(v) 	# calcolo le informazioni sul baffo dalla deformata
+					#if v.avi.find('_NONcolor')>-1:
+					#	self.getInfoWhiskers(v) 	# calcolo le informazioni sul baffo dalla deformata
 				#print self.integrale_lunghezza
+				cristo
 				self.saveWhiskersInfo()
 				self.loadWhiskersInfo()
 
@@ -1632,6 +1766,16 @@ class video: # ogni fideo va elaborato
 		self.videoThs = videoThs			# soglia ottimale per quel filmato (binarizzazione)
 		self.videoShow = videoShow			# mostro filmato o no (debug)
 		self.justPlotRaw = justPlotRaw		# bypasso tutto per mostrare il filmato con box senza nessuna operazione
+		if processAllVideo:
+			self.computeVideoParameters() 
+			self.wst = np.zeros((self.N,self.maxFrame)) 	# whisker samples time per ogni cap
+			self.elaboroFilmato(cap)				# faccio il tracking
+			self.postProcessing()					# abbellisco il tracking con intorpolazione dei NaN e antialias (media mobile)
+			self.WSF = self.trasformataBaffo()		# eseguo la trasformata di Fourier dei punti del baffo ricostruiti
+			#self.test_fig1() 						# due subplot con overlap tracking e trends nel tempo
+			#self.test_fig2()						# un subplot con lo spettro del baffo
+
+	def computeVideoParameters(self): 
 		self.bw = 2000.0 					# frame/sec - bandwidth
 		cap = cv2.VideoCapture(self.avi) 
 		self.maxFrame = int(cap.get(7))		# contatore dei frame
@@ -1644,13 +1788,6 @@ class video: # ogni fideo va elaborato
 		self.time = [dt*c for c in xrange(0,self.maxFrame)]	
 		self.freq = [df*c for c in xrange(0,self.maxFrame/2)]	
 		self.N = 100 # XXX era 100 									# punti equidistanziati per il tracking del baffo
-		if processAllVideo:
-			self.wst = np.zeros((self.N,self.maxFrame)) 	# whisker samples time per ogni cap
-			self.elaboroFilmato(cap)				# faccio il tracking
-			self.postProcessing()					# abbellisco il tracking con intorpolazione dei NaN e antialias (media mobile)
-			self.WSF = self.trasformataBaffo()		# eseguo la trasformata di Fourier dei punti del baffo ricostruiti
-			#self.test_fig1() 						# due subplot con overlap tracking e trends nel tempo
-			#self.test_fig2()						# un subplot con lo spettro del baffo
 
 	def test_fig1(self,salva=False,name=''): 
 		ff, (a1,a2) = plt.subplots(1,2)
@@ -1943,16 +2080,16 @@ if __name__ == '__main__':
 
 	# CONTROLLO BASE STIMOLO PER OGNI WHISKER E RISPOSTA IN FREQUENZA DELLA PUNTA
 	#a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
-	#a.checkTF(6)
+	#a.checkTF()
 	#a.checkTipTracking() 
 	#a.checkBaseTracking()
 	#a.saveTipTF() # per Ale per fare l'ottimizzazione del modello in COMSOL
-	funTemporaneoConfrontoBaffiSimulatiTraLoro() # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
+	#funTemporaneoConfrontoBaffiSimulatiTraLoro() # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
 	
 
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	if 1:
+	if 0:
 		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 		db.infoWhiskerDisplay()
@@ -1962,7 +2099,7 @@ if __name__ == '__main__':
 		db.plotComparisons('transferFunction')
 	#confrontoAddestramento()						
 	#creoSpettriBaffi()								
-	#stampo_lunghezza_whiskers()					
+	stampo_lunghezza_whiskers()					
 	#mergeComparisonsResults()						
 	#simulatedAndSetup() 							
 	#creoImageProcessing_Stacked()					
