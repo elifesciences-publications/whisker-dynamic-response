@@ -258,7 +258,7 @@ class creoImageProcessing_Stacked(): #
 		fig.savefig(DATA_PATH+'/elab_video/stacked.pdf')
 
 class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo a video
-	def __init__(self): 
+	def __init__(self,SovrascriviPickle=False,Stampa=True): 
 		self.FILEs = [\
 				DATA_PATH+"/ratto1/a1_1/0951_120516_NONcolor_trial1.avi",
 				DATA_PATH+"/ratto1/a3_1/1011_120516_NONcolor_trial1.avi",
@@ -278,32 +278,32 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 				DATA_PATH+"/ratto1/delta_1/0847_120516_NONcolor_trial1.avi",
 				DATA_PATH+"/ratto1/gamma_1/1012_120516_NONcolor_trial1.avi"]
 		self.NAMEs = [\
-			"a1_1",
-			"a3_1",
-			"a4_1",
-			"b1_1",
-			"c1_1",
-			"c1_2",
-			"c2_1",
-			"c2_2",
-			"c3_1",
-			"c4_1",
-			"c5_1",
-			"d1_1",
-			"d2_1",
-			"d2_2",
-			"d3_1",
-			"delta_1",
-			"gamma_1"
-				]
+				"a1_1",
+				"a3_1",
+				"a4_1",
+				"b1_1",
+				"c1_1",
+				"c1_2",
+				"c2_1",
+				"c2_2",
+				"c3_1",
+				"c4_1",
+				"c5_1",
+				"d1_1",
+				"d2_1",
+				"d2_2",
+				"d3_1",
+				"delta_1",
+				"gamma_1"
+					]
 		self.ROIs = [\
 				# ordine imshow come y-x
-				(315,621,64,193), # a11
+				(315,621,64,193),  # a11
 				(490,630,173,210), # a31
 				(565,636,137,196), # a41
 				(453,625,186,239), # b11
 				(217,638,172,206), # c11
-				(334,644,98,213), # c12
+				(334,644,98,213),  # c12
 				(393,623,149,220), # c21
 				(272,664,101,162), # c22
 				(348,626,177,212), # c31
@@ -311,12 +311,33 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 				(500,635,185,204), # c51
 				(246,642,122,185), # d11
 				(336,629,115,192), # d21
-				(360,637,91,165), # d22
+				(360,637,91,165),  # d22
 				(427,624,166,238), # d31
-				(348,741,10,238), # delta1
+				(348,741,10,238),  # delta1
 				(337,755,123,173), # gamma1
 				]
-		self.dasistemare()
+		self.Diameters = [\ # misure diametri alla base ed alla punta presi al microscopio
+				(10.44  , 168.431),   # a11    
+				(5.691  , 79.327 ),   # a31    
+				(3.686  , 83.690 ),   # a41    
+				(7.164  , 98.353 ),   # b11     
+				(14.150 , 187.985),   # c11     
+				(8.944  , 162.327),   # c12    
+				(11.757 , 164.994),   # c21     
+				(12.100 , 188.878),   # c22     
+				(18.265 , 133.237),   # c31     
+				(6.036  , 96.673 ),   # c41
+				(6.096  , 113.736),   # c51    
+				(14.454 , 188    ),   # d11
+				(13.21  , 165.938),   # d21    
+				(14.286 , 178.881),   # d22     
+				(11.624 , 149.476),   # d31     
+				(16.926 , 204.415),   # delta1  
+				(11.136 , 173.164),   # gamma1  
+				]
+
+		filename = DATA_PATH+'/elab_video/dati_geometrici_whiskers.pickle'
+
 	def dasistemare(self):
 		FILEs = self.FILEs
 		NAMEs = self.NAMEs
@@ -365,20 +386,30 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 					cv2.imwrite(name, frame)     # save frame as JPEG file
 					#
 					X,Y = (X/px_mm, Y/px_mm)
-					if 1:	
-						l=0  # integrale lunghezza
-						s1=0 # integrale angolo
-						s2=0 # integrale angolo normalizzato
-						for i in xrange(1,X.__len__()):
-							x, xp = (X[i],X[i-1])
-							y, yp = (Y[i],Y[i-1])
-							dwhisk = np.sqrt(np.power(x-xp,2)+np.power(y-yp,2))
-							angle = np.arcsin((y-yp)/dwhisk)*dwhisk # e se lo pesassi con il delta baffo?
-							l += dwhisk 
-							s1 += np.abs(angle)
-						angle0 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
-						lunghezza.append(l)
-						somma_angolo.append(s1-angle0)
+					l=0  # integrale lunghezza
+					s1=0 # integrale angolo
+					s2=0 # integrale angolo normalizzato
+					for i in xrange(1,X.__len__()):
+						x, xp = (X[i],X[i-1])
+						y, yp = (Y[i],Y[i-1])
+						dwhisk = np.sqrt(np.power(x-xp,2)+np.power(y-yp,2))
+						angle = np.arcsin((y-yp)/dwhisk)*dwhisk # e se lo pesassi con il delta baffo?
+						l += dwhisk 
+						s1 += np.abs(angle)
+					# vediamo l'angolo
+					def distanza2Punti(p1,p2): # clear what it is...
+						x1,y1 = p1
+						x2,y2 = p2
+						x12 = np.power(x2-x1,2)
+						y12 = np.power(y2-y1,2)
+						return np.sqrt(x12+y12) 
+					def angoloMedio(d,dy): # d is distance, dy is the difference between y coordinates of two points
+						return np.arcsin(dy/d)*(180./np.pi) # in degree
+					angle010  = angoloMedio(distanza2Punti((X[90],Y[90]),(X[99],Y[99])), Y[99]-Y[90])       
+					angle0100 = angoloMedio(distanza2Punti((X[0] ,Y[0]) ,(X[99],Y[99])), Y[99]-Y[0])  
+					lunghezza.append(l)
+					angle0 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
+					somma_angolo.append(s1-angle0)
 					break
 			cap.release()
 			cv2.destroyAllWindows()
@@ -2002,16 +2033,16 @@ if __name__ == '__main__':
 
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	if 1:
+	if 0: # confronto i baffi e produco delle matrici di comparazione (plot veloce di debug)
 		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 		db.compareWhiskers('spettri')
-		db.plotComparisons('spettri')
 		db.compareWhiskers('transferFunction')
+		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
+	stampo_lunghezza_whiskers()					
 	#confrontoAddestramento()						
 	#creoSpettriBaffi()								
-	#stampo_lunghezza_whiskers()					
 	#mergeComparisonsResults()						
 	#simulatedAndSetup() 							
 	#creoImageProcessing_Stacked()					
