@@ -117,6 +117,9 @@ class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
 		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim.txt' #ampvsfreq_D21_rel.txt'  #transffunct_D21_bw1000Hz_sim.txt  #ampvsfreq_D21_damp001.txt
+
+		CONTROLLARECONALE
+
 		a = sessione('d21','12May','_NONcolor_','/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 
 		a.calcoloTransferFunction(False)
@@ -753,8 +756,7 @@ class mergeComparisonsResults():
 		self.diagColComp(a,TimeSD,lung,a.CORR2)
 		self.supradiagTimeComp(b,ColorD)
 		# stampo
-		f.tight_layout()
-		f.subplots_adjust(wspace=0.35,hspace=0.3)
+		f.subplots_adjust(wspace=0.5,hspace=0.5)
 		f.savefig(DATA_PATH+'/elab_video/baseFigura4_'+typeComparison+'.pdf')
 
 
