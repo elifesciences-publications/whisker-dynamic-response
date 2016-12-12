@@ -471,16 +471,7 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 	def __init__(self): 
 		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False) # per le lunghezze dei baffi 
-		a.loadWhiskersInfo()
-		# calcolo le transfer functions dato che non sono salvate... 
-		'''
-		# avro` gia` cambiato quella classe per computare la transfer function?? 
-		'''
-		ba = sessione('d11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-		bb = sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-		bc = sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-		for baffo in [ba,bb,bc]:
-			baffo.calcoloTransferFunction(False)
+		info = stampo_lunghezza_whiskers()					
 
 		if 1: # 3 spettri (due simili uno diverso), due distanze relative e gli scatter calcolati pixel a pixel
 			ig1 = 3 # gruppo 1
@@ -509,6 +500,11 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				g2_to_plot /= np.max(g2_to_plot)
 				g3_to_plot /= np.max(g3_to_plot)
 			else: # transfer function
+				ba = sessione('d11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+				bb = sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+				bc = sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+				for baffo in [ba,bb,bc]:
+					baffo.calcoloTransferFunction(False)
 				g1 = ba.TFM
 				g2 = bb.TFM
 				g3 = bc.TFM
@@ -530,10 +526,8 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				cax1 = a1.imshow(g1_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 				cax2 = a2.imshow(g2_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')
 				cax3 = a3.imshow(g3_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-				d12 = np.power(g2_to_plot-g1_to_plot,2)
-				d12 /= np.max(d12)
-				d13 = np.power(g3_to_plot-g1_to_plot,2)
-				d13 /= np.max(d13)
+				d12 = g2_to_plot-g1_to_plot
+				d13 = g3_to_plot-g1_to_plot
 				cax4 = a4.imshow(d12,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 				cax5 = a5.imshow(d13,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 				cbar1 = f.colorbar(cax1,ax=a1)
@@ -552,15 +546,23 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				cbar5.set_ticks(np.arange(-4,5.1,.1))
 				cbar5.ax.tick_params(labelsize=FS)
 				#
+				lunghezze = []
+				for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
+					print a.ROOT[idx1], info.NAMEs[idx2]
+					lunghezze.append(info.lunghezza[idx2])
 				def shorten(l):
 					l = np.round(l*100)
 					return str(l/100)
-				a1.set_title('W1 = '+str(shorten(a.integrale_lunghezza[ig1]))+'[mm]',fontsize=FS)
-				a2.set_title('W2 = '+str(shorten(a.integrale_lunghezza[ig2]))+'[mm]',fontsize=FS)
-				a3.set_title('W3 = '+str(shorten(a.integrale_lunghezza[ig3]))+'[mm]',fontsize=FS)
+				a1.set_title('W1 = '+str(shorten(lunghezze[0]))+'[mm]',fontsize=FS)
+				a2.set_title('W2 = '+str(shorten(lunghezze[1]))+'[mm]',fontsize=FS)
+				a3.set_title('W3 = '+str(shorten(lunghezze[2]))+'[mm]',fontsize=FS)
 				a4.set_title('W1-W2',fontsize=FS)
 				a5.set_title('W1-W3',fontsize=FS)
 				a5.set_xlabel('Frequency [Hz]',fontsize=FS)
+				for ax in [a1,a2,a3,a4,a5]:
+					ax.set_yticks([])
+				a6.set_xlabel('Pixel Value',fontsize=FS)
+				a6.set_ylabel('Pixel Value',fontsize=FS)
 				a1.set_ylabel(r'Base        $\longrightarrow$         tip',fontsize=FS)
 
 				# scatter
@@ -570,7 +572,7 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				idx = np.random.permutation(len(g1r))[0:20000]
 				w13 = a6.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='#dbc65e',color='#dbc65e', alpha=0.4, rasterized=True)
 				w12 = a6.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='#ef725f',color='#ef725f',marker='x', alpha=0.4, rasterized=True)
-				a6.legend((w12,w13), ('similar','diverse'), scatterpoints=1,markerscale=2, loc='upper left',fontsize=FS)
+				a6.legend((w12,w13), ('W1 vs W2','W1 vs W3'), scatterpoints=1,markerscale=2, loc=4,fontsize=FS)
 				# regressione 
 				def getLine(g,h): 
 					slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
@@ -585,10 +587,10 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 					return xv,yv,r_value**2, text
 				x12,y12,r12,pp12 = getLine(g2r,g1r)
 				x13,y13,r13,pp13 = getLine(g3r,g1r)
-				a6.plot(x12,y12,color='#6d2a2a')
-				a6.plot(x13,y13,color='#6d622a')
-				a6.text(9,10,pp12,fontsize=14)
-				a6.text(8,6,pp13,fontsize=14)
+				a6.plot(x12,y12,color='#6d2a2a',linewidth=2)
+				a6.plot(x13,y13,color='#6d622a',linewidth=2)
+				a6.text(12,10,pp12,fontsize=14)
+				a6.text(3,15,pp13,fontsize=14)
 				for spine in ('top','bottom','left','right'):
 					a6.spines[spine].set_visible(False)
 				a6.set_xlim([min(g1r),max(g1r)])
@@ -603,7 +605,7 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 
 			# faccio figura
 			FS = 20 # la dimensione del font dipende dalla dimensione della figura
-			f1 = plt.figure(figsize=(20,12))
+			f1 = plt.figure(figsize=(28,14))
 			a11,a12,a13,a14,a15,a16 = doFigura(a,True, f1)
 			#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
 			f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
@@ -2083,9 +2085,9 @@ if __name__ == '__main__':
 		db.compareWhiskers('transferFunction')
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
-	stampo_lunghezza_whiskers()					
+	#stampo_lunghezza_whiskers()					
 	#confrontoAddestramento()						
-	#creoSpettriBaffi()								
+	creoSpettriBaffi()								
 	#mergeComparisonsResults()						
 	#simulatedAndSetup() 							
 	#creoImageProcessing_Stacked()					
