@@ -116,20 +116,38 @@ def range_brace(x_min, x_max, mid=0.75,
 class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
-		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim.txt' #ampvsfreq_D21_rel.txt'  #transffunct_D21_bw1000Hz_sim.txt  #ampvsfreq_D21_damp001.txt
-
-		CONTROLLARECONALE
-
+		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim_primaTuning_forse.txt' #transffunct_D21_bw1000Hz_sim.txt'  # XXX DA CONTROLLARE CON ALE 
 		a = sessione('d21','12May','_NONcolor_','/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-
+		fromErik = DATA_PATH+'/elab_video/Setup_color_transparent_background.png'
+		SETUP=mpimg.imread(fromErik)
+		#
 		a.calcoloTransferFunction(False)
 		spettroVero = a.TFM 
 		spettroSim = np.flipud(np.loadtxt(fromAle))
 		spettroSim = spettroSim[:-2,3:]
 		# figura
-		f = plt.figure(figsize=(20,12))
-		a1 = f.add_subplot(2,2,1)
-		a3 = f.add_subplot(2,2,3)
+		f = plt.figure(figsize=(13,7))
+		gs  = gridspec.GridSpec(2,2)
+		gs2 = gridspec.GridSpec(7,5)
+		gs3 = gridspec.GridSpec(3,3)
+		a1 = f.add_subplot(gs[0,0])
+		a3 = f.add_subplot(gs[1,0])
+		a2 = f.add_subplot(1,2,2)
+		a2.imshow(SETUP)
+		a4 = f.add_subplot(gs2[4,4])
+		Np = 150
+		s = np.random.normal(0, 1, Np)	
+		s = s*signal.hamming(Np)
+		t = xrange(10,Np+10,1)
+		a4.plot(t,s,linewidth=2,color='k')
+		a4.annotate('', xy=(0, 1.1), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(color='k'))
+		a4.annotate('', xy=(0, -.1), xycoords='axes fraction', xytext=(0, 1), arrowprops=dict(color='k'))
+		def unvisibleAxes(ax):
+			ax.axes.get_xaxis().set_visible(False)
+			ax.axes.get_yaxis().set_visible(False)
+			for spine in ['top', 'right','bottom','left']:
+				ax.spines[spine].set_visible(False)
+		[unvisibleAxes(ax) for ax in [a2,a4]]
 		cax1 = a1.imshow(np.log10(spettroSim) ,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 		cbar1 = f.colorbar(cax1,ax=a1)
 		cax3 =a3.imshow(np.log10(spettroVero),aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
@@ -139,14 +157,6 @@ class simulatedAndSetup():
 		a3.set_yticks([])
 		a1.set_ylabel(r'Base        $\longrightarrow$         tip')
 		a3.set_ylabel(r'Base        $\longrightarrow$         tip')
-		# setup
-		'''
-		#spezzoni di codice -- forse meglio inserire il setup nel postprocessing
-		setupFile =	'Setup_color_transparent_background.png'
-		aw1.imshow(LB)
-		self.luceBluFiltroPLung = directory+'IMG_0236.JPG'
-		LB=mpimg.imread(self.luceBianca)
-		'''	
 		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
 		
 	
@@ -478,9 +488,9 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 		info = stampo_lunghezza_whiskers()					
 
 		if 1: # 3 spettri (due simili uno diverso), due distanze relative e gli scatter calcolati pixel a pixel
-			ig1 = 3 # gruppo 1
-			ig2 = 4 # gruppo 1
-			ig3 = 10 # gruppo 3
+			ig1 = 1#3 # gruppo 1
+			ig2 = 2#4 # gruppo 1
+			ig3 = 8#10 # gruppo 3
 			maxFrame = 4500
 			Np = maxFrame/2. 		# numero di campioni frequenze positive
 			bw = 2000.0 			# frame/sec - bandwidth
@@ -535,19 +545,19 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				cax4 = a4.imshow(d12,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 				cax5 = a5.imshow(d13,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 				cbar1 = f.colorbar(cax1,ax=a1)
-				cbar1.set_ticks(np.arange(-4,5.1,.1))
+				cbar1.set_ticks(np.arange(-4,5.1,.2))
 				cbar1.ax.tick_params(labelsize=FS)
 				cbar2 = f.colorbar(cax2,ax=a2)
-				cbar2.set_ticks(np.arange(-4,5.1,.1))
+				cbar2.set_ticks(np.arange(-4,5.1,.2))
 				cbar2.ax.tick_params(labelsize=FS)
 				cbar3 = f.colorbar(cax3,ax=a3)
-				cbar3.set_ticks(np.arange(-4,5.1,.1))
+				cbar3.set_ticks(np.arange(-4,5.1,.2))
 				cbar3.ax.tick_params(labelsize=FS)
 				cbar4 = f.colorbar(cax4,ax=a4)
-				cbar4.set_ticks(np.arange(-4,5.1,.1))
+				cbar4.set_ticks(np.arange(-4,5.1,.2))
 				cbar4.ax.tick_params(labelsize=FS)
 				cbar5 = f.colorbar(cax5,ax=a5)
-				cbar5.set_ticks(np.arange(-4,5.1,.1))
+				cbar5.set_ticks(np.arange(-4,5.1,.2))
 				cbar5.ax.tick_params(labelsize=FS)
 				#
 				lunghezze = []
@@ -608,9 +618,10 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				return a1,a2,a3,a4,a5,a6
 
 			# faccio figura
-			FS = 20 # la dimensione del font dipende dalla dimensione della figura
-			f1 = plt.figure(figsize=(28,14))
+			FS = 18 # la dimensione del font dipende dalla dimensione della figura
+			f1 = plt.figure(figsize=(21,8))
 			a11,a12,a13,a14,a15,a16 = doFigura(a,True, f1)
+			f1.subplots_adjust(wspace=0.3,hspace=0.3)
 			#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
 			f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
 
@@ -709,6 +720,7 @@ class mergeComparisonsResults():
 		a.compareWhiskers(typeComparison) 
 		b = confrontoBaffiDiversi('baffi_12May','diversiTempi',False)    
 		b.compareWhiskers(typeComparison) 
+		FS = 18
 
 		#print cbd.info.lunghezza
 		lung = []
@@ -724,7 +736,7 @@ class mergeComparisonsResults():
 		print lung
 		#
 		# axes arrangements
-		f = plt.figure(figsize=(12,6))
+		f = plt.figure(figsize=(21,11))
 		UnDyed = f.add_subplot(2,3,1)
 		ColorC = f.add_subplot(2,3,2)
 		Dyed = f.add_subplot(2,3,3)
@@ -738,33 +750,39 @@ class mergeComparisonsResults():
 		# plot stuff
 		# self.sizeWhiskerGroups(a,WhiskerGroup,lung) # <--- sostituisco questo scatter con le matrici dei baffi simulati
 		CORR2SIM = funTemporaneoConfrontoBaffiSimulatiTraLoro()
-		self.colorComparison(a,WhiskerGroup,lung,CORR2SIM       ,'  Sim \n  Sim')
-		self.colorComparison(a,ColorC,lung,a.CORR2       		,'  Undyed \n  Dyed')
-		self.colorComparison(a,UnDyed,lung,a.CORR2_undyed		,'  Undyed \n  Undyed')
-		self.colorComparison(a,Dyed  ,lung,a.CORR2_dyed  		,'  Dyed \n  Dyed')
-		cax = self.timeComparison(b,TimeC)
+		self.colorComparison(a,WhiskerGroup,lung,CORR2SIM       ,'  Sim \n  Sim'       , FS)
+		self.colorComparison(a,ColorC,lung,a.CORR2       		,'  Undyed \n  Dyed'   , FS)
+		self.colorComparison(a,UnDyed,lung,a.CORR2_undyed		,'  Undyed \n  Undyed' , FS)
+		self.colorComparison(a,Dyed  ,lung,a.CORR2_dyed  		,'  Dyed \n  Dyed'     , FS)
+		self.diagColComp(a,TimeSD,lung,a.CORR2                                         , FS)
+		self.supradiagTimeComp(b,ColorD                                                , FS)
+		cax = self.timeComparison(b,TimeC                                              , FS)
+			
+		v1 = a.CORR2_undyed.reshape(-1)
+		v2 = a.CORR2.reshape(-1)
+		v3 = a.CORR2_dyed.reshape(-1)
+		vs = CORR2SIM.reshape(-1)
+		print 'corr2 sim vs undyed',np.power(np.corrcoef(v1,vs)[0,1],2)
+		print 'corr2 sim vs mixed',np.power(np.corrcoef(v2,vs)[0,1],2)
+		print 'corr2 sim vs dyed',np.power(np.corrcoef(v3,vs)[0,1],2)
+		
 		cbar2 = f.colorbar(cax,ax=WhiskerGroup)
-		cbar2.ax.tick_params(labelsize=10)
+		cbar2.ax.tick_params(labelsize=FS)
 		cbar3 = f.colorbar(cax,ax=ColorC)
-		cbar3.ax.tick_params(labelsize=10)
+		cbar3.ax.tick_params(labelsize=FS)
 		cbar4 = f.colorbar(cax,ax=TimeC)
-		cbar4.ax.tick_params(labelsize=10)
+		cbar4.ax.tick_params(labelsize=FS)
 		cbar5 = f.colorbar(cax,ax=UnDyed)
-		cbar5.ax.tick_params(labelsize=10)
+		cbar5.ax.tick_params(labelsize=FS)
 		cbar6 = f.colorbar(cax,ax=Dyed)
-		cbar6.ax.tick_params(labelsize=10)
-		self.diagColComp(a,TimeSD,lung,a.CORR2)
-		self.supradiagTimeComp(b,ColorD)
+		cbar6.ax.tick_params(labelsize=FS)
 		# stampo
 		f.subplots_adjust(wspace=0.5,hspace=0.5)
 		f.savefig(DATA_PATH+'/elab_video/baseFigura4_'+typeComparison+'.pdf')
 
 
-	def diagColComp(self,cbd,a51,lung,CORR2):
-		def shorten(l):
-			l = np.round(l*100)
-			return str(l/100)
-		lengths = [np.round(l) for l in lung]
+	def diagColComp(self,cbd,a51,lung,CORR2,FS):
+		lengths = [int(l) for l in lung]
 		#
 		d_c2 = []
 		for i in xrange(0,CORR2.__len__()):
@@ -772,20 +790,21 @@ class mergeComparisonsResults():
 		a51.plot(d_c2,'k.',markersize=5)
 		a51.plot(d_c2,'k')
 		a51.set_xticks(np.arange(0,len(lung),1))
+		a51.set_xlabel('Length [mm]',fontsize=FS)
 		a51.set_yticks(np.arange(0,1.2,0.2))
 		a51.axis([-0.2, len(cbd.ROOT)-0.8, 0.1, 1])
 		#a51.set_xticklabels([])
-		a51.set_ylabel('Similarity', color='k',fontsize=14, y=-.5,x = 0.3) # e` condiviso
-		a51.set_title('Dye effect', color='k',fontsize=12)
+		a51.set_ylabel('Similarity', color='k',fontsize=FS, y=-.5,x = 0.3) # e` condiviso
+		a51.set_title('Dye effect', color='k',fontsize=FS)
 		for spine in ('top','bottom','left','right'):
 			a51.spines[spine].set_visible(False)
-		a51.tick_params(labelsize=10) 
+		a51.tick_params(labelsize=FS) 
 		a51.set_xticklabels(lengths,rotation=90) #cbd.ROOT[0:14],rotation=90)
 		a51.set_xlim([-.5, len(lung)-.5])
 		a51.set_ylim([0, 1])
 		#a51.axes.get_xaxis().set_visible(False)
 
-	def supradiagTimeComp(self,cbd,a51):
+	def supradiagTimeComp(self,cbd,a51,FS):
 		ROOT  	= [re.sub('[$]','',cbd.ROOT[i]) for i in xrange(0,cbd.ROOT.__len__()) if cbd.group3[i] == 0] # uso le regular expression per togliere i $ che mi servono per l'interpreter latex per fare il corsivo 
 		d_c2 = []
 		for i in xrange(0,12):
@@ -796,38 +815,35 @@ class mergeComparisonsResults():
 		a51.set_yticks(np.arange(0.2,1.2,0.2))
 		a51.set_xticks(xrange(0,len(cbd.CORR2)-1))
 		#a51.set_ylabel('Similarity', color='k',fontsize=14) # e` condiviso
-		a51.set_title('Time effect', color='k',fontsize=12)
+		a51.set_title('Time effect', color='k',fontsize=FS)
 		for tl in a51.get_yticklabels():
 			tl.set_color('k')
 		for spine in ('top','bottom','left','right'):
 			a51.spines[spine].set_visible(False)
-		a51.tick_params(labelsize=10) 
+		a51.tick_params(labelsize=FS) 
+		a51.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
 		#a51.set_xticklabels(ROOT[1:])
 		a51.set_xticklabels(ROOT[1:13],rotation=90)
 		a51.set_xlim([-.5, len(d_c2)-.5])
 		#a51.axes.get_xaxis().set_visible(False)
 
-	def colorComparison(self,cbd,a2,lung,CORR2,text):
-		def shorten(l):
-			l = np.round(l*100)
-			return str(l/100)
-		lengths = [shorten(l) for l in lung]
+	def colorComparison(self,cbd,a2,lung,CORR2,text,FS):
+		lengths = [int(l) for l in lung]
 		# faccio il plot
 		cax2 = a2.imshow(np.flipud(CORR2),aspect='equal', interpolation="nearest",clim=(0,1))
 		a2.set_xticks(np.arange(len(cbd.ROOT)))
 		a2.set_xticklabels(lengths,rotation=90)#cbd.ROOT,rotation=90)
 		a2.set_yticks(np.arange(len(cbd.ROOT)))
 		a2.set_yticklabels(reversed(lengths))#cbd.ROOT)
-		a2.set_ylabel('Length [mm]',fontsize=14)
-		#a2.set_xlabel('Length [mm]',fontsize=14)
-		a2.text(-.18, -.18, text,horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=12)
+		a2.set_ylabel('Length [mm]',fontsize=FS)
+		a2.text(-.18, -.18, text,horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=FS)
 		a2.annotate('', xy=(-0.3, -0.3), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
 		#a2.set_ylabel('Undyed')
 		#a2.set_xlabel('Dyed')
-		a2.tick_params(labelsize=10) 
+		a2.tick_params(labelsize=FS) 
 		return cax2
 
-	def timeComparison(self,cbd,a1):
+	def timeComparison(self,cbd,a1,FS):
 		ROOT  	= [re.sub('[$]','',cbd.ROOT[i]) for i in xrange(0,cbd.ROOT.__len__()) if cbd.group3[i] == 0] # uso le regular expression per togliere i $ che mi servono per l'interpreter latex per fare il corsivo 
 		CORR2 	= cbd.CORR2[0:ROOT.__len__(),0:ROOT.__len__()]
 		cax1 = a1.imshow(np.flipud(CORR2),aspect='equal', interpolation="nearest",clim=(0,1))
@@ -836,8 +852,8 @@ class mergeComparisonsResults():
 		a1.set_yticks(np.arange(len(ROOT)))
 		a1.set_yticklabels(reversed(ROOT))
 		#a1.set_xlabel('Whisker')
-		a1.set_ylabel('Over time',fontsize=14) # C3 o 37.99mm
-		a1.tick_params(labelsize=10) 
+		a1.set_ylabel('Time',fontsize=FS) # C3 o 37.99mm
+		a1.tick_params(labelsize=FS) 
 		return cax1
 
 
