@@ -316,7 +316,8 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 				(348,741,10,238),  # delta1
 				(337,755,123,173), # gamma1
 				]
-		self.Diameters = [\ # misure diametri alla base ed alla punta presi al microscopio
+		# misure diametri alla base ed alla punta presi al microscopio
+		self.Diameters = [\
 				(10.44  , 168.431),   # a11    
 				(5.691  , 79.327 ),   # a31    
 				(3.686  , 83.690 ),   # a41    
@@ -336,95 +337,137 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 				(11.136 , 173.164),   # gamma1  
 				]
 
-		filename = DATA_PATH+'/elab_video/dati_geometrici_whiskers.pickle'
+		self.px_mm = 6.9 # calcolato con matlab, inquadratura fissa
+						 # 1 mm sono circa 7 pixel
 
-	def dasistemare(self):
-		FILEs = self.FILEs
-		NAMEs = self.NAMEs
-		ROIs = self.ROIs
-		px_mm = 6.9 # calcolato con matlab, inquadratura fissa
-					# 1 mm sono circa 7 pixel
-		lunghezza = []
-		somma_angolo = []
-		V = video('pippo',(0,0,0,0),0,False,False,False) # mi servono due metodi
-		for filen,nameW,roi in zip(FILEs,NAMEs,ROIs):
-			# scelgo i dati
-			cap = cv2.VideoCapture(filen)
-			name = DATA_PATH+'/elab_video/'+nameW+'.jpg'
-			c = 0
-			while(cap.isOpened()):
-				c += 1
-				ret, frame = cap.read()
-				gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-				if cv2.waitKey(1) & 0xFF == ord('q'):
-					break
-				if c == 10: #2: # prima un si vede na sega 
-					print 'conosco asta, calcolo features del baffo'
-					#cv2.imshow('gray',gray)
-					#gray = cv2.medianBlur(gray,3)
-					gray = cv2.threshold(gray,33,255,cv2.THRESH_BINARY)[1]#int(1.25*np.median(frame)),255,cv2.THRESH_BINARY)[1]
-					gray = gray[roi[2]:roi[3],roi[0]:roi[1]]
-					#plt.imshow(gray,aspect='auto', interpolation="nearest")
-					X,Y = V.get_whisker(gray)
-					Xb,Yb = V.norm_whisker(X,Y,100,3)
-					X = []
-					Y = []
-					#print len(frame)
-					#print len(frame[0])
-					#print len(frame[0][0])
-					idx_nan = []
-					for k,x,y in zip(xrange(0,len(Xb)),Xb,Yb):
-						if not np.isnan(x*y):
-							frame[np.round(y)+roi[2]][np.round(x)+roi[0]][:] = 0
-							X.append(Xb[k])
-							Y.append(Yb[k])
-					X = np.asarray(X)
-					Y = np.asarray(Y)
-					x,y,w,h = ( roi[0]		 ,roi[2],\
-								roi[1]-roi[0],roi[3]-roi[2])
-					cv2.rectangle(frame, (x,y), (x+w,y+h), 255, 2)
-					cv2.imwrite(name, frame)     # save frame as JPEG file
-					#
-					X,Y = (X/px_mm, Y/px_mm)
-					l=0  # integrale lunghezza
-					s1=0 # integrale angolo
-					s2=0 # integrale angolo normalizzato
-					for i in xrange(1,X.__len__()):
-						x, xp = (X[i],X[i-1])
-						y, yp = (Y[i],Y[i-1])
-						dwhisk = np.sqrt(np.power(x-xp,2)+np.power(y-yp,2))
-						angle = np.arcsin((y-yp)/dwhisk)*dwhisk # e se lo pesassi con il delta baffo?
-						l += dwhisk 
-						s1 += np.abs(angle)
-					# vediamo l'angolo
-					def distanza2Punti(p1,p2): # clear what it is...
-						x1,y1 = p1
-						x2,y2 = p2
-						x12 = np.power(x2-x1,2)
-						y12 = np.power(y2-y1,2)
-						return np.sqrt(x12+y12) 
-					def angoloMedio(d,dy): # d is distance, dy is the difference between y coordinates of two points
-						return np.arcsin(dy/d)*(180./np.pi) # in degree
-					angle010  = angoloMedio(distanza2Punti((X[90],Y[90]),(X[99],Y[99])), Y[99]-Y[90])       
-					angle0100 = angoloMedio(distanza2Punti((X[0] ,Y[0]) ,(X[99],Y[99])), Y[99]-Y[0])  
-					lunghezza.append(l)
-					angle0 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
-					somma_angolo.append(s1-angle0)
-					break
-			cap.release()
-			cv2.destroyAllWindows()
-		# stampo a video le lunghezze
-		for l,sa,n in zip(lunghezza,somma_angolo,NAMEs):
-			print n, l
+		self.pickleNameDatiGeometrici = DATA_PATH+'/elab_video/dati_geometrici_whiskers.pickle'
+		if os.path.isfile(self.pickleNameDatiGeometrici):
+			# carico il file
+			self.caricoFile()
+			print 'il file '+self.pickleNameDatiGeometrici+' esiste'
+		else:
+			# qualche test prima
+			tuttoOk = True
+			if len(self.FILEs) is not len(self.NAMEs):
+				tuttoOk = False
+			if len(self.NAMEs) is not len(self.ROIs):
+				tuttoOk = False
+			if len(self.ROIs) is not len(self.Diameters):
+				tuttoOk = False
+			# creo il file 
+			if tuttoOk:
+				self.creoFile()
+			else:
+				print 'qualcosa non va bene nei dati'
+		self.scatterPlot()
+
+
+	def scatterPlot(self):
 		# scatter con nomi di baffo
-		plt.scatter(lunghezza,somma_angolo)
+		plt.scatter(self.lunghezza,self.somma_angolo)
 		plt.xlabel('length')
 		plt.ylabel('|abs|')
-		for l,sa,n in zip(lunghezza,somma_angolo,NAMEs):
+		for l,sa,n in zip(self.lunghezza,self.somma_angolo,self.NAMEs):
+			print n, l
 			plt.annotate(n,(l,sa)) 
 		plt.savefig(DATA_PATH+'/elab_video/featuresWhiskersScatter.pdf')
 
+	def caricoFile(self):
+		with open(self.pickleNameDatiGeometrici, 'rb') as f:
+			data = pickle.load(f)	
+		self.FILEs = data[0]
+		self.NAMEs = data[1]
+		self.ROIs  = data[2]
+		self.px_mm = data[3]
+		self.Diameters = data[4]
+		self.lunghezza = data[5]
+		self.somma_angolo = data[6]
+		self.angle010 = data[7]
+		self.angle0100 = data[8]
 
+	def creoFile(self):
+		self.lunghezza = []
+		self.somma_angolo = [] 
+		self.angle010 = []  		
+		self.angle0100 = [] 		
+		V = video('pippo',(0,0,0,0),0,False,False,False) # mi servono due metodi
+		for i in xrange(0,len(self.FILEs)):
+			l,somma_angolo,angle010,angle0100 = self.analizzoPrimoFrame(i,V)
+			self.lunghezza.append(l)
+			self.somma_angolo.append(somma_angolo)
+			self.angle010.append(angle010)
+			self.angle0100.append(angle0100)
+			#print self.NAMEs[i],self.analizzoPrimoFrame(i,V) # debug
+		with open(self.pickleNameDatiGeometrici, 'w') as f:
+			pickle.dump([self.FILEs,self.NAMEs,self.ROIs,self.px_mm,self.Diameters,self.lunghezza,self.somma_angolo,self.angle010,self.angle0100], f)	
+
+	def analizzoPrimoFrame(self,idx,V):
+		def distanza2Punti(p1,p2): # clear what it is...
+			x1,y1 = p1
+			x2,y2 = p2
+			x12 = np.power(x2-x1,2)
+			y12 = np.power(y2-y1,2)
+			return np.sqrt(x12+y12) 
+		def angoloMedio(d,dy): # d is distance, dy is the difference between y coordinates of two points
+			return np.arcsin(dy/d)*(180./np.pi) # in degree
+		#
+		f = self.FILEs[idx]		
+		n = self.NAMEs[idx]		
+		roi = self.ROIs[idx]		
+		d = self.Diameters[idx]		
+		px_mm = self.px_mm
+		cap = cv2.VideoCapture(f)
+		#	
+		c = 0
+		while(cap.isOpened()):
+			c += 1
+			ret, frame = cap.read()
+			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+			if c == 10: #2: # prima un si vede na sega 
+				break
+		gray = cv2.threshold(gray,33,255,cv2.THRESH_BINARY)[1]#int(1.25*np.median(frame)),255,cv2.THRESH_BINARY)[1]
+		gray = gray[roi[2]:roi[3],roi[0]:roi[1]]
+		#plt.imshow(gray,aspect='auto', interpolation="nearest")
+		X,Y = V.get_whisker(gray)
+		Xb,Yb = V.norm_whisker(X,Y,100,3)
+		X = []
+		Y = []
+		#print len(frame)
+		#print len(frame[0])
+		#print len(frame[0][0])
+		idx_nan = []
+		for k,x,y in zip(xrange(0,len(Xb)),Xb,Yb):
+			if not np.isnan(x*y):
+				frame[np.round(y)+roi[2]][np.round(x)+roi[0]][:] = 0
+				X.append(Xb[k])
+				Y.append(Yb[k])
+		X = np.asarray(X)
+		Y = np.asarray(Y)
+		x,y,w,h = ( roi[0]		 ,roi[2],\
+					roi[1]-roi[0],roi[3]-roi[2])
+		cv2.rectangle(frame, (x,y), (x+w,y+h), 255, 2)
+		if 1:
+			name = DATA_PATH+'/elab_video/'+n+'.jpg'
+			cv2.imwrite(name, frame)     # save frame as JPEG file
+		#
+		X,Y = (X/px_mm, Y/px_mm)
+		l=0  # integrale lunghezza
+		s1=0 # integrale angolo
+		for i in xrange(1,X.__len__()):
+			x, xp = (X[i],X[i-1])
+			y, yp = (Y[i],Y[i-1])
+			dwhisk = np.sqrt(np.power(x-xp,2)+np.power(y-yp,2))
+			angle = np.arcsin((y-yp)/dwhisk)*dwhisk # e se lo pesassi con il delta baffo?
+			l += dwhisk 
+			s1 += np.abs(angle)
+		angle010  = angoloMedio(distanza2Punti((X[90],Y[90]),(X[-1],Y[-1])), Y[-1]-Y[90])       
+		angle0100 = angoloMedio(distanza2Punti((X[0] ,Y[0]) ,(X[-1],Y[-1])), Y[-1]-Y[0])  
+		angle0 = np.arcsin((Y[-1]-Y[0])/l)*l # angolo medio... (se il baffo e` dritto ma montato non orizzontale)
+		somma_angolo = s1-angle0
+		cap.release()
+		cv2.destroyAllWindows()
+		return l,somma_angolo,angle010,angle0100
+		
 class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 	def __init__(self): 
 		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False) # per le lunghezze dei baffi 
