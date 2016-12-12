@@ -258,7 +258,7 @@ class creoImageProcessing_Stacked(): #
 		fig.savefig(DATA_PATH+'/elab_video/stacked.pdf')
 
 class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo a video
-	def __init__(self,SovrascriviPickle=False,Stampa=True): 
+	def __init__(self,SovrascriviPickle=False,Stampa=False): 
 		self.FILEs = [\
 				DATA_PATH+"/ratto1/a1_1/0951_120516_NONcolor_trial1.avi",
 				DATA_PATH+"/ratto1/a3_1/1011_120516_NONcolor_trial1.avi",
@@ -341,10 +341,11 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 						 # 1 mm sono circa 7 pixel
 
 		self.pickleNameDatiGeometrici = DATA_PATH+'/elab_video/dati_geometrici_whiskers.pickle'
-		if os.path.isfile(self.pickleNameDatiGeometrici):
-			# carico il file
-			self.caricoFile()
-			print 'il file '+self.pickleNameDatiGeometrici+' esiste'
+		if not SovrascriviPickle:
+			if os.path.isfile(self.pickleNameDatiGeometrici):
+				# carico il file
+				self.caricoFile()
+				print 'il file '+self.pickleNameDatiGeometrici+' esiste'
 		else:
 			# qualche test prima
 			tuttoOk = True
@@ -359,8 +360,8 @@ class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo 
 				self.creoFile()
 			else:
 				print 'qualcosa non va bene nei dati'
-		self.scatterPlot()
-
+		if Stampa:
+			self.scatterPlot()
 
 	def scatterPlot(self):
 		# scatter con nomi di baffo
@@ -701,15 +702,26 @@ class mergeComparisonsResults():
 
 		# carico dati
 		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)
-		a.loadWhiskersInfo()
-		print a.integrale_lunghezza
-		QUALCOSANONTORNACONLELUNGHEZZE
+		a.info = stampo_lunghezza_whiskers()					
 		a.compareWhiskers(typeComparison) 
 		b = confrontoBaffiDiversi('baffi_12May','diversiTempi',False)    
 		b.compareWhiskers(typeComparison) 
 
+		#print cbd.info.lunghezza
+		lung = []
+		names = [] 
+		for i in a.ROOT:
+			for j,l in zip(a.info.NAMEs,a.info.lunghezza):
+				if i.find(j) is not -1:
+					names.append(j)
+					lung.append(l)
+					break
+		print a.ROOT
+		print names
+		print lung
+		#
 		# axes arrangements
-		f = plt.figure(figsize=(10,6))
+		f = plt.figure(figsize=(12,6))
 		UnDyed = f.add_subplot(2,3,1)
 		ColorC = f.add_subplot(2,3,2)
 		Dyed = f.add_subplot(2,3,3)
@@ -718,46 +730,47 @@ class mergeComparisonsResults():
 		gs  = gridspec.GridSpec(4,3,hspace=1)
 		ColorD = plt.subplot(gs[3,2])
 		TimeSD = plt.subplot(gs[2,2],sharey=ColorD)
-
+		#ColorD = f.add_subplot(2,4,7)
+		#TimeSD = f.add_subplot(2,4,8)
 		# plot stuff
-		self.sizeWhiskerGroups(a,WhiskerGroup)
-		self.colorComparison(a,ColorC)
+		# self.sizeWhiskerGroups(a,WhiskerGroup,lung) # <--- sostituisco questo scatter con le matrici dei baffi simulati
+		CORR2SIM = funTemporaneoConfrontoBaffiSimulatiTraLoro()
+		self.colorComparison(a,WhiskerGroup,lung,CORR2SIM       ,'  Sim \n  Sim')
+		self.colorComparison(a,ColorC,lung,a.CORR2       		,'  Undyed \n  Dyed')
+		self.colorComparison(a,UnDyed,lung,a.CORR2_undyed		,'  Undyed \n  Undyed')
+		self.colorComparison(a,Dyed  ,lung,a.CORR2_dyed  		,'  Dyed \n  Dyed')
 		cax = self.timeComparison(b,TimeC)
+		cbar2 = f.colorbar(cax,ax=WhiskerGroup)
+		cbar2.ax.tick_params(labelsize=10)
 		cbar3 = f.colorbar(cax,ax=ColorC)
 		cbar3.ax.tick_params(labelsize=10)
 		cbar4 = f.colorbar(cax,ax=TimeC)
 		cbar4.ax.tick_params(labelsize=10)
-		self.diagColComp(a,TimeSD)
-		self.supradiagTimeComp(b,ColorD)
-		self.UndyedWhiskersComparison(a,UnDyed)
 		cbar5 = f.colorbar(cax,ax=UnDyed)
 		cbar5.ax.tick_params(labelsize=10)
-		self.DyedWhiskersComparison(a,Dyed)
 		cbar6 = f.colorbar(cax,ax=Dyed)
 		cbar6.ax.tick_params(labelsize=10)
-
+		self.diagColComp(a,TimeSD,lung,a.CORR2)
+		self.supradiagTimeComp(b,ColorD)
+		# stampo
 		f.tight_layout()
-		f.subplots_adjust(wspace=0.45,hspace=0.6)
+		f.subplots_adjust(wspace=0.35,hspace=0.3)
 		f.savefig(DATA_PATH+'/elab_video/baseFigura4_'+typeComparison+'.pdf')
 
 
-	def diagColComp(self,cbd,a51):
-		# calcolo le lunghezze per metterle in ordine
+	def diagColComp(self,cbd,a51,lung,CORR2):
 		def shorten(l):
 			l = np.round(l*100)
 			return str(l/100)
-		lengths = [shorten(l) for l in cbd.integrale_lunghezza]
-		l_sort = [i[0] for i in reversed(sorted(enumerate(lengths), key=lambda x:x[1]))]
-		lengths = [lengths[i] for i in l_sort] 
+		lengths = [np.round(l) for l in lung]
 		#
 		d_c2 = []
-		for i in xrange(0,cbd.CORR2.__len__()):
-			d_c2.append(cbd.CORR2[i][i])
-		x = np.linspace(0,12,13)
-		a51.plot(x,d_c2,'k.',markersize=5)
-		a51.plot(x,d_c2,'k')
-		a51.set_xticks(np.arange(0,len(cbd.ROOT),1))
-		a51.set_yticks(np.arange(0.6,1.1,0.2))
+		for i in xrange(0,CORR2.__len__()):
+			d_c2.append(CORR2[i][i])
+		a51.plot(d_c2,'k.',markersize=5)
+		a51.plot(d_c2,'k')
+		a51.set_xticks(np.arange(0,len(lung),1))
+		a51.set_yticks(np.arange(0,1.2,0.2))
 		a51.axis([-0.2, len(cbd.ROOT)-0.8, 0.1, 1])
 		#a51.set_xticklabels([])
 		a51.set_ylabel('Similarity', color='k',fontsize=14, y=-.5,x = 0.3) # e` condiviso
@@ -766,8 +779,8 @@ class mergeComparisonsResults():
 			a51.spines[spine].set_visible(False)
 		a51.tick_params(labelsize=10) 
 		a51.set_xticklabels(lengths,rotation=90) #cbd.ROOT[0:14],rotation=90)
-		a51.set_xlim([-.5, 12.5])
-		a51.set_ylim([0.5, 1.1])
+		a51.set_xlim([-.5, len(lung)-.5])
+		a51.set_ylim([0, 1])
 		#a51.axes.get_xaxis().set_visible(False)
 
 	def supradiagTimeComp(self,cbd,a51):
@@ -789,119 +802,52 @@ class mergeComparisonsResults():
 		a51.tick_params(labelsize=10) 
 		#a51.set_xticklabels(ROOT[1:])
 		a51.set_xticklabels(ROOT[1:13],rotation=90)
-		a51.set_xlim([-.5, 11.5])
+		a51.set_xlim([-.5, len(d_c2)-.5])
 		#a51.axes.get_xaxis().set_visible(False)
 
-	def colorComparison(self,cbd,a2):
-		# calcolo le lunghezze per metterle in ordine
+	def colorComparison(self,cbd,a2,lung,CORR2,text):
 		def shorten(l):
 			l = np.round(l*100)
 			return str(l/100)
-		lengths = [shorten(l) for l in cbd.integrale_lunghezza]
-		l_sort = [i[0] for i in reversed(sorted(enumerate(lengths), key=lambda x:x[1]))]
-		lengths = [lengths[i] for i in l_sort] 
-		# riordino la matrice di interesse
-		CORR2 = cbd.CORR2
-		print len(CORR2), len(cbd.integrale_lunghezza)
-		for i in xrange(0,CORR2.__len__()): 
-			j = l_sort[i]
-			cbd.CORR2[j] = CORR2[i]
+		lengths = [shorten(l) for l in lung]
 		# faccio il plot
-		cax2 = a2.imshow(cbd.CORR2,aspect='equal', interpolation="nearest",clim=(0,1))
+		cax2 = a2.imshow(np.flipud(CORR2),aspect='equal', interpolation="nearest",clim=(0,1))
 		a2.set_xticks(np.arange(len(cbd.ROOT)))
 		a2.set_xticklabels(lengths,rotation=90)#cbd.ROOT,rotation=90)
 		a2.set_yticks(np.arange(len(cbd.ROOT)))
-		a2.set_yticklabels(lengths)#cbd.ROOT)
+		a2.set_yticklabels(reversed(lengths))#cbd.ROOT)
 		a2.set_ylabel('Length [mm]',fontsize=14)
 		#a2.set_xlabel('Length [mm]',fontsize=14)
-		a2.text(-.25, -.25, 'Undyed \n  Dyed',horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=12)
-		a2.annotate('', xy=(-0.42, -0.42), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
+		a2.text(-.18, -.18, text,horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=12)
+		a2.annotate('', xy=(-0.3, -0.3), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
 		#a2.set_ylabel('Undyed')
 		#a2.set_xlabel('Dyed')
 		a2.tick_params(labelsize=10) 
 		return cax2
-
-	def DyedWhiskersComparison(self,cbd,a2):
-		# calcolo le lunghezze per metterle in ordine
-		def shorten(l):
-			l = np.round(l*100)
-			return str(l/100)
-		lengths = [shorten(l) for l in cbd.integrale_lunghezza]
-		l_sort = [i[0] for i in reversed(sorted(enumerate(lengths), key=lambda x:x[1]))]
-		lengths = [lengths[i] for i in l_sort] 
-		# riordino la matrice di interesse
-		CORR2 = cbd.CORR2_dyed
-		for i in xrange(0,CORR2.__len__()): 
-			j = l_sort[i]
-			cbd.CORR2_dyed[j] = CORR2[i]
-		# faccio il plot
-		cax2 = a2.imshow(cbd.CORR2_dyed,aspect='equal', interpolation="nearest",clim=(0,1))
-		a2.set_xticks(np.arange(len(cbd.ROOT)))
-		a2.set_xticklabels(lengths,rotation=90)#cbd.ROOT,rotation=90)
-		a2.set_yticks(np.arange(len(cbd.ROOT)))
-		a2.set_yticklabels(lengths)#cbd.ROOT)
-		a2.set_ylabel('Length [mm]',fontsize=14)
-		#a2.set_xlabel('Length [mm]',fontsize=14)
-		a2.text(-.25, -.25, 'Dyed \n  Dyed',horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=12)
-		a2.annotate('', xy=(-0.42, -0.42), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
-		#a2.set_ylabel('Dyed')
-		#a2.set_xlabel('Dyed')
-		a2.tick_params(labelsize=10) 
-		return cax2
-
-
-	def UndyedWhiskersComparison(self,cbd,a2):
-		# calcolo le lunghezze per metterle in ordine
-		def shorten(l):
-			l = np.round(l*100)
-			return str(l/100)
-		lengths = [shorten(l) for l in cbd.integrale_lunghezza]
-		l_sort = [i[0] for i in reversed(sorted(enumerate(lengths), key=lambda x:x[1]))]
-		lengths = [lengths[i] for i in l_sort] 
-		# riordino la matrice di interesse
-		CORR2 = cbd.CORR2_undyed
-		for i in xrange(0,CORR2.__len__()): 
-			j = l_sort[i]
-			cbd.CORR2_undyed[j] = CORR2[i]
-		# faccio il plot
-		cax2 = a2.imshow(cbd.CORR2_undyed,aspect='equal', interpolation="nearest",clim=(0,1))
-		a2.set_xticks(np.arange(len(cbd.ROOT)))
-		a2.set_xticklabels(lengths,rotation=90)#cbd.ROOT,rotation=90)
-		a2.set_yticks(np.arange(len(cbd.ROOT)))
-		a2.set_yticklabels(lengths)#cbd.ROOT)
-		a2.set_ylabel('Length [mm]',fontsize=14)
-		#a2.set_xlabel('Length [mm]',fontsize=14)
-		a2.text(-.25, -.25, 'Undyed \n  Undyed',horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=12)
-		a2.annotate('', xy=(-0.42, -0.42), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
-		#a2.set_ylabel('Undyed')
-		#a2.set_xlabel('Undyed')
-		a2.tick_params(labelsize=10) 
-		return cax2
-
 
 	def timeComparison(self,cbd,a1):
 		ROOT  	= [re.sub('[$]','',cbd.ROOT[i]) for i in xrange(0,cbd.ROOT.__len__()) if cbd.group3[i] == 0] # uso le regular expression per togliere i $ che mi servono per l'interpreter latex per fare il corsivo 
 		CORR2 	= cbd.CORR2[0:ROOT.__len__(),0:ROOT.__len__()]
-		cax1 = a1.imshow(CORR2,aspect='equal', interpolation="nearest",clim=(0,1))
+		cax1 = a1.imshow(np.flipud(CORR2),aspect='equal', interpolation="nearest",clim=(0,1))
 		a1.set_xticks(np.arange(len(ROOT)))
-		a1.set_xticklabels(ROOT)
 		a1.set_xticklabels(ROOT,rotation=90)
 		a1.set_yticks(np.arange(len(ROOT)))
-		a1.set_yticklabels(ROOT)
+		a1.set_yticklabels(reversed(ROOT))
 		#a1.set_xlabel('Whisker')
 		a1.set_ylabel('Over time',fontsize=14) # C3 o 37.99mm
 		a1.tick_params(labelsize=10) 
 		return cax1
 
 
-	def sizeWhiskerGroups(self,cbd,a1):
+	def sizeWhiskerGroups(self,cbd,a1,lung):
+		#
 		dist  = []
 		corr2 = []
 		corr2c = []
 		corr2nc = []
 		for i in xrange(0,cbd.CORR2.__len__()):
 			for j in xrange(0,cbd.CORR2.__len__()):
-				dist.append(np.abs(cbd.integrale_lunghezza[i]-cbd.integrale_lunghezza[j]))
+				dist.append(np.abs(lung[i]-lung[j]))
 				corr2.append(cbd.CORR2[i,j])
 				corr2c.append(cbd.CORR2_dyed[i,j])
 				corr2nc.append(cbd.CORR2_undyed[i,j])
@@ -1190,23 +1136,39 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 
 		# modifiche al volo di variabili che non devo precalcolare
 		if self.testType == 'diversiBaffi':
+			'''
+			# ordine usato finora
 			self.listaWhisker = [\
-								#DATA_PATH+'/elab_video/a11_12May_',\
-								#DATA_PATH+'/elab_video/c11_12May_',\
-								DATA_PATH+'/elab_video/c12_12May_',\
-								DATA_PATH+'/elab_video/c22_12May_',\
-								DATA_PATH+'/elab_video/d11_12May_',\
-								DATA_PATH+'/elab_video/c21_12May_',\
-								DATA_PATH+'/elab_video/c31_12May_',\
-								DATA_PATH+'/elab_video/d21_12May_',\
-								DATA_PATH+'/elab_video/d22_12May_',\
-								DATA_PATH+'/elab_video/a31_12May_',\
-								DATA_PATH+'/elab_video/b11_12May_',\
-								DATA_PATH+'/elab_video/c41_12May_',\
+								#DATA_PATH+'/elab_video/a11_12May_',
+								#DATA_PATH+'/elab_video/c11_12May_',
+								DATA_PATH+'/elab_video/c12_12May_', # 1
+								DATA_PATH+'/elab_video/c22_12May_', # 2
+								DATA_PATH+'/elab_video/d11_12May_', # 3
+								DATA_PATH+'/elab_video/c21_12May_', # 4
+								DATA_PATH+'/elab_video/c31_12May_', # 5
+								DATA_PATH+'/elab_video/d21_12May_', # 6
+								DATA_PATH+'/elab_video/d22_12May_', # 7
+								DATA_PATH+'/elab_video/a31_12May_', # 8
+								DATA_PATH+'/elab_video/b11_12May_', # 9
+								DATA_PATH+'/elab_video/c41_12May_', # 10
 								# 			in d31 e` comparsa una imperfezione dopo la colorazione
-								#DATA_PATH+'/elab_video/d31_12May_',\
-								#DATA_PATH+'/elab_video/a41_12May_',\
-								#DATA_PATH+'/elab_video/c51_12May_',\
+								#DATA_PATH+'/elab_video/d31_12May_',
+								#DATA_PATH+'/elab_video/a41_12May_',
+								#DATA_PATH+'/elab_video/c51_12May_',
+								]
+			'''
+			# ordino per ordine crescente di dimensione
+			self.listaWhisker = [\
+								DATA_PATH+'/elab_video/a31_12May_', # 8
+								DATA_PATH+'/elab_video/b11_12May_', # 9
+								DATA_PATH+'/elab_video/c41_12May_', # 10
+								DATA_PATH+'/elab_video/c21_12May_', # 4
+								DATA_PATH+'/elab_video/c31_12May_', # 5
+								DATA_PATH+'/elab_video/d22_12May_', # 7
+								DATA_PATH+'/elab_video/d21_12May_', # 6
+								DATA_PATH+'/elab_video/c12_12May_', # 1
+								DATA_PATH+'/elab_video/c22_12May_', # 2
+								DATA_PATH+'/elab_video/d11_12May_', # 3
 								]
 			# creo le due liste di cose da confrontare
 			self.listaWhisker1 = []
@@ -1216,15 +1178,17 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 			for lW in self.listaWhisker:
 				self.listaWhisker2.append(lW+'_color_')
 			
-			self.group1 = ['$A1_L$','$C1_L$','$C1_R$','$C2_R$','$D1_L$']
-			self.group2 = ['$C2_L$','$C3_L$','$D2_L$','$D2_R$']
-			self.group3 = ['$A3_L$','$B1_L$','$C4_L$','$D3_L$']
-			self.group4 = ['$A4_L$','$C5_L$']
-			self.ROOT = self.group1 + self.group2 + self.group3 #+ self.group4
-			'''
-			for lW in self.listaWhisker:
-				self.ROOT.append(lW[14:17])
-			'''
+			# ora non stampo piu` i nomi dei whisker nelle label...
+			#self.group1 = ['$A1_L$','$C1_L$','$C1_R$','$C2_R$','$D1_L$']
+			#self.group2 = ['$C2_L$','$C3_L$','$D2_L$','$D2_R$']
+			#self.group3 = ['$A3_L$','$B1_L$','$C4_L$','$D3_L$']
+			#self.group4 = ['$A4_L$','$C5_L$']
+			#self.ROOT = self.group1[2:] + self.group2 + self.group3[:-1] #+ self.group4
+			self.ROOT = []
+			bias = len(DATA_PATH+'/elab_video/')
+			for i in self.listaWhisker:
+				self.ROOT.append(i[bias:bias+2]+'_'+i[bias+2]) # lo costruisco con il '_' nel mezzo
+			
 		elif self.testType == 'diversiTempi': 
 			
 			self.group1 = ['$A1_L$','$C1_L$','$C2_R$','$D1_L$'] # ne manca uno, perche`???`
@@ -1973,13 +1937,15 @@ class video: # ogni fideo va elaborato
 		print 'stampami questo!'
 
 
-def funTemporaneoConfrontoBaffiSimulatiTraLoro(): #FIXME TODO mettere nelle figure opportunamente
-	CORR2 = np.loadtxt('/media/jaky/DATI BAFFO/elab_video/simulatedWhisker_byAle/comparisonSimWhiskers_CORR2_visualInspection.txt') 
-	f = plt.figure()
-	a1 = f.add_subplot(1,1,1)
-	cax1 = a1.imshow(CORR2,aspect='equal', interpolation="nearest",clim=(0,1))	
-	cbar1 = f.colorbar(cax1,ax=a1)
-	plt.savefig(DATA_PATH+'elab_video/simulatedWhisker_byAle/comparisonSimWhiskers_CORR2_visualInspection.pdf')
+def funTemporaneoConfrontoBaffiSimulatiTraLoro(SalvaImg=False): #FIXME TODO mettere nelle figure opportunamente
+	CORR2 = np.loadtxt('/media/jaky/DATI BAFFO/elab_video/simulatedWhisker_byAle/comparisonSimWhisker_ordered.txt') #comparisonSimWhiskers_CORR2_visualInspection.txt') 
+	if SalvaImg: 
+		f = plt.figure()
+		a1 = f.add_subplot(1,1,1)
+		cax1 = a1.imshow(CORR2,aspect='equal', interpolation="nearest",clim=(0,1))	
+		cbar1 = f.colorbar(cax1,ax=a1)
+		plt.savefig(DATA_PATH+'elab_video/simulatedWhisker_byAle/comparisonSimWhisker_ordered.pdf') #comparisonSimWhiskers_CORR2_visualInspection.pdf')
+	return CORR2 
 
 # i test vanno qui
 if __name__ == '__main__': 
@@ -2073,7 +2039,7 @@ if __name__ == '__main__':
 	#a.checkTipTracking() 
 	#a.checkBaseTracking()
 	#a.saveTipTF() # per Ale per fare l'ottimizzazione del modello in COMSOL
-	#funTemporaneoConfrontoBaffiSimulatiTraLoro() # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
+	#funTemporaneoConfrontoBaffiSimulatiTraLoro(True) # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
 	
 
 	# ---- POST - PROCESSING ---- #
@@ -2087,8 +2053,8 @@ if __name__ == '__main__':
 		db.plotComparisons('transferFunction')
 	#stampo_lunghezza_whiskers()					
 	#confrontoAddestramento()						
-	creoSpettriBaffi()								
-	#mergeComparisonsResults()						
+	#creoSpettriBaffi()								
+	mergeComparisonsResults()						
 	#simulatedAndSetup() 							
 	#creoImageProcessing_Stacked()					
 	
