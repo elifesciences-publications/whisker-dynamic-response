@@ -24,6 +24,9 @@ import pickle
 import os.path
 
 
+def referencePanel(ax,text,x,y):
+	ax.text(x,y, text ,horizontalalignment='center',verticalalignment='center',fontweight='bold',fontsize=18,transform=ax.transAxes)
+
 class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
@@ -672,6 +675,7 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 		colors = ['b','c','m','g'] #cm.rainbow(np.linspace(0, 1, 4)) # 4 gruppi 
 		ALPHA= 0.5
 
+		'''
 		def annotatingPatches(ax, info):
 			stylename= 'wedge'
 			x,y,dx,dy,xc,yc,color,commento,fontsize = info
@@ -700,8 +704,9 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 										connectionstyle="arc3,rad=-0.05",
 										),
 						)
+		'''
 
-		def creo_a1(a1):
+		def panel_D(a):
 			# disegno i trend
 			area = np.pi*(1.5**2)
 			Rats_name = ['colored rat','control rat','colored rat','control rat']
@@ -709,88 +714,86 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 			Rats_post = [self.ratto_1_post, self.ratto_2_post, self.ratto_3_post, self.ratto_4_post]
 			xx = 0
 			for rat_pre,rat_post,n,c in zip(Rats_pre,Rats_post,Rats_name,colors): 
-				a1.scatter(np.linspace(0, 9.5, rat_pre.__len__()), rat_pre, area,color=c,alpha=0.8)
-				a1.scatter(np.linspace(10.5, 20, rat_post.__len__()),rat_post,area,color=c,alpha=0.5)
-				a1.plot(np.linspace(0, 9.5, rat_pre.__len__()), rat_pre, color=c, linewidth=1.2,alpha=0.5)
-				a1.plot(np.linspace(10.5, 20, rat_post.__len__()),rat_post, color=c, linewidth=1.2,alpha=0.5)
-				a1.plot(np.linspace(9.5, 10.5, 2), [rat_pre[-1],rat_post[0]], color=c, linestyle='--',alpha=0.5)
-				#plt.annotate(n,(2.05,rat_post[-1]),arrowprops=dict(facecolor=c, shrink=0.05)) 
-				#a1.text(xx, 90, n, bbox={'facecolor':c, 'alpha':0.5})
+				a.scatter(np.linspace(0, 9.5, rat_pre.__len__()), rat_pre, area,color=c,alpha=0.8)
+				a.scatter(np.linspace(10.5, 20, rat_post.__len__()),rat_post,area,color=c,alpha=0.5)
+				a.plot(np.linspace(0, 9.5, rat_pre.__len__()), rat_pre, color=c, linewidth=1.2,alpha=0.5)
+				a.plot(np.linspace(10.5, 20, rat_post.__len__()),rat_post, color=c, linewidth=1.2,alpha=0.5)
+				a.plot(np.linspace(9.5, 10.5, 2), [rat_pre[-1],rat_post[0]], color=c, linestyle='--',alpha=0.5)
 				xx += 0.25
-			'''
-			a1.spines['right'].set_visible(False)
-			a1.spines['left'].set_visible(False)
-			a1.spines['bottom'].set_visible(False)
-			a1.spines['top'].set_visible(False)
-			'''
-			a1.get_xaxis().tick_top()
-			a1.get_yaxis().tick_left()
-			a1.set_ylabel('Correct trials [%]', fontsize=14)
-			a1.set_xlabel('Sessions',fontsize=14)
-			a1.set_yticks([75,80,85,90]) # niente
-			if 0:
-				a1.axvline(x=1, color='gray', linestyle='-.')	
-				a1.set_xticks([0.5,1.5])
-				a1.set_xticklabels(['before','after']) # niente
-			else:
-				annotatingPatches(a1,(-.25,74,10,17,5,96,'gray','before',12))
-				annotatingPatches(a1,(10.25,74,10,17,15.5,96,'gray','after ',12))
-				a1.set_xticks([]) # niente
-			a1.set_xlim([-.5, 21.2])
-			a1.set_ylim([70, 95])
-			a1.tick_params(labelsize=10) 
+			a.get_xaxis().tick_top()
+			a.get_yaxis().tick_left()
+			a.set_ylabel('Correct trials [%]', fontsize=14)
+			a.set_xlabel('Sessions',fontsize=14)
+			a.set_yticks([75,80,85,90]) # niente
+			a.set_xticks([]) # niente
+			a.set_xlim([-.5, 20])
+			a.set_ylim([73, 91])
+			a.tick_params(labelsize=14) 
+			# patches
+			p1 = a.add_patch(patches.Rectangle((-.25, 74),10,18))
+			p1.set_alpha(0.2)
+			p1.set_color('gray')
+			p2 = a.add_patch(patches.Rectangle((10.25,74),10,18))
+			p2.set_alpha(0.2)
+			p2.set_color('gray')
+			# annotations
+			a.annotate('before', ( 5, 89),( 4, 93.5),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
+			a.annotate('after' , (15, 89),(14, 93.5),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
+			#a.annotate('dyed', (3.5, 10),(3, 15),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
 
-		def creo_a2(a2):
-			'''
-			a2.spines['right'].set_visible(False)
-			a2.spines['left'].set_visible(False)
-			a2.spines['bottom'].set_visible(False)
-			a2.spines['top'].set_visible(False)
-			'''
-			#a2.axes.get_yaxis().set_visible(False)
-			a2.set_xticks([]) 
-			#
-			if 1:
-				def permutoPerf(pre,post):
-					dp = []
-					for r in itertools.product(pre,post):	
-						dp.append(r[1]-r[0])
-					return dp
-				annotatingPatches(a2,( .6,-12,1.8,25,1.5,20,'gray','sham\nrats',12))
-				annotatingPatches(a2,(2.6,-12,1.8,25,3.5,20,'red','dyed\nrats',12))
-				dr1 = permutoPerf(self.ratto_1_pre,self.ratto_1_post)
-				dr2 = permutoPerf(self.ratto_2_pre,self.ratto_2_post)
-				dr3 = permutoPerf(self.ratto_3_pre,self.ratto_3_post)
-				dr4 = permutoPerf(self.ratto_4_pre,self.ratto_4_post)
-				dr = [dr2,dr4,dr1,dr3] 
-				# calcolo intervallo di confidenza
-				def bootstrap(data, num_samples, statistic, alpha):
-					"""Returns bootstrap estimate of 100.0*(1-alpha) CI for statistic."""
-					n = len(data)
-					idx = np.random.randint(0, n, (num_samples, n))
-					print n, '\n----\n----\n', idx
-					samples = [data[i] for i in idx] 
-					stat = np.sort(statistic(samples, 1))
-					return (stat[int((alpha/2.0)*num_samples)],
-							stat[int((1-alpha/2.0)*num_samples)])
-				ci = []
-				ci.append(bootstrap(np.asarray(dr2), 1000, np.mean, 0.05))
-				ci.append(bootstrap(np.asarray(dr4), 1000, np.mean, 0.05))
-				ci.append(bootstrap(np.asarray(dr1), 1000, np.mean, 0.05))
-				ci.append(bootstrap(np.asarray(dr3), 1000, np.mean, 0.05))
-				print ci # due ratti hanno migliorato le performance in modo significativo...
-				# faccio il violinplot
-				violin_parts = a2.violinplot(dr,showextrema=False,showmeans=False,showmedians=True)
-				violin_parts['cmedians'].set_color('k')
-				for pc,c in zip(violin_parts['bodies'],colors):
-					pc.set_color(c)
-					pc.set_alpha(ALPHA)
-				a2.set_ylabel('Difference [%]',fontsize=14)
-				a2.set_xlabel('Rats',fontsize=14)
-				a2.set_yticks(np.arange(-10,11,5))
-				a2.tick_params(labelsize=11) 
-				a2.set_ylim([-12, 15])
-				a2.set_xlim([0, 5])
+			#annotatingPatches(a,(-.25,74,10,17,5,94,'gray','before',12))
+			#annotatingPatches(a,(10.25,74,10,17,15.5,94,'gray','after ',12))
+
+		def panel_E(a):
+			a.set_xticks([]) 
+			def permutoPerf(pre,post):
+				dp = []
+				for r in itertools.product(pre,post):	
+					dp.append(r[1]-r[0])
+				return dp
+			dr1 = permutoPerf(self.ratto_1_pre,self.ratto_1_post)
+			dr2 = permutoPerf(self.ratto_2_pre,self.ratto_2_post)
+			dr3 = permutoPerf(self.ratto_3_pre,self.ratto_3_post)
+			dr4 = permutoPerf(self.ratto_4_pre,self.ratto_4_post)
+			dr = [dr2,dr4,dr1,dr3] 
+			# calcolo intervallo di confidenza
+			def bootstrap(data, num_samples, statistic, alpha):
+				"""Returns bootstrap estimate of 100.0*(1-alpha) CI for statistic."""
+				n = len(data)
+				idx = np.random.randint(0, n, (num_samples, n))
+				print n, '\n----\n----\n', idx
+				samples = [data[i] for i in idx] 
+				stat = np.sort(statistic(samples, 1))
+				return (stat[int((alpha/2.0)*num_samples)],
+						stat[int((1-alpha/2.0)*num_samples)])
+			ci = []
+			ci.append(bootstrap(np.asarray(dr2), 1000, np.mean, 0.05))
+			ci.append(bootstrap(np.asarray(dr4), 1000, np.mean, 0.05))
+			ci.append(bootstrap(np.asarray(dr1), 1000, np.mean, 0.05))
+			ci.append(bootstrap(np.asarray(dr3), 1000, np.mean, 0.05))
+			print ci # due ratti hanno migliorato le performance in modo significativo...
+			# faccio il violinplot
+			violin_parts = a.violinplot(dr,showextrema=False,showmeans=False,showmedians=True)
+			violin_parts['cmedians'].set_color('k')
+			for pc,c in zip(violin_parts['bodies'],colors):
+				pc.set_color(c)
+				pc.set_alpha(ALPHA)
+			a.set_ylabel('Difference [%]',fontsize=14)
+			a.set_xlabel('Rats',fontsize=14)
+			a.set_yticks(np.arange(-10,11,5))
+			a.tick_params(labelsize=11) 
+			a.set_ylim([-11, 11])
+			a.set_xlim([0, 5])
+			# patches
+			p1 = a.add_patch(patches.Rectangle((.6, -10.2),1.8,23))
+			p1.set_alpha(0.2)
+			p1.set_color('gray')
+			p2 = a.add_patch(patches.Rectangle((2.6, -10.2),1.8,23))
+			p2.set_alpha(0.2)
+			p2.set_color('red')
+			# annotations
+			a.annotate('sham', (1.5, 10),(1, 15),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
+			a.annotate('dyed', (3.5, 10),(3, 15),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
 
 		# luce bianca - luce blu filtro rosso - luce blu  filtro passa lungo 
 		# 				effetto sulla behavioral performance
@@ -808,17 +811,25 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 		aw2 = fW.add_subplot(2,3,2)
 		aw3 = fW.add_subplot(2,3,3)
 		aw1.imshow(LB)
+		referencePanel(aw1,'A',-0.05, 1.05)
 		aw2.imshow(FPL)
+		referencePanel(aw2,'B',-0.05, 1.05)
 		aw3.imshow(FR)
+		referencePanel(aw3,'C',-0.05, 1.05)
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
 		[unvisibleAxes(ax) for ax in [aw1,aw2,aw3]] 
-		gs = gridspec.GridSpec(2,3,width_ratios=[0,6,1])
-		aw41 = fW.add_subplot(gs[4])
-		aw42 = fW.add_subplot(gs[5]) #,sharey=aw41)
-		creo_a2(aw42)
-		creo_a1(aw41)
+		gs = gridspec.GridSpec(2,4,width_ratios=[0,3,0,1],wspace=0.2)
+		aw41 = fW.add_subplot(gs[1,1])
+		aw42 = fW.add_subplot(gs[1,3]) #,sharey=aw41)
+		panel_D(aw41)
+		referencePanel(aw1,'D',-0.05, -0.4)
+		panel_E(aw42)
+		referencePanel(aw1,'E',2.35, -0.4)
+		for a in [aw41,aw42]:
+			for spine in ['right','top']: #'left','bottom'
+				a.spines[spine].set_visible(False)
 
 		#	
 		fW.tight_layout()
@@ -1735,9 +1746,9 @@ if __name__ == '__main__':
 	#stampo_lunghezza_whiskers()					
 	dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()	# fig2.part
-	simulatedAndSetup() 			# fig2				
-	creoSpettriBaffi()				# fig3			
-	mergeComparisonsResults()		# fig4				
+	#simulatedAndSetup() 			# fig2				
+	#creoSpettriBaffi()				# fig3			
+	#mergeComparisonsResults()		# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
