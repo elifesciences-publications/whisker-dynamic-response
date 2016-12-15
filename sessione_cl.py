@@ -23,71 +23,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import pickle
 import os.path
 
-from math import sqrt  # per latexify
-SPINE_COLOR = 'gray'   # per latexify
-
-# presa da http://nipunbatra.github.io/2014/08/latexify/
-def latexify(fig_width=None, fig_height=None, columns=1):
-    """Set up matplotlib's RC params for LaTeX plotting.
-    Call this before plotting a figure.
-
-    Parameters
-    ----------
-    fig_width : float, optional, inches
-    fig_height : float,  optional, inches
-    columns : {1, 2}
-    """
-
-
-    # code adapted from http://www.scipy.org/Cookbook/Matplotlib/LaTeX_Examples
-
-    # Width and max height in inches for IEEE journals taken from
-    # computer.org/cms/Computer.org/Journal%20templates/transactions_art_guide.pdf
-
-    assert(columns in [1,2])
-
-    if fig_width is None:
-        fig_width = 3.39 if columns==1 else 6.9 # width in inches
-
-    if fig_height is None:
-        golden_mean = (sqrt(5)-1.0)/2.0    # Aesthetic ratio
-        fig_height = fig_width*golden_mean # height in inches
-
-    MAX_HEIGHT_INCHES = 8.0
-    if fig_height > MAX_HEIGHT_INCHES:
-        print("WARNING: fig_height too large:" + fig_height + 
-              "so will reduce to" + MAX_HEIGHT_INCHES + "inches.")
-        fig_height = MAX_HEIGHT_INCHES
-
-    params = {'backend': 'ps',
-              'text.latex.preamble': ['\usepackage{gensymb}'],
-              'axes.labelsize': 8, # fontsize for x and y labels (was 10)
-              'axes.titlesize': 8,
-              'text.fontsize': 8, # was 10
-              'legend.fontsize': 8, # was 10
-              'xtick.labelsize': 8,
-              'ytick.labelsize': 8,
-              'text.usetex': True,
-              'figure.figsize': [fig_width,fig_height],
-              'font.family': 'sans-serif'
-    }
-
-    matplotlib.rcParams.update(params)
-
-'''
-def format_axes(ax):
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
-    for spine in ['top', 'right']:
-        ax.spines[spine].set_visible(False)
-    for spine in ['left', 'bottom']:
-        ax.spines[spine].set_color(SPINE_COLOR)
-        ax.spines[spine].set_linewidth(0.5)
-    for axis in [ax.xaxis, ax.yaxis]:
-        axis.set_tick_params(direction='out', color=SPINE_COLOR)
-    return ax
-'''
-
 def range_brace(x_min, x_max, mid=0.75, 
                 beta1=50.0, beta2=100.0, height=1, 
                 initial_divisions=11, resolution_factor=1.5):
@@ -708,7 +643,6 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			ax2.set_yticks([])
 			ax3.set_yticks([])
 			#f.text(0.02, 0.5, 'Whisker dynamic response \n pippo', ha='center', va='center', rotation='vertical')
-			#latexify()
 			f1.tight_layout()
 			#f2.tight_layout()
 			#f2.subplots_adjust(wspace=0.05,hspace=0.6)
@@ -928,7 +862,6 @@ class mergeComparisonsResults():
 
 class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-anestesia, due di controllo due con colorazione nel post-anestesia
 	def __init__(self):
-		#latexify()
 		self.initData()
 		self.trendData(True)
 
