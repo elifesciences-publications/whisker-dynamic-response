@@ -74,22 +74,19 @@ def latexify(fig_width=None, fig_height=None, columns=1):
 
     matplotlib.rcParams.update(params)
 
+'''
 def format_axes(ax):
-
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
     for spine in ['top', 'right']:
         ax.spines[spine].set_visible(False)
-
     for spine in ['left', 'bottom']:
         ax.spines[spine].set_color(SPINE_COLOR)
         ax.spines[spine].set_linewidth(0.5)
-
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
-
     for axis in [ax.xaxis, ax.yaxis]:
         axis.set_tick_params(direction='out', color=SPINE_COLOR)
-
     return ax
+'''
 
 def range_brace(x_min, x_max, mid=0.75, 
                 beta1=50.0, beta2=100.0, height=1, 
@@ -135,7 +132,7 @@ class simulatedAndSetup():
 		a2 = f.add_subplot(1,2,2)
 		a2.imshow(SETUP)
 		a4 = f.add_subplot(gs2[4,4])
-		Np = 150
+		Np = 4500
 		s = np.random.normal(0, 1, Np)	
 		s = s*signal.hamming(Np)
 		t = xrange(10,Np+10,1)
@@ -145,18 +142,21 @@ class simulatedAndSetup():
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
+			'''
 			for spine in ['top', 'right','bottom','left']:
 				ax.spines[spine].set_visible(False)
+			'''
 		[unvisibleAxes(ax) for ax in [a2,a4]]
-		cax1 = a1.imshow(np.log10(spettroSim) ,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+		cax1 = a1.imshow(np.log10(spettroSim[:,SPECTRAL_RANGE]) ,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 		cbar1 = f.colorbar(cax1,ax=a1)
-		cax3 =a3.imshow(np.log10(spettroVero),aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+		cax3 =a3.imshow(np.log10(spettroVero[:,SPECTRAL_RANGE]),aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 		cbar3 = f.colorbar(cax3,ax=a3)
-		a3.set_xlabel('Frequency [Hz]') 
 		a1.set_yticks([])
 		a3.set_yticks([])
-		a1.set_ylabel(r'Base        $\longrightarrow$         tip')
-		a3.set_ylabel(r'Base        $\longrightarrow$         tip')
+		a1.set_ylabel(r'Base        $\longrightarrow$         Tip')
+		a1.set_xlabel('Frequency [Hz]') 
+		a3.set_ylabel(r'Base        $\longrightarrow$         Tip')
+		a3.set_xlabel('Frequency [Hz]') 
 		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
 		
 	
@@ -243,8 +243,10 @@ class creoImageProcessing_Stacked(): #
 		
 		fig = plt.figure()
 		ax = fig.add_subplot(1,1,1)		
+		'''
 		for spine in ('top','bottom','left','right'):
 			ax.spines[spine].set_visible(False)
+		'''
 		'''
 		# NON mi piazzi...
 		ax.annotate("",
@@ -519,9 +521,9 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				bc = sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 				for baffo in [ba,bb,bc]:
 					baffo.calcoloTransferFunction(False)
-				g1 = ba.TFM
-				g2 = bb.TFM
-				g3 = bc.TFM
+				g1 = ba.TFM[:,SPECTRAL_RANGE]
+				g2 = bb.TFM[:,SPECTRAL_RANGE]
+				g3 = bc.TFM[:,SPECTRAL_RANGE]
 				g1_to_plot = np.log10(g1)
 				g2_to_plot = np.log10(g2)
 				g3_to_plot = np.log10(g3)
@@ -567,9 +569,9 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				def shorten(l):
 					l = np.round(l*100)
 					return str(l/100)
-				a1.set_title('W1 = '+str(shorten(lunghezze[0]))+'[mm]',fontsize=FS)
-				a2.set_title('W2 = '+str(shorten(lunghezze[1]))+'[mm]',fontsize=FS)
-				a3.set_title('W3 = '+str(shorten(lunghezze[2]))+'[mm]',fontsize=FS)
+				a1.set_title('W1 = '+str(shorten(lunghezze[0]))+' [mm]',fontsize=FS)
+				a2.set_title('W2 = '+str(shorten(lunghezze[1]))+' [mm]',fontsize=FS)
+				a3.set_title('W3 = '+str(shorten(lunghezze[2]))+' [mm]',fontsize=FS)
 				a4.set_title('W1-W2',fontsize=FS)
 				a5.set_title('W1-W3',fontsize=FS)
 				a5.set_xlabel('Frequency [Hz]',fontsize=FS)
@@ -577,7 +579,7 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 					ax.set_yticks([])
 				a6.set_xlabel('Pixel Value',fontsize=FS)
 				a6.set_ylabel('Pixel Value',fontsize=FS)
-				a1.set_ylabel(r'Base        $\longrightarrow$         tip',fontsize=FS)
+				a1.set_ylabel(r'Base        $\longrightarrow$         Tip',fontsize=FS)
 
 				# scatter
 				g1r = np.reshape(g1,g1.__len__()*g1[0].__len__())
@@ -605,8 +607,10 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				a6.plot(x13,y13,color='#6d622a',linewidth=2)
 				a6.text(12,10,pp12,fontsize=14)
 				a6.text(3,15,pp13,fontsize=14)
+				'''
 				for spine in ('top','bottom','left','right'):
 					a6.spines[spine].set_visible(False)
+				'''
 				a6.set_xlim([min(g1r),max(g1r)])
 				a6.set_ylim([min(g1r),max(g1r)])
 				a6.tick_params(labelsize=FS) 
@@ -686,14 +690,16 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			ax2.set_title(str(shorten(a.integrale_lunghezza[ig2]))+'[mm]',fontsize=14)
 			ax3.set_title(str(shorten(a.integrale_lunghezza[ig3]))+'[mm]',fontsize=14)
 			#
-			aa.set_xlabel('Frequency [Hz]',fontsize=14)
-			ax2.set_xlabel('Frequency [Hz]',fontsize=14)
 			idx = [freq.index(0),freq.index(100),freq.index(200),freq.index(300)]
 			for a in (aa,ax1,ax2,ax3):
 				a.set_xticks(idx)
 				a.set_xticklabels([freq[i] for i in idx])
-			aa.set_ylabel(r'Base - - - - $\longrightarrow$  - - - - tip',fontsize=14)
-			ax1.set_ylabel(r'Base        $\longrightarrow$         tip',fontsize=14)
+			aa.set_xlabel('Frequency [Hz]',fontsize=14)
+			ax1.set_xlabel('Frequency [Hz]',fontsize=14)
+			ax2.set_xlabel('Frequency [Hz]',fontsize=14)
+			ax3.set_xlabel('Frequency [Hz]',fontsize=14)
+			aa.set_ylabel(r'Base - - - - $\longrightarrow$  - - - - Tip',fontsize=14)
+			ax1.set_ylabel(r'Base        $\longrightarrow$         Tip',fontsize=14)
 			ax1.tick_params(labelsize=10) 
 			ax2.tick_params(labelsize=10) 
 			ax3.tick_params(labelsize=10) 
@@ -702,7 +708,7 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			ax2.set_yticks([])
 			ax3.set_yticks([])
 			#f.text(0.02, 0.5, 'Whisker dynamic response \n pippo', ha='center', va='center', rotation='vertical')
-			latexify()
+			#latexify()
 			f1.tight_layout()
 			#f2.tight_layout()
 			#f2.subplots_adjust(wspace=0.05,hspace=0.6)
@@ -794,10 +800,12 @@ class mergeComparisonsResults():
 		a51.set_yticks(np.arange(0,1.2,0.2))
 		a51.axis([-0.2, len(cbd.ROOT)-0.8, 0.1, 1])
 		#a51.set_xticklabels([])
-		a51.set_ylabel('Similarity', color='k',fontsize=FS, y=-.5,x = 0.3) # e` condiviso
+		a51.set_ylabel(r'$R^2$', color='k',fontsize=FS, y=-.5,x = 0.3) # e` condiviso
 		a51.set_title('Dye effect', color='k',fontsize=FS)
+		'''
 		for spine in ('top','bottom','left','right'):
 			a51.spines[spine].set_visible(False)
+		'''
 		a51.tick_params(labelsize=FS) 
 		a51.set_xticklabels(lengths,rotation=90) #cbd.ROOT[0:14],rotation=90)
 		a51.set_xlim([-.5, len(lung)-.5])
@@ -814,12 +822,13 @@ class mergeComparisonsResults():
 		a51.axis([-0.2, len(cbd.CORR2)-0.8, 0.1, 1])
 		a51.set_yticks(np.arange(0.2,1.2,0.2))
 		a51.set_xticks(xrange(0,len(cbd.CORR2)-1))
-		#a51.set_ylabel('Similarity', color='k',fontsize=14) # e` condiviso
 		a51.set_title('Time effect', color='k',fontsize=FS)
 		for tl in a51.get_yticklabels():
 			tl.set_color('k')
+		'''
 		for spine in ('top','bottom','left','right'):
 			a51.spines[spine].set_visible(False)
+		'''
 		a51.tick_params(labelsize=FS) 
 		a51.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
 		#a51.set_xticklabels(ROOT[1:])
@@ -835,11 +844,10 @@ class mergeComparisonsResults():
 		a2.set_xticklabels(lengths,rotation=90)#cbd.ROOT,rotation=90)
 		a2.set_yticks(np.arange(len(cbd.ROOT)))
 		a2.set_yticklabels(reversed(lengths))#cbd.ROOT)
+		a2.set_xlabel('Length [mm]',fontsize=FS)
 		a2.set_ylabel('Length [mm]',fontsize=FS)
 		a2.text(-.18, -.18, text,horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=FS)
 		a2.annotate('', xy=(-0.3, -0.3), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
-		#a2.set_ylabel('Undyed')
-		#a2.set_xlabel('Dyed')
 		a2.tick_params(labelsize=FS) 
 		return cax2
 
@@ -851,7 +859,7 @@ class mergeComparisonsResults():
 		a1.set_xticklabels(ROOT,rotation=90)
 		a1.set_yticks(np.arange(len(ROOT)))
 		a1.set_yticklabels(reversed(ROOT))
-		#a1.set_xlabel('Whisker')
+		a1.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
 		a1.set_ylabel('Time',fontsize=FS) # C3 o 37.99mm
 		a1.tick_params(labelsize=FS) 
 		return cax1
@@ -877,10 +885,9 @@ class mergeComparisonsResults():
 		a1.set_ylim([-0.05, 1.05])
 		a1.set_xlim([-2, 42])
 		a1.tick_params(labelsize=10) 
+		'''
 		for spine in ('top','bottom','left','right'):
 			a1.spines[spine].set_visible(False)
-
-		'''
 		gLengths = [[],[],[],[]]
 		for l,n in zip(cbd.integrale_lunghezza,cbd.ROOT):
 			if n in cbd.group1:
@@ -910,7 +917,6 @@ class mergeComparisonsResults():
 		a1.axes.get_yaxis().set_visible(False)
 		a1.set_xlim([0,len(cbd.ROOT)])
 		a1.set_yticks(xrange(0,66,5))
-		#a1.ylabel('Length [mm]')
 		# grafe
 		x1,y1 = range_brace(1.9,5.2)
 		x2,y2 = range_brace(5.4,7.7)
@@ -940,6 +946,7 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 
 	def trendData(self,salva=False):
 		colors = ['b','c','m','g'] #cm.rainbow(np.linspace(0, 1, 4)) # 4 gruppi 
+		ALPHA= 0.5
 
 		def annotatingPatches(ax, info):
 			stylename= 'wedge'
@@ -986,13 +993,16 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 				#plt.annotate(n,(2.05,rat_post[-1]),arrowprops=dict(facecolor=c, shrink=0.05)) 
 				#a1.text(xx, 90, n, bbox={'facecolor':c, 'alpha':0.5})
 				xx += 0.25
+			'''
 			a1.spines['right'].set_visible(False)
 			a1.spines['left'].set_visible(False)
 			a1.spines['bottom'].set_visible(False)
 			a1.spines['top'].set_visible(False)
+			'''
 			a1.get_xaxis().tick_top()
 			a1.get_yaxis().tick_left()
-			a1.set_ylabel('Performance[%]', fontsize=14)
+			a1.set_ylabel('Correct trials [%]', fontsize=14)
+			a1.set_xlabel('Sessions',fontsize=14)
 			a1.set_yticks([75,80,85,90]) # niente
 			if 0:
 				a1.axvline(x=1, color='gray', linestyle='-.')	
@@ -1002,16 +1012,17 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 				annotatingPatches(a1,(-.25,74,10,17,5,96,'gray','before',12))
 				annotatingPatches(a1,(10.25,74,10,17,15.5,96,'gray','after ',12))
 				a1.set_xticks([]) # niente
-			a1.set_xlabel('Training Sessions',fontsize=14)
 			a1.set_xlim([-.5, 21.2])
 			a1.set_ylim([70, 95])
 			a1.tick_params(labelsize=10) 
 
 		def creo_a2(a2):
+			'''
 			a2.spines['right'].set_visible(False)
 			a2.spines['left'].set_visible(False)
 			a2.spines['bottom'].set_visible(False)
 			a2.spines['top'].set_visible(False)
+			'''
 			#a2.axes.get_yaxis().set_visible(False)
 			a2.set_xticks([]) 
 			#
@@ -1038,14 +1049,14 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 				r32 = mlab.normpdf(x32,np.mean(self.ratto_3_post), stats.sem(self.ratto_3_post)) 
 				r41 = mlab.normpdf(x41,np.mean(self.ratto_4_pre), stats.sem(self.ratto_4_pre)) 
 				r42 = mlab.normpdf(x42,np.mean(self.ratto_4_post), stats.sem(self.ratto_4_post)) 
-				a2.plot(r11+0, x11, color = c[0], linestyle='-', linewidth=1.5,alpha=0.8)
-				a2.plot(r21+2, x21, color = c[1], linestyle='-', linewidth=1.5,alpha=0.8)
-				a2.plot(r31+1, x31, color = c[2], linestyle='-', linewidth=1.5,alpha=0.8)
-				a2.plot(r41+3, x41, color = c[3], linestyle='-', linewidth=1.5,alpha=0.8)
-				a2.plot(r12+0, x12, color = c[0], linestyle='-', linewidth=1,alpha=0.5)
-				a2.plot(r22+2, x22, color = c[1], linestyle='-', linewidth=1,alpha=0.5)
-				a2.plot(r32+1, x32, color = c[2], linestyle='-', linewidth=1,alpha=0.5)
-				a2.plot(r42+3, x42, color = c[3], linestyle='-', linewidth=1,alpha=0.5)
+				a2.plot(r11+0, x11, color = c[0], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
+				a2.plot(r21+2, x21, color = c[1], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
+				a2.plot(r31+1, x31, color = c[2], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
+				a2.plot(r41+3, x41, color = c[3], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
+				a2.plot(r12+0, x12, color = c[0], linestyle='-', linewidth=1,alpha=ALPHA)
+				a2.plot(r22+2, x22, color = c[1], linestyle='-', linewidth=1,alpha=ALPHA)
+				a2.plot(r32+1, x32, color = c[2], linestyle='-', linewidth=1,alpha=ALPHA)
+				a2.plot(r42+3, x42, color = c[3], linestyle='-', linewidth=1,alpha=ALPHA)
 
 				xx1,yy1 = range_brace(-0.5,2.2)
 				xx2,yy2 = range_brace(1.8,4)
@@ -1063,6 +1074,8 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 					for r in itertools.product(pre,post):	
 						dp.append(r[1]-r[0])
 					return dp
+				annotatingPatches(a2,( .6,-12,1.8,25,1.5,20,'gray','sham\nrats',12))
+				annotatingPatches(a2,(2.6,-12,1.8,25,3.5,20,'red','dyed\nrats',12))
 				dr1 = permutoPerf(self.ratto_1_pre,self.ratto_1_post)
 				dr2 = permutoPerf(self.ratto_2_pre,self.ratto_2_post)
 				dr3 = permutoPerf(self.ratto_3_pre,self.ratto_3_post)
@@ -1086,12 +1099,12 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 				print ci # due ratti hanno migliorato le performance in modo significativo...
 				# faccio il violinplot
 				violin_parts = a2.violinplot(dr,showextrema=False,showmeans=False,showmedians=True)
+				violin_parts['cmedians'].set_color('k')
 				for pc,c in zip(violin_parts['bodies'],colors):
-					pc.set_facecolor(c)
-					pc.set_edgecolor('black')
-				annotatingPatches(a2,( .6,-12,1.8,25,1.5,20,'gray','sham\nrats',12))
-				annotatingPatches(a2,(2.6,-12,1.8,25,3.5,20,'red','dyed\nrats',12))
+					pc.set_color(c)
+					pc.set_alpha(ALPHA)
 				a2.set_ylabel('Difference [%]',fontsize=14)
+				a2.set_xlabel('Rats',fontsize=14)
 				a2.set_yticks(np.arange(-10,11,5))
 				a2.tick_params(labelsize=11) 
 				a2.set_ylim([-12, 15])
@@ -1522,8 +1535,8 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 		elif var2compare == 'transferFunction': 
 			lista1 = [loadPickle(f+self.pickleEndTransFun) for f in self.listaWhisker1]
 			lista2 = [loadPickle(f+self.pickleEndTransFun) for f in self.listaWhisker2]
-			var2compare1 = [l[0][:,:350] for l in lista1] # fino a 350Hz
-			var2compare2 = [l[0][:,:350] for l in lista2] # fino a 350Hz
+			var2compare1 = [l[0][:,SPECTRAL_RANGE] for l in lista1] # fino a 350Hz
+			var2compare2 = [l[0][:,SPECTRAL_RANGE] for l in lista2] # fino a 350Hz
 		else: 
 			print 'quale variabile si vuole comparare?'
 			errore
@@ -1971,8 +1984,10 @@ if __name__ == '__main__':
 	# definitiamo i PATH come varaibili globali
 	global ELAB_PATH 
 	global DATA_PATH 
+	global SPECTRAL_RANGE
 	ELAB_PATH = os.path.abspath(__file__)[:-len(os.path.basename(__file__))] # io sono qui
 	DATA_PATH = '/media/jaky/DATI BAFFO/'
+	SPECTRAL_RANGE = xrange(0,3500)
 	print '~~~~~~~~~~~~\nNOTA BENE:'
 	print 'ELAB_PATH = '+ELAB_PATH
 	print 'DATA_PATH = '+DATA_PATH
@@ -2070,11 +2085,11 @@ if __name__ == '__main__':
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
 	#stampo_lunghezza_whiskers()					
-	#confrontoAddestramento()						
-	#creoSpettriBaffi()								
-	mergeComparisonsResults()						
-	#simulatedAndSetup() 							
-	#creoImageProcessing_Stacked()					
+	confrontoAddestramento()		# fig1
+	#creoImageProcessing_Stacked()	# fig2.part
+	simulatedAndSetup() 			# fig2				
+	creoSpettriBaffi()				# fig3			
+	mergeComparisonsResults()		# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
