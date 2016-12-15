@@ -74,36 +74,6 @@ class simulatedAndSetup():
 		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
 		
 	
-
-class PickleAsciiTimeTrendsConversion(): # prendo i dati di un baffo dal pickle e salvo i trend punto a punto in un file ascii
-	def __init__(self):
-		Pickle2Ascii = True # se True from pickle to ascii
-							# se False from ascii to pickle
-		self.sample = 'filo_acciaio' #'d21' #
-		self.date = '13Apr' #'12May' #
-		self.label = '_NONcolor_'
-		self.path = '/media/jaky/DATI BAFFO/elab_video/'
-		if Pickle2Ascii:
-			self.fext = 'pickle'
-			self.pickle2ascii_conversion()	
-
-	def pickle2ascii_conversion(self):
-		elabSessione = False
-		ROI_inutile = (310, 629, 50, 210)
-		THs_inutile = 29
-		s = sessione(self.sample,self.date,self.label,self.path,ROI_inutile,THs_inutile,True,elabSessione,False,True) # carico la sessione senza elabolarla
-		s.loadTracking()
-		k = 1
-		for v in s.V:
-			f = open(self.path+self.sample+'_'+self.date+'_'+self.label+'_video_'+str(k)+'.txt','wb') 
-			k = k+1
-			for dbaffo in v.wst: # punti baffo
-				for yt in dbaffo:
-					f.write(str(yt)+'\t')
-				f.write('\n') 
-			f.close()
-			
-	
 class creoImageProcessing_Stacked(): # 
 	def __init__(self): 
 
@@ -131,11 +101,11 @@ class creoImageProcessing_Stacked(): #
 				for k1 in range(-2,2):
 					for k2 in range(-2,2):
 						Frame_Bspline[j+k1][i+k2] = 255
-		if 1: # in caso le salvo
-			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Raw.jpg',			Frame_raw)     
-			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Blurred.jpg',		Frame_blur)     
-			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Thresholded.jpg',	Frame_ths)     
-			cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Bspline.jpg',		Frame_Bspline)     
+		# le salvo
+		cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Raw.jpg',			Frame_raw)     
+		cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Blurred.jpg',		Frame_blur)     
+		cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Thresholded.jpg',	Frame_ths)     
+		cv2.imwrite(DATA_PATH+'/elab_video/ImageProc_Bspline.jpg',		Frame_Bspline)     
 	
 		# plot	
 		Layers = [] 
@@ -157,25 +127,6 @@ class creoImageProcessing_Stacked(): #
 		
 		fig = plt.figure()
 		ax = fig.add_subplot(1,1,1)		
-		'''
-		for spine in ('top','bottom','left','right'):
-			ax.spines[spine].set_visible(False)
-		'''
-		'''
-		# NON mi piazzi...
-		ax.annotate("",
-            xy=(160, 300), 
-            xytext=(40, 150), 
-			xycoords='data',
-			textcoords='data',
-            arrowprops=dict(arrowstyle="fancy", #linestyle="dashed",
-                            color="0",
-                            shrinkB=5,
-                            connectionstyle="arc3,rad=0.3",
-                            ),
-        )
-		ax.text(40,250,"Processing",fontsize=FS,color='k') 
-		'''
 		FS = 22
 		ax.text(100-10,20,"Raw Image",fontsize=FS,color='white') 
 		ax.text(100+y_offset-15,20+x_offset,"Thresholding",fontsize=FS,color='white') 
@@ -184,7 +135,6 @@ class creoImageProcessing_Stacked(): #
 		ax.set_yticks([])
 		ax.imshow(stacked,cmap='gray')
 		fig.savefig(DATA_PATH+'/elab_video/stacked.png') # <--- serve per la base della figura 2
-		fig.savefig(DATA_PATH+'/elab_video/stacked.pdf')
 
 class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo a video
 	def __init__(self,SovrascriviPickle=False,Stampa=False): 
@@ -403,230 +353,128 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 		a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False) # per le lunghezze dei baffi 
 		info = stampo_lunghezza_whiskers()					
 
-		if 1: # 3 spettri (due simili uno diverso), due distanze relative e gli scatter calcolati pixel a pixel
-			ig1 = 1#3 # gruppo 1
-			ig2 = 2#4 # gruppo 1
-			ig3 = 8#10 # gruppo 3
-			maxFrame = 4500
-			Np = maxFrame/2. 		# numero di campioni frequenze positive
-			bw = 2000.0 			# frame/sec - bandwidth
-			df = (bw/2)/Np			# df 
-			freq = [int(df*c) for c in xrange(0,801)]	
-			# prendo i dati
-			if 0: #semplice spettro
-				g1 = a.AvSp_ncol[ig1]  # gruppo 1
-				g2 = a.AvSp_ncol[ig2]  # gruppo 2 
-				g3 = a.AvSp_ncol[ig3] # gruppo 3
-				g1 = g1[:,:800]/np.max(g1[:,:800])
-				g2 = g2[:,:800]/np.max(g2[:,:800]) 
-				g3 = g3[:,:800]/np.max(g3[:,:800])
-				g1_to_plot = np.log10(g1)
-				g2_to_plot = np.log10(g2)
-				g3_to_plot = np.log10(g3)
-				g1_to_plot -= np.min(g1_to_plot)
-				g2_to_plot -= np.min(g2_to_plot)
-				g3_to_plot -= np.min(g3_to_plot)
-				g1_to_plot /= np.max(g1_to_plot)
-				g2_to_plot /= np.max(g2_to_plot)
-				g3_to_plot /= np.max(g3_to_plot)
-			else: # transfer function
-				ba = sessione('d11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-				bb = sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-				bc = sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-				for baffo in [ba,bb,bc]:
-					baffo.calcoloTransferFunction(False)
-				g1 = ba.TFM[:,SPECTRAL_RANGE]
-				g2 = bb.TFM[:,SPECTRAL_RANGE]
-				g3 = bc.TFM[:,SPECTRAL_RANGE]
-				g1_to_plot = np.log10(g1)
-				g2_to_plot = np.log10(g2)
-				g3_to_plot = np.log10(g3)
+		ig1 = 1#3 # gruppo 1
+		ig2 = 2#4 # gruppo 1
+		ig3 = 8#10 # gruppo 3
+		maxFrame = 4500
+		Np = maxFrame/2. 		# numero di campioni frequenze positive
+		bw = 2000.0 			# frame/sec - bandwidth
+		df = (bw/2)/Np			# df 
+		freq = [int(df*c) for c in xrange(0,801)]	
+		# prendo i dati
+		ba = sessione('d11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		bb = sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		bc = sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		for baffo in [ba,bb,bc]:
+			baffo.calcoloTransferFunction(False)
+		g1 = ba.TFM[:,SPECTRAL_RANGE]
+		g2 = bb.TFM[:,SPECTRAL_RANGE]
+		g3 = bc.TFM[:,SPECTRAL_RANGE]
+		g1_to_plot = np.log10(g1)
+		g2_to_plot = np.log10(g2)
+		g3_to_plot = np.log10(g3)
 
-			def doFigura(a,wLog,f): 
-				a1 = f.add_subplot(2,3,1)
-				a2 = f.add_subplot(2,3,2)
-				a3 = f.add_subplot(2,3,3)
-				a4 = f.add_subplot(2,3,4)
-				a5 = f.add_subplot(2,3,5)
-				#gs = gridspec.GridSpec(4,3)
-				#a61 = plt.subplot(gs[8])
-				#a62 = plt.subplot(gs[11])
-				a6 = f.add_subplot(2,3,6)
-				# spettri
-				cax1 = a1.imshow(g1_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-				cax2 = a2.imshow(g2_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')
-				cax3 = a3.imshow(g3_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-				d12 = g2_to_plot-g1_to_plot
-				d13 = g3_to_plot-g1_to_plot
-				cax4 = a4.imshow(d12,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-				cax5 = a5.imshow(d13,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-				cbar1 = f.colorbar(cax1,ax=a1)
-				cbar1.set_ticks(np.arange(-4,5.1,.2))
-				cbar1.ax.tick_params(labelsize=FS)
-				cbar2 = f.colorbar(cax2,ax=a2)
-				cbar2.set_ticks(np.arange(-4,5.1,.2))
-				cbar2.ax.tick_params(labelsize=FS)
-				cbar3 = f.colorbar(cax3,ax=a3)
-				cbar3.set_ticks(np.arange(-4,5.1,.2))
-				cbar3.ax.tick_params(labelsize=FS)
-				cbar4 = f.colorbar(cax4,ax=a4)
-				cbar4.set_ticks(np.arange(-4,5.1,.2))
-				cbar4.ax.tick_params(labelsize=FS)
-				cbar5 = f.colorbar(cax5,ax=a5)
-				cbar5.set_ticks(np.arange(-4,5.1,.2))
-				cbar5.ax.tick_params(labelsize=FS)
-				#
-				lunghezze = []
-				for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
-					print a.ROOT[idx1], info.NAMEs[idx2]
-					lunghezze.append(info.lunghezza[idx2])
-				def shorten(l):
-					l = np.round(l*100)
-					return str(l/100)
-				a1.set_title('W1 = '+str(shorten(lunghezze[0]))+' [mm]',fontsize=FS)
-				a2.set_title('W2 = '+str(shorten(lunghezze[1]))+' [mm]',fontsize=FS)
-				a3.set_title('W3 = '+str(shorten(lunghezze[2]))+' [mm]',fontsize=FS)
-				a4.set_title('W1-W2',fontsize=FS)
-				a5.set_title('W1-W3',fontsize=FS)
-				a5.set_xlabel('Frequency [Hz]',fontsize=FS)
-				for ax in [a1,a2,a3,a4,a5]:
-					ax.set_yticks([])
-				a6.set_xlabel('Pixel Value',fontsize=FS)
-				a6.set_ylabel('Pixel Value',fontsize=FS)
-				a1.set_ylabel(r'Base        $\longrightarrow$         Tip',fontsize=FS)
-
-				# scatter
-				g1r = np.reshape(g1,g1.__len__()*g1[0].__len__())
-				g2r = np.reshape(g2,g1.__len__()*g1[0].__len__())
-				g3r = np.reshape(g3,g1.__len__()*g1[0].__len__())
-				idx = np.random.permutation(len(g1r))[0:20000]
-				w13 = a6.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='#dbc65e',color='#dbc65e', alpha=0.4, rasterized=True)
-				w12 = a6.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='#ef725f',color='#ef725f',marker='x', alpha=0.4, rasterized=True)
-				a6.legend((w12,w13), ('W1 vs W2','W1 vs W3'), scatterpoints=1,markerscale=2, loc=4,fontsize=FS)
-				# regressione 
-				def getLine(g,h): 
-					slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
-					r2 = r_value**2
-					xv = [a for a in np.arange(min(h),max(h),.1)]
-					yv = [a*slope+intercept for a in xv]
-					if np.sign(intercept)>0:
-						segno='+'
-					else:
-						segno='-'
-					text = 'y = '+str(np.floor(slope*100)/100)+'x'+segno+str(np.abs(np.floor(intercept*100)/100))+'\n    (R2 = '+str(np.floor(r2*100)/100)+')'
-					return xv,yv,r_value**2, text
-				x12,y12,r12,pp12 = getLine(g2r,g1r)
-				x13,y13,r13,pp13 = getLine(g3r,g1r)
-				a6.plot(x12,y12,color='#6d2a2a',linewidth=2)
-				a6.plot(x13,y13,color='#6d622a',linewidth=2)
-				a6.text(12,10,pp12,fontsize=14)
-				a6.text(3,15,pp13,fontsize=14)
-				'''
-				for spine in ('top','bottom','left','right'):
-					a6.spines[spine].set_visible(False)
-				'''
-				a6.set_xlim([min(g1r),max(g1r)])
-				a6.set_ylim([min(g1r),max(g1r)])
-				a6.tick_params(labelsize=FS) 
-				a1.tick_params(labelsize=FS) 
-				a2.tick_params(labelsize=FS) 
-				a3.tick_params(labelsize=FS) 
-				a4.tick_params(labelsize=FS) 
-				a5.tick_params(labelsize=FS) 
-				return a1,a2,a3,a4,a5,a6
-
-			# faccio figura
-			FS = 18 # la dimensione del font dipende dalla dimensione della figura
-			f1 = plt.figure(figsize=(21,8))
-			a11,a12,a13,a14,a15,a16 = doFigura(a,True, f1)
-			f1.subplots_adjust(wspace=0.3,hspace=0.3)
-			#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
-			f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
-
-		else: # NON sara` piu` cosi` questa figura  
-			print a.ROOT, ' len=', a.ROOT.__len__()
-			print a.ROOT[3]
-			print a.ROOT[5]
-			print a.ROOT[11]
-			ig1 = 3
-			ig2 = 7 
-			ig3 = 10 
-			g1 = a.AvSp_ncol[ig1]  # gruppo 1
-			g2 = a.AvSp_ncol[ig2]  # gruppo 2 
-			g3 = a.AvSp_ncol[ig3] # gruppo 3
-
-			# figura
-			f1 = plt.figure()
-			aa = f1.add_subplot(1,1,1)
-			f2 = plt.figure(figsize=(7,6))
-			gs = gridspec.GridSpec(1,3,wspace=0.2)
-			ax1 = plt.subplot(gs[0,0])
-			ax2 = plt.subplot(gs[0,1])
-			ax3 = plt.subplot(gs[0,2])
-			#f2,(ax1,ax2,ax3) = plt.subplots(1,3,sharex=True)
-			# plotto i dati
-			maxFrame = 4500
-			Np = maxFrame/2. 		# numero di campioni frequenze positive
-			bw = 2000.0 			# frame/sec - bandwidth
-			df = (bw/2)/Np			# df 
-			freq = [int(df*c) for c in xrange(0,801)]	
-			g1_to_plot = np.log10(g1[:,:800])
-			g2_to_plot = np.log10(g2[:,:800]) 
-			g3_to_plot = np.log10(g3[:,:800])
-			g1_to_plot -= np.min(g1_to_plot)
-			g2_to_plot -= np.min(g2_to_plot)
-			g3_to_plot -= np.min(g3_to_plot)
-			g1_to_plot /= np.max(g1_to_plot)
-			g2_to_plot /= np.max(g2_to_plot)
-			g3_to_plot /= np.max(g3_to_plot)
-
-			cax  = aa.imshow(g1_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-			cax1 = ax1.imshow(g1_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-			cax2 = ax2.imshow(g2_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')
-			cax3 = ax3.imshow(g3_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+		def doFigura(a,wLog,f): 
+			a1 = f.add_subplot(2,3,1)
+			a2 = f.add_subplot(2,3,2)
+			a3 = f.add_subplot(2,3,3)
+			a4 = f.add_subplot(2,3,4)
+			a5 = f.add_subplot(2,3,5)
+			#gs = gridspec.GridSpec(4,3)
+			#a61 = plt.subplot(gs[8])
+			#a62 = plt.subplot(gs[11])
+			a6 = f.add_subplot(2,3,6)
+			# spettri
+			cax1 = a1.imshow(g1_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+			cax2 = a2.imshow(g2_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')
+			cax3 = a3.imshow(g3_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+			d12 = g2_to_plot-g1_to_plot
+			d13 = g3_to_plot-g1_to_plot
+			cax4 = a4.imshow(d12,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+			cax5 = a5.imshow(d13,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+			cbar1 = f.colorbar(cax1,ax=a1)
+			cbar1.set_ticks(np.arange(-4,5.1,.2))
+			cbar1.ax.tick_params(labelsize=FS)
+			cbar2 = f.colorbar(cax2,ax=a2)
+			cbar2.set_ticks(np.arange(-4,5.1,.2))
+			cbar2.ax.tick_params(labelsize=FS)
+			cbar3 = f.colorbar(cax3,ax=a3)
+			cbar3.set_ticks(np.arange(-4,5.1,.2))
+			cbar3.ax.tick_params(labelsize=FS)
+			cbar4 = f.colorbar(cax4,ax=a4)
+			cbar4.set_ticks(np.arange(-4,5.1,.2))
+			cbar4.ax.tick_params(labelsize=FS)
+			cbar5 = f.colorbar(cax5,ax=a5)
+			cbar5.set_ticks(np.arange(-4,5.1,.2))
+			cbar5.ax.tick_params(labelsize=FS)
 			#
-			cbar = f1.colorbar(cax,ax=aa)
-			cbar.set_ticks([])
-			cbar1 = f2.colorbar(cax1,ax=ax1)
-			cbar1.set_ticks(np.arange(0,1.1,.1))
-			cbar1.ax.tick_params(labelsize=10)
-			cbar2 = f2.colorbar(cax2,ax=ax2)
-			cbar2.set_ticks(np.arange(0,1.1,.1))
-			cbar2.ax.tick_params(labelsize=10)
-			cbar3 = f2.colorbar(cax3,ax=ax3)
-			cbar3.set_ticks(np.arange(0,1.1,.1))
-			cbar3.ax.tick_params(labelsize=10)
-			#
+			lunghezze = []
+			for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
+				print a.ROOT[idx1], info.NAMEs[idx2]
+				lunghezze.append(info.lunghezza[idx2])
 			def shorten(l):
 				l = np.round(l*100)
 				return str(l/100)
-			ax1.set_title(str(shorten(a.integrale_lunghezza[ig1]))+'[mm]',fontsize=14)
-			ax2.set_title(str(shorten(a.integrale_lunghezza[ig2]))+'[mm]',fontsize=14)
-			ax3.set_title(str(shorten(a.integrale_lunghezza[ig3]))+'[mm]',fontsize=14)
-			#
-			idx = [freq.index(0),freq.index(100),freq.index(200),freq.index(300)]
-			for a in (aa,ax1,ax2,ax3):
-				a.set_xticks(idx)
-				a.set_xticklabels([freq[i] for i in idx])
-			aa.set_xlabel('Frequency [Hz]',fontsize=14)
-			ax1.set_xlabel('Frequency [Hz]',fontsize=14)
-			ax2.set_xlabel('Frequency [Hz]',fontsize=14)
-			ax3.set_xlabel('Frequency [Hz]',fontsize=14)
-			aa.set_ylabel(r'Base - - - - $\longrightarrow$  - - - - Tip',fontsize=14)
-			ax1.set_ylabel(r'Base        $\longrightarrow$         Tip',fontsize=14)
-			ax1.tick_params(labelsize=10) 
-			ax2.tick_params(labelsize=10) 
-			ax3.tick_params(labelsize=10) 
-			aa.set_yticks([])
-			ax1.set_yticks([])
-			ax2.set_yticks([])
-			ax3.set_yticks([])
-			#f.text(0.02, 0.5, 'Whisker dynamic response \n pippo', ha='center', va='center', rotation='vertical')
-			f1.tight_layout()
-			#f2.tight_layout()
-			#f2.subplots_adjust(wspace=0.05,hspace=0.6)
-			f1.savefig(DATA_PATH+'/elab_video/OneSpectrum.pdf')
-			f2.savefig(DATA_PATH+'/elab_video/baseFigura5.pdf')
+			a1.set_title('W1 = '+str(shorten(lunghezze[0]))+' [mm]',fontsize=FS)
+			a2.set_title('W2 = '+str(shorten(lunghezze[1]))+' [mm]',fontsize=FS)
+			a3.set_title('W3 = '+str(shorten(lunghezze[2]))+' [mm]',fontsize=FS)
+			a4.set_title('W1-W2',fontsize=FS)
+			a5.set_title('W1-W3',fontsize=FS)
+			a5.set_xlabel('Frequency [Hz]',fontsize=FS)
+			for ax in [a1,a2,a3,a4,a5]:
+				ax.set_yticks([])
+			a6.set_xlabel('Pixel Value',fontsize=FS)
+			a6.set_ylabel('Pixel Value',fontsize=FS)
+			a1.set_ylabel(r'Base        $\longrightarrow$         Tip',fontsize=FS)
+
+			# scatter
+			g1r = np.reshape(g1,g1.__len__()*g1[0].__len__())
+			g2r = np.reshape(g2,g1.__len__()*g1[0].__len__())
+			g3r = np.reshape(g3,g1.__len__()*g1[0].__len__())
+			idx = np.random.permutation(len(g1r))[0:20000]
+			w13 = a6.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='#dbc65e',color='#dbc65e', alpha=0.4, rasterized=True)
+			w12 = a6.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='#ef725f',color='#ef725f',marker='x', alpha=0.4, rasterized=True)
+			a6.legend((w12,w13), ('W1 vs W2','W1 vs W3'), scatterpoints=1,markerscale=2, loc=4,fontsize=FS)
+			# regressione 
+			def getLine(g,h): 
+				slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
+				r2 = r_value**2
+				xv = [a for a in np.arange(min(h),max(h),.1)]
+				yv = [a*slope+intercept for a in xv]
+				if np.sign(intercept)>0:
+					segno='+'
+				else:
+					segno='-'
+				text = 'y = '+str(np.floor(slope*100)/100)+'x'+segno+str(np.abs(np.floor(intercept*100)/100))+'\n    (R2 = '+str(np.floor(r2*100)/100)+')'
+				return xv,yv,r_value**2, text
+			x12,y12,r12,pp12 = getLine(g2r,g1r)
+			x13,y13,r13,pp13 = getLine(g3r,g1r)
+			a6.plot(x12,y12,color='#6d2a2a',linewidth=2)
+			a6.plot(x13,y13,color='#6d622a',linewidth=2)
+			a6.text(12,10,pp12,fontsize=14)
+			a6.text(3,15,pp13,fontsize=14)
+			'''
+			for spine in ('top','bottom','left','right'):
+				a6.spines[spine].set_visible(False)
+			'''
+			a6.set_xlim([min(g1r),max(g1r)])
+			a6.set_ylim([min(g1r),max(g1r)])
+			a6.tick_params(labelsize=FS) 
+			a1.tick_params(labelsize=FS) 
+			a2.tick_params(labelsize=FS) 
+			a3.tick_params(labelsize=FS) 
+			a4.tick_params(labelsize=FS) 
+			a5.tick_params(labelsize=FS) 
+			return a1,a2,a3,a4,a5,a6
+
+		# faccio figura
+		FS = 18 # la dimensione del font dipende dalla dimensione della figura
+		f1 = plt.figure(figsize=(21,8))
+		a11,a12,a13,a14,a15,a16 = doFigura(a,True, f1)
+		f1.subplots_adjust(wspace=0.3,hspace=0.3)
+		#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
+		f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
+
 
 class mergeComparisonsResults():
 	def __init__(self):
@@ -697,7 +545,7 @@ class mergeComparisonsResults():
 		cbar6.ax.tick_params(labelsize=FS)
 		# stampo
 		f.subplots_adjust(wspace=0.5,hspace=0.5)
-		f.savefig(DATA_PATH+'/elab_video/baseFigura4_'+typeComparison+'.pdf')
+		f.savefig(DATA_PATH+'/elab_video/mergeComparisonsResults_'+typeComparison+'.pdf')
 
 
 	def diagColComp(self,cbd,a51,lung,CORR2,FS):
@@ -801,42 +649,9 @@ class mergeComparisonsResults():
 		'''
 		for spine in ('top','bottom','left','right'):
 			a1.spines[spine].set_visible(False)
-		gLengths = [[],[],[],[]]
-		for l,n in zip(cbd.integrale_lunghezza,cbd.ROOT):
-			if n in cbd.group1:
-				gLengths[0].append(l)
-			if n in cbd.group2:
-				gLengths[1].append(l)
-			if n in cbd.group3:
-				gLengths[2].append(l)
-			if n in cbd.group4:
-				gLengths[3].append(l)
-		gLenMean = [np.mean(g) for g in gLengths if g] 
-		gLenSem = [stats.sem(g) for g in gLengths if g] 
-		bars = a1.bar([3.3,6.3,8.9],gLenMean,0.5,color='gray',yerr=gLenSem,error_kw=dict(elinewidth=2,ecolor='gray'))
-		a1.text(6,50,'Length [mm]',fontsize=14)
-		def autolabel(ax,rects):
-			# attach some text labels
-			for rect in rects:
-				height = rect.get_height()
-				ax.text(rect.get_x() + rect.get_width()/2., 3+height,'%d' % int(height),ha='center', va='bottom',fontsize=14)
-		autolabel(a1,bars)
-		#a1.set_xticklabels([])
-		a1.spines['right'].set_visible(False)
-		a1.spines['left'].set_visible(False)
-		a1.spines['bottom'].set_visible(False)
-		a1.spines['top'].set_visible(False)
-		a1.axes.get_xaxis().set_visible(False)
-		a1.axes.get_yaxis().set_visible(False)
-		a1.set_xlim([0,len(cbd.ROOT)])
-		a1.set_yticks(xrange(0,66,5))
-		# grafe
-		a1.plot(x1,6*(y1-1.2),color='gray')
-		a1.plot(x2,6*(y2-1.2),color='gray')
-		a1.plot(x3,6*(y3-1.2),color='gray')
 		'''
 
-class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-anestesia, due di controllo due con colorazione nel post-anestesia
+class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pre/post-anestesia, due di controllo due con colorazione nel post-anestesia
 	def __init__(self):
 		self.initData()
 		self.trendData(True)
@@ -1009,7 +824,7 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 		fW.tight_layout()
 		fW.subplots_adjust(wspace=0.15,hspace=0.5)
 		if salva:
-			fW.savefig(DATA_PATH+'/elab_video/baseFigura1.pdf',dpi=300)
+			fW.savefig(DATA_PATH+'/elab_video/dyeEnhanceAndBehavioralEffect.pdf',dpi=300)
 		else:
 			plt.show()
 
@@ -1441,33 +1256,6 @@ class confrontoBaffiDiversi: # elaboro le diverse sessioni fra loro
 				CORR2[i,j] = np.power(CORR,2) 
 		return CORR2
 
-		'''
-		N = self.ROOT.__len__()
-		CORR2 			= np.zeros((N,N))
-		CORR2_undyed	= np.zeros((N,N))
-		CORR2_dyed		= np.zeros((N,N))
-		DIFF_PERC_MAT  = np.ones((N,N))
-		for i1 in xrange(0,N):
-			print '\n baffo da confrontare = ', self.ROOT[i1], i1 
-			data_c = data_c_i1  = var2[i1].reshape(-1)
-			data_nc_i1 = var1[i1].reshape(-1)
-			for i2 in xrange(0,N):
-				data_c_i2  = var2[i2].reshape(-1)
-				data_nc = data_nc_i2 = var1[i2].reshape(-1)
-				# CORR2	
-				CORR2[i1,i2] = np.power(np.corrcoef(data_c,data_nc)[0,1],2) 	# calcolo il quadrato cosi` la metrica va da 0 ad 1 
-				CORR2_undyed[i1,i2] = np.power(np.corrcoef(data_nc_i1,data_nc_i2)[0,1],2) # confronto solo non colorati
-				CORR2_dyed[i1,i2]   = np.power(np.corrcoef(data_c_i1,data_c_i2)[0,1],2) # confronto solo colorati
-				# DIFF_PERC_MAT
-				data_c /= np.max(data_c)
-				data_nc /= np.max(data_nc)
-				norma = np.sqrt(np.sum(np.power(data_c - data_nc,2))) 				# questa e` la norma
-				DIFF_PERC_MAT[i1,i2] = norma/np.sqrt(data_c.__len__())			# normalizzo la norma per il suo valore massimo, ovvero sqrt(dim)
-				print ' ',i2,
-		return (CORR2,CORR2_undyed,CORR2_dyed), DIFF_PERC_MAT # la diff e` obsoleta...
-		'''	
-
-
 class sessione: # una sessione e` caratterizzata da tanti video
 	def __init__(self,whiskerName,recordingDate,colorNonColor_status,path,ROI,videoThs,videoShow=True,go=True,justPlotRaw=False,overWriteElab=False):	
 		self.name    	= whiskerName                               		# campione
@@ -1528,9 +1316,6 @@ class sessione: # una sessione e` caratterizzata da tanti video
 				f,Sxx = signal.csd(ingresso,ingresso,2000.0,nperseg=2000,scaling='spectrum')
 				TF = []
 				for t in traiettorie: 
-					if 0: # provo a togliere la media
-						t = t-ingresso
-						t = t-np.mean(t)
 					f,Syy = signal.csd(t,t,2000.0,nperseg=2000,scaling='density')          #scaling='spectrum'
 					f,Syx = signal.csd(t,ingresso,2000.0,nperseg=2000,scaling='density')
 					f,Sxy = signal.csd(ingresso,t,2000.0,nperseg=2000,scaling='density')
@@ -1818,9 +1603,8 @@ class video: # ogni fideo va elaborato
 		window = (1.0/0.54)*signal.hamming(nCampioni) # coefficiente di ragguaglio = 0.54
 		spettri_abs = np.zeros((nPunti,nCampioni/2)) 
 		spettri_phs = np.zeros((nPunti,nCampioni/2)) 
-		if 1: # provo a non togliere il riferimento alla base
-			traiettorie = [t-traiettorie[nPunti-1] for t in traiettorie] # osservo dal punto di vista dello shaker
-			traiettorie = [window*(t-np.mean(t)) for t in traiettorie] # finestro usando hamming
+		traiettorie = [t-traiettorie[nPunti-1] for t in traiettorie] # osservo dal punto di vista dello shaker
+		traiettorie = [window*(t-np.mean(t)) for t in traiettorie] # finestro usando hamming e tolgo (se mai fosse rimasta) la media del segnale
 		return self.fft_whisker(traiettorie,nCampioni)
 
 	def fft_whisker(self,x,Np): 
@@ -1854,7 +1638,7 @@ if __name__ == '__main__':
 	global SPECTRAL_RANGE
 	ELAB_PATH = os.path.abspath(__file__)[:-len(os.path.basename(__file__))] # io sono qui
 	DATA_PATH = '/media/jaky/DATI BAFFO/'
-	SPECTRAL_RANGE = xrange(0,3500)
+	SPECTRAL_RANGE = xrange(0,350) # in [Hz]
 	print '~~~~~~~~~~~~\nNOTA BENE:'
 	print 'ELAB_PATH = '+ELAB_PATH
 	print 'DATA_PATH = '+DATA_PATH
@@ -1926,9 +1710,6 @@ if __name__ == '__main__':
 	#TRACKING ACCIAIO 13 APRILE
 	#sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
 
-	# ROBA DA DARE AD ALE...
-	#PickleAsciiTimeTrendsConversion() #<-- da finire serve ad alessandro per il modlelo
-
 	# CALCOLO TRANSFER FUNCTION POST TRACKING
 	#a = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
 	#a.calcoloTransferFunction(True)
@@ -1952,7 +1733,7 @@ if __name__ == '__main__':
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
 	#stampo_lunghezza_whiskers()					
-	confrontoAddestramento()		# fig1
+	dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()	# fig2.part
 	simulatedAndSetup() 			# fig2				
 	creoSpettriBaffi()				# fig3			
