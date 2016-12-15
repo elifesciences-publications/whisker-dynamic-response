@@ -31,7 +31,7 @@ class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
 		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim_primaTuning_forse.txt' #transffunct_D21_bw1000Hz_sim.txt'  # XXX DA CONTROLLARE CON ALE 
-		a = sessione('d21','12May','_NONcolor_','/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
+		a = sessione('d21','12May','_NONcolor_','puppa',(0,0,0,0),-1,True, False)
 		fromErik = DATA_PATH+'/elab_video/Setup_color_transparent_background.png'
 		SETUP=mpimg.imread(fromErik)
 		#
@@ -41,7 +41,7 @@ class simulatedAndSetup():
 		spettroSim = spettroSim[:-2,3:]
 		# figura
 		f = plt.figure(figsize=(13,7))
-		gs  = gridspec.GridSpec(2,2)
+		gs  = gridspec.GridSpec(2,2,hspace=0.3)
 		gs2 = gridspec.GridSpec(7,5)
 		gs3 = gridspec.GridSpec(3,3)
 		a1 = f.add_subplot(gs[0,0])
@@ -51,7 +51,8 @@ class simulatedAndSetup():
 		a4 = f.add_subplot(gs2[4,4])
 		Np = 4500
 		s = np.random.normal(0, 1, Np)	
-		s = s*signal.hamming(Np)
+		s2 = s[0:20]*signal.hamming(200)
+		s[0:len(s2)/2] = s2[0:len(s2)/2] 
 		t = xrange(10,Np+10,1)
 		a4.plot(t,s,linewidth=2,color='k')
 		a4.annotate('', xy=(0, 1.1), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(color='k'))
@@ -59,20 +60,18 @@ class simulatedAndSetup():
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
-			'''
 			for spine in ['top', 'right','bottom','left']:
 				ax.spines[spine].set_visible(False)
-			'''
 		[unvisibleAxes(ax) for ax in [a2,a4]]
-		cax1 = a1.imshow(np.log10(spettroSim[:,SPECTRAL_RANGE]) ,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+		cax1 = a1.imshow(np.log10(spettroSim[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.4,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
 		cbar1 = f.colorbar(cax1,ax=a1)
-		cax3 =a3.imshow(np.log10(spettroVero[:,SPECTRAL_RANGE]),aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+		cax3 =a3.imshow(np.log10(spettroVero[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.4,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
 		cbar3 = f.colorbar(cax3,ax=a3)
 		a1.set_yticks([])
 		a3.set_yticks([])
-		a1.set_ylabel(r'Base        $\longrightarrow$         Tip')
+		a1.set_ylabel(r'Base     $\longrightarrow$      Tip')
 		a1.set_xlabel('Frequency [Hz]') 
-		a3.set_ylabel(r'Base        $\longrightarrow$         Tip')
+		a3.set_ylabel(r'Base     $\longrightarrow$      Tip')
 		a3.set_xlabel('Frequency [Hz]') 
 		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
 		
@@ -726,14 +725,14 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 			a.set_xlabel('Sessions',fontsize=14)
 			a.set_yticks([75,80,85,90]) # niente
 			a.set_xticks([]) # niente
-			a.set_xlim([-.5, 20])
-			a.set_ylim([73, 91])
+			a.set_xlim([-.5, 20.5])
+			a.set_ylim([74, 91])
 			a.tick_params(labelsize=14) 
 			# patches
-			p1 = a.add_patch(patches.Rectangle((-.25, 74),10,18))
+			p1 = a.add_patch(patches.Rectangle((-.5, 74),10.25,18))
 			p1.set_alpha(0.2)
 			p1.set_color('gray')
-			p2 = a.add_patch(patches.Rectangle((10.25,74),10,18))
+			p2 = a.add_patch(patches.Rectangle((10.25,74),11.25,18))
 			p2.set_alpha(0.2)
 			p2.set_color('gray')
 			# annotations
@@ -782,8 +781,8 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 			a.set_xlabel('Rats',fontsize=14)
 			a.set_yticks(np.arange(-10,11,5))
 			a.tick_params(labelsize=11) 
-			a.set_ylim([-11, 11])
-			a.set_xlim([0, 5])
+			a.set_ylim([-10, 11])
+			a.set_xlim([.6, 4.4])
 			# patches
 			p1 = a.add_patch(patches.Rectangle((.6, -10.2),1.8,23))
 			p1.set_alpha(0.2)
