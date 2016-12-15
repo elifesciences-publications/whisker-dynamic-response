@@ -23,27 +23,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import pickle
 import os.path
 
-def range_brace(x_min, x_max, mid=0.75, 
-                beta1=50.0, beta2=100.0, height=1, 
-                initial_divisions=11, resolution_factor=1.5):
-    # determine x0 adaptively values using second derivitive
-    # could be replaced with less snazzy:
-    #   x0 = np.arange(0, 0.5, .001)
-    x0 = np.array(())
-    tmpx = np.linspace(0, 0.5, initial_divisions)
-    tmp = beta1**2 * (np.exp(beta1*tmpx)) * (1-np.exp(beta1*tmpx)) / np.power((1+np.exp(beta1*tmpx)),3)
-    tmp += beta2**2 * (np.exp(beta2*(tmpx-0.5))) * (1-np.exp(beta2*(tmpx-0.5))) / np.power((1+np.exp(beta2*(tmpx-0.5))),3)
-    for i in range(0, len(tmpx)-1):
-        t = int(np.ceil(resolution_factor*max(np.abs(tmp[i:i+2]))/float(initial_divisions)))
-        x0 = np.append(x0, np.linspace(tmpx[i],tmpx[i+1],t))
-    x0 = np.sort(np.unique(x0)) # sort and remove dups
-    # half brace using sum of two logistic functions
-    y0 = mid*2*((1/(1.+np.exp(-1*beta1*x0)))-0.5)
-    y0 += (1-mid)*2*(1/(1.+np.exp(-1*beta2*(x0-0.5))))
-    # concat and scale x
-    x = np.concatenate((x0, 1-x0[::-1])) * float((x_max-x_min)) + x_min
-    y = np.concatenate((y0, y0[::-1])) * float(height)
-    return (x,y)
 
 class simulatedAndSetup():
 	def __init__(self):
@@ -852,9 +831,6 @@ class mergeComparisonsResults():
 		a1.set_xlim([0,len(cbd.ROOT)])
 		a1.set_yticks(xrange(0,66,5))
 		# grafe
-		x1,y1 = range_brace(1.9,5.2)
-		x2,y2 = range_brace(5.4,7.7)
-		x3,y3 = range_brace(7.9,10.3)
 		a1.plot(x1,6*(y1-1.2),color='gray')
 		a1.plot(x2,6*(y2-1.2),color='gray')
 		a1.plot(x3,6*(y3-1.2),color='gray')
@@ -959,49 +935,7 @@ class confrontoAddestramento: # confronto le performance di 4 ratti, pre/post-an
 			#a2.axes.get_yaxis().set_visible(False)
 			a2.set_xticks([]) 
 			#
-			if 0: # faccio delle gaussiane
-				#	
-				c = colors #cm.rainbow(np.linspace(0, 1, 4)) # 4 gruppi 
-				x = np.linspace(0,100,1000)
-				if 1:
-					x11 = np.linspace(81,86,1000)
-					x12 = np.linspace(81,86,1000)
-					x21 = np.linspace(80,85,1000)
-					x22 = np.linspace(80,85,1000)
-					x31 = np.linspace(78,83,1000)
-					x32 = np.linspace(80,85,1000)
-					x41 = np.linspace(77,82,1000)
-					x42 = np.linspace(79.5,84.5,1000)
-				else:
-					x11 = x12 = x21 = x22 = x31 = x32 = x41 = x42 = x
-				r11 = mlab.normpdf(x11,np.mean(self.ratto_1_pre), stats.sem(self.ratto_1_pre)) 
-				r12 = mlab.normpdf(x12,np.mean(self.ratto_1_post), stats.sem(self.ratto_1_post)) 
-				r21 = mlab.normpdf(x21,np.mean(self.ratto_2_pre), stats.sem(self.ratto_2_pre)) 
-				r22 = mlab.normpdf(x22,np.mean(self.ratto_2_post), stats.sem(self.ratto_2_post)) 
-				r31 = mlab.normpdf(x31,np.mean(self.ratto_3_pre), stats.sem(self.ratto_3_pre)) 
-				r32 = mlab.normpdf(x32,np.mean(self.ratto_3_post), stats.sem(self.ratto_3_post)) 
-				r41 = mlab.normpdf(x41,np.mean(self.ratto_4_pre), stats.sem(self.ratto_4_pre)) 
-				r42 = mlab.normpdf(x42,np.mean(self.ratto_4_post), stats.sem(self.ratto_4_post)) 
-				a2.plot(r11+0, x11, color = c[0], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
-				a2.plot(r21+2, x21, color = c[1], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
-				a2.plot(r31+1, x31, color = c[2], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
-				a2.plot(r41+3, x41, color = c[3], linestyle='-', linewidth=1.5,alpha=1.2*ALPHA)
-				a2.plot(r12+0, x12, color = c[0], linestyle='-', linewidth=1,alpha=ALPHA)
-				a2.plot(r22+2, x22, color = c[1], linestyle='-', linewidth=1,alpha=ALPHA)
-				a2.plot(r32+1, x32, color = c[2], linestyle='-', linewidth=1,alpha=ALPHA)
-				a2.plot(r42+3, x42, color = c[3], linestyle='-', linewidth=1,alpha=ALPHA)
-
-				xx1,yy1 = range_brace(-0.5,2.2)
-				xx2,yy2 = range_brace(1.8,4)
-				a2.plot(xx1,1.5*(yy1)+89,color='gray')
-				a2.plot(xx2,1.5*(-yy2)+75,color='gray')
-				a2.text(-0.6,93,"dyed rats",fontsize=6)
-				a2.text(-0.6,69,"control rats",fontsize=6)
-
-				#a2.set_xlabel('PDF')
-				#a2.get_yaxis().tick_left()
-				a2.set_ylim([78, 85])
-			else: # faccio dei barplot
+			if 1:
 				def permutoPerf(pre,post):
 					dp = []
 					for r in itertools.product(pre,post):	
