@@ -600,10 +600,10 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
 				print a.ROOT[idx1], info.NAMEs[idx2]
 				lunghezze.append(info.lunghezza[idx2])
-			a1.set_title(r'Log$_{10}$(TF) of W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE,fontweight='bold')
-			a2.set_title(r'Log$_{10}$(TF) of W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE,fontweight='bold')
-			a3.set_title(r'Log$_{10}$(TF) of W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE,fontweight='bold')
-			a4.set_title(r'TF$_1$ vs TF$_2$',fontsize=FONTSIZE,fontweight='bold')
+			a1.set_title(r'Log$_{10}$(TF) of W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a2.set_title(r'Log$_{10}$(TF) of W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a3.set_title(r'Log$_{10}$(TF) of W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a4.set_title(r'TF$_1$ vs TF$_2$',fontsize=FONTSIZE)										  #,fontweight='bold')
 			a1.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a2.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a3.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
@@ -640,6 +640,11 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			a4.text(.5,18,pp13,fontsize=FONTSIZE*0.7)
 			a4.set_xlim([min(g1r),max(g1r)])
 			a4.set_ylim([min(g1r),max(g1r)])
+
+			referencePanel(a01,'A',-5	, 1.1)
+			referencePanel(a2 ,'B',-0.03 , 1.1)
+			referencePanel(a11,'C',-5	, 1.1)
+			referencePanel(a4 ,'D',-.5	, 1.1)
 			customaxis(a1,size=FONTSIZE,pad=-3)
 			customaxis(a2,size=FONTSIZE,pad=-3)
 			customaxis(a3,size=FONTSIZE,pad=-3)
