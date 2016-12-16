@@ -160,6 +160,8 @@ class simulatedAndSetup():
 		gs3 = gridspec.GridSpec(4,2,width_ratios=[0.03,1,0,1],hspace=0.35, wspace=0.15)
 		a1 = f.add_subplot(gs[0,1])
 		a3 = f.add_subplot(gs[1,1])
+		customaxis(a1,size=FONTSIZE,pad=5)
+		customaxis(a3,size=FONTSIZE,pad=5)
 		a2l = f.add_subplot(4,2,2)
 		a2l.imshow(LAMP)
 		a2w = f.add_subplot(4,2,4)
@@ -228,7 +230,7 @@ class simulatedAndSetup():
 		a1.set_xticks(xrange(0,400,100))
 		a3.set_xticks(xrange(0,400,100))
 		a1.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
-		#a1.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE) 
+		a1.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE) 
 		a3.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 		a3.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE) 
 		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
@@ -541,19 +543,36 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 		g3_to_plot = np.log10(g3)
 
 		def doFigura(a,wLog,f): 
+			'''
 			a1 = f.add_subplot(2,3,1)
 			a2 = f.add_subplot(2,3,2)
 			a3 = f.add_subplot(2,3,3)
 			a4 = f.add_subplot(2,3,4)
 			a5 = f.add_subplot(2,3,5)
-			#gs = gridspec.GridSpec(4,3)
 			#a61 = plt.subplot(gs[8])
 			#a62 = plt.subplot(gs[11])
 			a6 = f.add_subplot(2,3,6)
+			'''
+			gs = gridspec.GridSpec(2,3,width_ratios=[0.03,1,1],wspace=0.3)
+			gs2 = gridspec.GridSpec(2,2,wspace=0.6)
+			a1 = f.add_subplot(gs[0,1])
+			a2 = f.add_subplot(gs[0,2])
+			a3 = f.add_subplot(gs[1,1])
+			a4 = f.add_subplot(gs2[1,1],aspect='equal')
+			def setcolorbar(acb):
+				cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation='vertical',cmap='RdBu_r')
+				cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
+				cbar.ax.tick_params(labelsize=FONTSIZE) 
+				acb.yaxis.set_ticks_position('left')
+			a01 = f.add_subplot(gs[0,0])
+			a11 = f.add_subplot(gs[1,0])
+			setcolorbar(a01)
+			setcolorbar(a11)
 			# spettri
-			cax1 = a1.imshow(g1_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-			cax2 = a2.imshow(g2_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')
-			cax3 = a3.imshow(g3_to_plot,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+			cax1 = a1.imshow(g1_to_plot,aspect='auto',vmin=-0.4,vmax=1.2, interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+			cax2 = a2.imshow(g2_to_plot,aspect='auto',vmin=-0.4,vmax=1.2, interpolation="gaussian",cmap='RdBu_r')#'OrRd')
+			cax3 = a3.imshow(g3_to_plot,aspect='auto',vmin=-0.4,vmax=1.2, interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
+			'''
 			d12 = g2_to_plot-g1_to_plot
 			d13 = g3_to_plot-g1_to_plot
 			cax4 = a4.imshow(d12,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
@@ -573,34 +592,34 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			cbar5 = f.colorbar(cax5,ax=a5)
 			cbar5.set_ticks(np.arange(-4,5.1,.2))
 			cbar5.ax.tick_params(labelsize=FS)
+			a4.set_title('W1-W2',fontsize=FS)
+			a5.set_title('W1-W3',fontsize=FS)
+			'''
 			#
 			lunghezze = []
 			for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
 				print a.ROOT[idx1], info.NAMEs[idx2]
 				lunghezze.append(info.lunghezza[idx2])
-			def shorten(l):
-				l = np.round(l*100)
-				return str(l/100)
-			a1.set_title('W1 = '+str(shorten(lunghezze[0]))+' [mm]',fontsize=FS)
-			a2.set_title('W2 = '+str(shorten(lunghezze[1]))+' [mm]',fontsize=FS)
-			a3.set_title('W3 = '+str(shorten(lunghezze[2]))+' [mm]',fontsize=FS)
-			a4.set_title('W1-W2',fontsize=FS)
-			a5.set_title('W1-W3',fontsize=FS)
-			a5.set_xlabel('Frequency [Hz]',fontsize=FS)
-			for ax in [a1,a2,a3,a4,a5]:
-				ax.set_yticks([])
-			a6.set_xlabel('Pixel Value',fontsize=FS)
-			a6.set_ylabel('Pixel Value',fontsize=FS)
-			a1.set_ylabel(r'Base        $\longrightarrow$         Tip',fontsize=FS)
+			a1.set_title(r'Log$_{10}$(TF) of W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE,fontweight='bold')
+			a2.set_title(r'Log$_{10}$(TF) of W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE,fontweight='bold')
+			a3.set_title(r'Log$_{10}$(TF) of W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE,fontweight='bold')
+			a4.set_title(r'TF$_1$ vs TF$_2$',fontsize=FONTSIZE,fontweight='bold')
+			a1.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
+			a2.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
+			a3.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
+			a4.set_xlabel('Pixel Value',fontsize=FONTSIZE)
+			a4.set_ylabel('Pixel Value',fontsize=FONTSIZE)
+			a1.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
+			a3.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 
 			# scatter
 			g1r = np.reshape(g1,g1.__len__()*g1[0].__len__())
 			g2r = np.reshape(g2,g1.__len__()*g1[0].__len__())
 			g3r = np.reshape(g3,g1.__len__()*g1[0].__len__())
 			idx = np.random.permutation(len(g1r))[0:20000]
-			w13 = a6.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='#dbc65e',color='#dbc65e', alpha=0.4, rasterized=True)
-			w12 = a6.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='#ef725f',color='#ef725f',marker='x', alpha=0.4, rasterized=True)
-			a6.legend((w12,w13), ('W1 vs W2','W1 vs W3'), scatterpoints=1,markerscale=2, loc=4,fontsize=FS)
+			w13 = a4.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='#dbc65e',color='#dbc65e', alpha=0.4, rasterized=True)
+			w12 = a4.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='#ef725f',color='#ef725f',marker='x', alpha=0.4, rasterized=True)
+			a4.legend((w12,w13), (r'W$_1$ vs W$_2$',r'W$_1$ vs W$_3$'), scatterpoints=1,markerscale=2, loc=4,prop={'size':FONTSIZE*0.8},fontsize=FONTSIZE)
 			# regressione 
 			def getLine(g,h): 
 				slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
@@ -610,34 +629,32 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				if np.sign(intercept)>0:
 					segno='+'
 				else:
-					segno='-'
-				text = 'y = '+str(np.floor(slope*100)/100)+'x'+segno+str(np.abs(np.floor(intercept*100)/100))+'\n    (R2 = '+str(np.floor(r2*100)/100)+')'
+					segno=r'$-$'
+				text = 'y = '+str(np.floor(slope*100)/100)+'x'+segno+str(np.abs(np.floor(intercept*100)/100))+'\n'+r' (R$^2$ = '+str(np.floor(r2*100)/100)+')'
 				return xv,yv,r_value**2, text
 			x12,y12,r12,pp12 = getLine(g2r,g1r)
 			x13,y13,r13,pp13 = getLine(g3r,g1r)
-			a6.plot(x12,y12,color='#6d2a2a',linewidth=2)
-			a6.plot(x13,y13,color='#6d622a',linewidth=2)
-			a6.text(12,10,pp12,fontsize=14)
-			a6.text(3,15,pp13,fontsize=14)
-			'''
-			for spine in ('top','bottom','left','right'):
-				a6.spines[spine].set_visible(False)
-			'''
-			a6.set_xlim([min(g1r),max(g1r)])
-			a6.set_ylim([min(g1r),max(g1r)])
-			a6.tick_params(labelsize=FS) 
-			a1.tick_params(labelsize=FS) 
-			a2.tick_params(labelsize=FS) 
-			a3.tick_params(labelsize=FS) 
-			a4.tick_params(labelsize=FS) 
-			a5.tick_params(labelsize=FS) 
-			return a1,a2,a3,a4,a5,a6
+			a4.plot(x12,y12,color='#6d2a2a',linewidth=2)
+			a4.plot(x13,y13,color='#6d622a',linewidth=2)
+			a4.text(12,10,pp12,fontsize=FONTSIZE*0.7)
+			a4.text(.5,18,pp13,fontsize=FONTSIZE*0.7)
+			a4.set_xlim([min(g1r),max(g1r)])
+			a4.set_ylim([min(g1r),max(g1r)])
+			customaxis(a1,size=FONTSIZE,pad=-3)
+			customaxis(a2,size=FONTSIZE,pad=-3)
+			customaxis(a3,size=FONTSIZE,pad=-3)
+			customaxis(a4,size=FONTSIZE,pad=-3)
+			for a in [a1,a2,a3,a4]:
+				a.tick_params(labelsize=FONTSIZE) 
+			for a in [a1,a2,a3]:
+				a.set_yticks([])
+				a.set_xticks(xrange(0,400,100))
+			return a1,a2,a3,a4
 
 		# faccio figura
-		FS = 18 # la dimensione del font dipende dalla dimensione della figura
-		f1 = plt.figure(figsize=(21,8))
-		a11,a12,a13,a14,a15,a16 = doFigura(a,True, f1)
-		f1.subplots_adjust(wspace=0.3,hspace=0.3)
+		f1 = plt.figure(figsize=(FIGSIZEx,FIGSIZEy))
+		f1.subplots_adjust(wspace=0.3,hspace=0.6)
+		a11,a12,a13,a14 = doFigura(a,True, f1)
 		#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
 		f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
 
@@ -1883,8 +1900,8 @@ if __name__ == '__main__':
 	#dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	simulatedAndSetup() 				# fig2				
-	#creoSpettriBaffi()					# fig3			
+	#simulatedAndSetup() 				# fig2				
+	creoSpettriBaffi()					# fig3			
 	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
