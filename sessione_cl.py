@@ -17,6 +17,8 @@ from matplotlib import gridspec
 from matplotlib.cbook import get_sample_data
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.transforms import Bbox, TransformedBbox, blended_transform_factory
+from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector, BboxConnectorPatch
 import matplotlib 
 matplotlib.rcParams.update({'font.size': 17})
 from mpl_toolkits.mplot3d import Axes3D
@@ -26,6 +28,116 @@ import os.path
 
 def referencePanel(ax,text,x,y):
 	ax.text(x,y, text ,horizontalalignment='center',verticalalignment='center',fontweight='bold',fontsize=18,transform=ax.transAxes)
+
+
+
+def customaxis(ax, c_left='k', c_bottom='k', c_right='none', c_top='none',
+               lw=3, size=12, pad=8):
+
+    for c_spine, spine in zip([c_left, c_bottom, c_right, c_top],
+                              ['left', 'bottom', 'right', 'top']):
+        if c_spine != 'none':
+            ax.spines[spine].set_color(c_spine)
+            ax.spines[spine].set_linewidth(lw)
+        else:
+            ax.spines[spine].set_color('none')
+    if (c_bottom == 'none') & (c_top == 'none'): # no bottom and no top
+        ax.xaxis.set_ticks_position('none')
+    elif (c_bottom != 'none') & (c_top != 'none'): # bottom and top
+        ax.tick_params(axis='x', direction='out', width=lw, length=7,
+                      color=c_bottom, labelsize=size, pad=pad)
+    elif (c_bottom != 'none') & (c_top == 'none'): # bottom but not top
+        ax.xaxis.set_ticks_position('bottom')
+        ax.tick_params(axis='x', direction='out', width=lw, length=7,
+                       color=c_bottom, labelsize=size, pad=pad)
+    elif (c_bottom == 'none') & (c_top != 'none'): # no bottom but top
+        ax.xaxis.set_ticks_position('top')
+        ax.tick_params(axis='x', direction='out', width=lw, length=7,
+                       color=c_top, labelsize=size, pad=pad)
+    if (c_left == 'none') & (c_right == 'none'): # no left and no right
+        ax.yaxis.set_ticks_position('none')
+    elif (c_left != 'none') & (c_right != 'none'): # left and right
+        ax.tick_params(axis='y', direction='out', width=lw, length=7,
+                       color=c_left, labelsize=size, pad=pad)
+    elif (c_left != 'none') & (c_right == 'none'): # left but not right
+        ax.yaxis.set_ticks_position('left')
+        ax.tick_params(axis='y', direction='out', width=lw, length=7,
+                       color=c_left, labelsize=size, pad=pad)
+    elif (c_left == 'none') & (c_right != 'none'): # no left but right
+        ax.yaxis.set_ticks_position('right')
+        ax.tick_params(axis='y', direction='out', width=lw, length=7,
+                       color=c_right, labelsize=size, pad=pad)
+
+
+
+
+class zoomPanel():
+	def __init__(self,Test=False,x1=0.3,x2=0.35):
+		if Test:
+			plt.figure(1, figsize=(5, 5))
+			ax1 = plt.subplot(211)
+			ax2 = plt.subplot(212)
+			ax1.set_xlim(0, 2.25)
+			ax2.set_xlim(x1, x2)
+			for a in [ax1,ax2]:
+				for spine in ['top','bottom','left','right']:
+					a.spines[spine].set_visible(False)
+			self.zoom_effect01(ax1, ax2, x1, x2)
+			plt.show()
+
+	def connect_bbox(self,bbox1, bbox2,loc1a, loc2a, loc1b, loc2b,prop_lines, prop_patches=None):
+		if prop_patches is None:
+			prop_patches = prop_lines.copy()
+			prop_patches["alpha"] = prop_patches.get("alpha", 1)*0.2
+
+		c1 = BboxConnector(bbox1, bbox2, loc1=loc1a, loc2=loc2a, **prop_lines)
+		c1.set_clip_on(False)
+		c2 = BboxConnector(bbox1, bbox2, loc1=loc1b, loc2=loc2b, **prop_lines)
+		c2.set_clip_on(False)
+
+		bbox_patch1 = BboxPatch(bbox1, **prop_patches)
+		bbox_patch2 = BboxPatch(bbox2, **prop_patches)
+
+		p = BboxConnectorPatch(bbox1, bbox2,loc1a=loc1a, loc2a=loc2a, loc1b=loc1b, loc2b=loc2b,**prop_patches)
+		p.set_clip_on(False)
+
+		return c1, c2, bbox_patch1, bbox_patch2, p
+
+
+	def zoom_effect01(self,ax1, ax2, xmin, xmax, **kwargs):
+		"""
+		ax1 : the main axes
+		ax1 : the zoomed axes
+		(xmin,xmax) : the limits of the colored area in both plot axes.
+
+		connect ax1 & ax2. The x-range of (xmin, xmax) in both axes will
+		be marked.  The keywords parameters will be used ti create
+		patches.
+
+		"""
+
+		trans1 = blended_transform_factory(ax1.transData, ax1.transAxes)
+		trans2 = blended_transform_factory(ax2.transData, ax2.transAxes)
+
+		bbox = Bbox.from_extents(xmin, 0, xmax, 1)
+
+		mybbox1 = TransformedBbox(bbox, trans1)
+		mybbox2 = TransformedBbox(bbox, trans2)
+
+		prop_patches = kwargs.copy()
+		prop_patches["ec"] = "none"
+		prop_patches["alpha"] = 0.2
+
+		c1, c2, bbox_patch1, bbox_patch2, p = self.connect_bbox(mybbox1, mybbox2,loc1a=3, loc2a=2, loc1b=4, loc2b=1,prop_lines=kwargs, prop_patches=prop_patches)
+
+		ax1.add_patch(bbox_patch1)
+		ax2.add_patch(bbox_patch2)
+		ax2.add_patch(c1)
+		ax2.add_patch(c2)
+		ax2.add_patch(p)
+
+		return c1, c2, bbox_patch1, bbox_patch2, p
+
 
 class simulatedAndSetup():
 	def __init__(self):
@@ -40,23 +152,34 @@ class simulatedAndSetup():
 		spettroSim = np.flipud(np.loadtxt(fromAle))
 		spettroSim = spettroSim[:-2,3:]
 		# figura
-		f = plt.figure(figsize=(13,7))
-		gs  = gridspec.GridSpec(2,2,hspace=0.3)
+		f = plt.figure(figsize=(FIGSIZEx,2*FIGSIZEy))
+		gs  = gridspec.GridSpec(4,2,hspace=0.3)
 		gs2 = gridspec.GridSpec(7,5)
 		gs3 = gridspec.GridSpec(3,3)
 		a1 = f.add_subplot(gs[0,0])
 		a3 = f.add_subplot(gs[1,0])
 		a2 = f.add_subplot(1,2,2)
 		a2.imshow(SETUP)
-		a4 = f.add_subplot(gs2[4,4])
+		a4  = f.add_subplot(gs2[4,3])
+		a4z = f.add_subplot(gs2[5,2])
 		Np = 4500
 		s = np.random.normal(0, 1, Np)	
-		s2 = s[0:20]*signal.hamming(200)
-		s[0:len(s2)/2] = s2[0:len(s2)/2] 
+		def fadeinfadeout(s):
+			for i in xrange(0,250):
+				s[i] *= 1/(1+np.exp((250-i)/50))
+			return s
+		s = fadeinfadeout(s)
+		s = fadeinfadeout(s[::-1])
+		zoom = zoomPanel()
+		zoom.zoom_effect01(a4, a4z, 300, 350)
+		# XXX TODO per fare lo zoom guarda qua  http://matplotlib.org/users/annotations_guide.html
+
+
 		t = xrange(10,Np+10,1)
 		a4.plot(t,s,linewidth=2,color='k')
-		a4.annotate('', xy=(0, 1.1), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(color='k'))
-		a4.annotate('', xy=(0, -.1), xycoords='axes fraction', xytext=(0, 1), arrowprops=dict(color='k'))
+		a4z.plot(xrange(300,350),s[300:350],linewidth=2,color='k')
+		#a4.annotate('', xy=(0, 1.1), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(color='k'))
+		#a4.annotate('', xy=(0, -.1), xycoords='axes fraction', xytext=(0, 1), arrowprops=dict(color='k'))
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
@@ -673,37 +796,7 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 	def trendData(self,salva=False):
 		colors = ['b','c','m','g'] #cm.rainbow(np.linspace(0, 1, 4)) # 4 gruppi 
 		ALPHA= 0.5
-
-		'''
-		def annotatingPatches(ax, info):
-			stylename= 'wedge'
-			x,y,dx,dy,xc,yc,color,commento,fontsize = info
-			#xc = x+dx/2.
-			#yc = y+dy+5
-			print x,y,dx,dy,commento,fontsize
-			p = ax.add_patch(
-					patches.Rectangle(
-						(x, y),   # (x,y)
-						dx,          # width
-						dy,          # height
-					)
-				)
-			p.set_alpha(0.2)
-			p.set_color(color)
-			ax.annotate(commento, (x+dx/2., y+dy),
-						(xc, yc),
-						#xycoords="figure fraction", textcoords="figure fraction",
-						ha="right", va="center",
-						size=fontsize,
-						arrowprops=dict(arrowstyle=stylename,
-										patchB=p,
-										shrinkA=5,
-										shrinkB=5,
-										fc="w", ec="k",
-										connectionstyle="arc3,rad=-0.05",
-										),
-						)
-		'''
+		FS = FONTSIZE
 
 		def panel_D(a):
 			# disegno i trend
@@ -721,13 +814,13 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 				xx += 0.25
 			a.get_xaxis().tick_top()
 			a.get_yaxis().tick_left()
-			a.set_ylabel('Correct trials [%]', fontsize=14)
-			a.set_xlabel('Sessions',fontsize=14)
+			a.set_ylabel('Correct trials [%]', fontsize=FS)
+			a.set_xlabel('Sessions',fontsize=FS)
 			a.set_yticks([75,80,85,90]) # niente
 			a.set_xticks([]) # niente
 			a.set_xlim([-.5, 20.5])
 			a.set_ylim([74, 91])
-			a.tick_params(labelsize=14) 
+			a.tick_params(labelsize=FS) 
 			# patches
 			p1 = a.add_patch(patches.Rectangle((-.5, 74),10.25,18))
 			p1.set_alpha(0.2)
@@ -738,10 +831,6 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 			# annotations
 			a.annotate('before', ( 5, 89),( 4, 93.5),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
 			a.annotate('after' , (15, 89),(14, 93.5),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
-			#a.annotate('dyed', (3.5, 10),(3, 15),ha="right", va="center",size=12,arrowprops=dict(arrowstyle='wedge',fc="w", ec="k",),)
-
-			#annotatingPatches(a,(-.25,74,10,17,5,94,'gray','before',12))
-			#annotatingPatches(a,(10.25,74,10,17,15.5,94,'gray','after ',12))
 
 		def panel_E(a):
 			a.set_xticks([]) 
@@ -777,10 +866,10 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 			for pc,c in zip(violin_parts['bodies'],colors):
 				pc.set_color(c)
 				pc.set_alpha(ALPHA)
-			a.set_ylabel('Difference [%]',fontsize=14)
-			a.set_xlabel('Rats',fontsize=14)
+			a.set_ylabel('Difference [%]',fontsize=FS)
+			a.set_xlabel('Rats',fontsize=FS)
 			a.set_yticks(np.arange(-10,11,5))
-			a.tick_params(labelsize=11) 
+			a.tick_params(labelsize=FS) 
 			a.set_ylim([-10, 11])
 			a.set_xlim([.6, 4.4])
 			# patches
@@ -804,8 +893,7 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 		FR=mpimg.imread(self.luceBluFiltroRosso)
 		FPL=mpimg.imread(self.luceBluFiltroPLung)
 		#textSize, labelSize = fontSizeOnFigures(True)
-		FS = (10,6) # dimensione figura
-		fW = plt.figure(figsize=FS)
+		fW = plt.figure(figsize=(FIGSIZEx,FIGSIZEy))
 		aw1 = fW.add_subplot(2,3,1)
 		aw2 = fW.add_subplot(2,3,2)
 		aw3 = fW.add_subplot(2,3,3)
@@ -819,13 +907,15 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
 		[unvisibleAxes(ax) for ax in [aw1,aw2,aw3]] 
-		gs = gridspec.GridSpec(2,4,width_ratios=[0,3,0,1],wspace=0.2)
+		gs = gridspec.GridSpec(2,4,width_ratios=[0,3,0,1],wspace=0.3)
 		aw41 = fW.add_subplot(gs[1,1])
 		aw42 = fW.add_subplot(gs[1,3]) #,sharey=aw41)
 		panel_D(aw41)
+		customaxis(aw41,size=FS,pad=0)
 		referencePanel(aw1,'D',-0.05, -0.4)
 		panel_E(aw42)
-		referencePanel(aw1,'E',2.35, -0.4)
+		customaxis(aw42,size=FS,pad=0)
+		referencePanel(aw1,'E',2.3, -0.4)
 		for a in [aw41,aw42]:
 			for spine in ['right','top']: #'left','bottom'
 				a.spines[spine].set_visible(False)
@@ -1646,9 +1736,15 @@ if __name__ == '__main__':
 	global ELAB_PATH 
 	global DATA_PATH 
 	global SPECTRAL_RANGE
+	global FIGSIZEx
+	global FIGSIZEy
+	global FONTSIZE
 	ELAB_PATH = os.path.abspath(__file__)[:-len(os.path.basename(__file__))] # io sono qui
 	DATA_PATH = '/media/jaky/DATI BAFFO/'
 	SPECTRAL_RANGE = xrange(0,350) # in [Hz]
+	FIGSIZEx = 10
+	FIGSIZEy = 6
+	FONTSIZE    = 14 
 	print '~~~~~~~~~~~~\nNOTA BENE:'
 	print 'ELAB_PATH = '+ELAB_PATH
 	print 'DATA_PATH = '+DATA_PATH
@@ -1743,11 +1839,12 @@ if __name__ == '__main__':
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
 	#stampo_lunghezza_whiskers()					
-	dyeEnhanceAndBehavioralEffect()	# fig1
-	#creoImageProcessing_Stacked()	# fig2.part
-	#simulatedAndSetup() 			# fig2				
-	#creoSpettriBaffi()				# fig3			
-	#mergeComparisonsResults()		# fig4				
+	#dyeEnhanceAndBehavioralEffect()	# fig1
+	#creoImageProcessing_Stacked()		# fig2.part
+	#zoomPanel()						# fig2.part
+	simulatedAndSetup() 				# fig2				
+	#creoSpettriBaffi()					# fig3			
+	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
