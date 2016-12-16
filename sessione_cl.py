@@ -215,8 +215,13 @@ class simulatedAndSetup():
 			cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
 			cbar.ax.tick_params(labelsize=FONTSIZE) 
 			acb.yaxis.set_ticks_position('left')
-		setcolorbar(f.add_subplot(gs3[0,0]))
-		setcolorbar(f.add_subplot(gs3[1,0]))
+		a01 = f.add_subplot(gs3[0,0])
+		a11 = f.add_subplot(gs3[1,0])
+		setcolorbar(a01)
+		setcolorbar(a11)
+		referencePanel(a01,'A',-5	, 1.1)
+		referencePanel(a2l,'B',-0.03, 1.25)
+		referencePanel(a11,'C',-5	, 1.1)
 		#
 		a1.set_yticks([])
 		a3.set_yticks([])
@@ -1875,10 +1880,10 @@ if __name__ == '__main__':
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
 	#stampo_lunghezza_whiskers()					
-	dyeEnhanceAndBehavioralEffect()	# fig1
+	#dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	#simulatedAndSetup() 				# fig2				
+	simulatedAndSetup() 				# fig2				
 	#creoSpettriBaffi()					# fig3			
 	#mergeComparisonsResults()			# fig4				
 	
