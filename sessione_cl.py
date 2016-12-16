@@ -675,7 +675,7 @@ class mergeComparisonsResults():
 		a.compareWhiskers(typeComparison) 
 		b = confrontoBaffiDiversi('baffi_12May','diversiTempi',False)    
 		b.compareWhiskers(typeComparison) 
-		FS = 18
+		FS = FONTSIZE
 
 		#print cbd.info.lunghezza
 		lung = []
@@ -691,15 +691,26 @@ class mergeComparisonsResults():
 		print lung
 		#
 		# axes arrangements
-		f = plt.figure(figsize=(21,11))
-		UnDyed = f.add_subplot(2,3,1)
-		ColorC = f.add_subplot(2,3,2)
-		Dyed = f.add_subplot(2,3,3)
-		TimeC = f.add_subplot(2,3,5)
-		WhiskerGroup = f.add_subplot(2,3,4)
-		gs  = gridspec.GridSpec(4,3,hspace=1)
-		ColorD = plt.subplot(gs[3,2])
-		TimeSD = plt.subplot(gs[2,2],sharey=ColorD)
+		f = plt.figure(figsize=((3/2)*FIGSIZEx,FIGSIZEy))
+		gs  = gridspec.GridSpec(2,4,width_ratios=[0.03,1,1,1],hspace=0.3, wspace=0.6)
+		UnDyed = f.add_subplot(gs[0,1])
+		ColorC = f.add_subplot(gs[0,2])
+		Dyed = f.add_subplot(gs[0,3])
+		TimeC = f.add_subplot(gs[1,2])
+		WhiskerGroup = f.add_subplot(gs[1,1])
+		gs2  = gridspec.GridSpec(4,3,width_ratios=[1,1,0.6],hspace=0.5)
+		ColorD = plt.subplot(gs2[3,2])
+		TimeSD = plt.subplot(gs2[2,2],sharey=ColorD)
+
+		def setcolorbar(acb):
+			cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation='vertical',cmap='RdBu_r')
+			cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
+			cbar.ax.tick_params(labelsize=FONTSIZE) 
+			acb.yaxis.set_ticks_position('left')
+		#a01 = f.add_subplot(gs[0,0])
+		#a11 = f.add_subplot(gs[1,0])
+
+
 		#ColorD = f.add_subplot(2,4,7)
 		#TimeSD = f.add_subplot(2,4,8)
 		# plot stuff
@@ -709,9 +720,20 @@ class mergeComparisonsResults():
 		self.colorComparison(a,ColorC,lung,a.CORR2       		,'  Undyed \n  Dyed'   , FS)
 		self.colorComparison(a,UnDyed,lung,a.CORR2_undyed		,'  Undyed \n  Undyed' , FS)
 		self.colorComparison(a,Dyed  ,lung,a.CORR2_dyed  		,'  Dyed \n  Dyed'     , FS)
+
+		SDTh1 = self.getSuperDiagThs(a.CORR2_undyed,1)
+		SDTh2 = self.getSuperDiagThs(a.CORR2_undyed,2)
+		print SDTh1,SDTh2
+		errore
+
+
 		self.diagColComp(a,TimeSD,lung,a.CORR2                                         , FS)
 		self.supradiagTimeComp(b,ColorD                                                , FS)
 		cax = self.timeComparison(b,TimeC                                              , FS)
+
+		for ax in [UnDyed,Dyed,ColorC,WhiskerGroup,ColorD,TimeSD]: 
+			customaxis(ax,size=FS,pad=-2)
+		customaxis(TimeC,size=FS,pad=-2)
 			
 		v1 = a.CORR2_undyed.reshape(-1)
 		v2 = a.CORR2.reshape(-1)
@@ -721,6 +743,7 @@ class mergeComparisonsResults():
 		print 'corr2 sim vs mixed',np.power(np.corrcoef(v2,vs)[0,1],2)
 		print 'corr2 sim vs dyed',np.power(np.corrcoef(v3,vs)[0,1],2)
 		
+		'''
 		cbar2 = f.colorbar(cax,ax=WhiskerGroup)
 		cbar2.ax.tick_params(labelsize=FS)
 		cbar3 = f.colorbar(cax,ax=ColorC)
@@ -731,10 +754,17 @@ class mergeComparisonsResults():
 		cbar5.ax.tick_params(labelsize=FS)
 		cbar6 = f.colorbar(cax,ax=Dyed)
 		cbar6.ax.tick_params(labelsize=FS)
+		'''
 		# stampo
-		f.subplots_adjust(wspace=0.5,hspace=0.5)
 		f.savefig(DATA_PATH+'/elab_video/mergeComparisonsResults_'+typeComparison+'.pdf')
 
+
+	def getSuperDiagThs(self,CORR2,k):
+		val []
+		for i in range(1,len(CORR2)-k): 
+			print i
+			media += CORR2[i-k,i-k]+CORR2[i+k,i+k]
+		return media / (2*len(CORR2))		
 
 	def diagColComp(self,cbd,a51,lung,CORR2,FS):
 		lengths = [int(l) for l in lung]
@@ -742,15 +772,15 @@ class mergeComparisonsResults():
 		d_c2 = []
 		for i in xrange(0,CORR2.__len__()):
 			d_c2.append(CORR2[i][i])
-		a51.plot(d_c2,'k.',markersize=5)
-		a51.plot(d_c2,'k')
+		a51.plot(d_c2,'k.',markersize=10)
+		#a51.plot(d_c2,'k')
 		a51.set_xticks(np.arange(0,len(lung),1))
-		a51.set_xlabel('Length [mm]',fontsize=FS)
+		#a51.set_xlabel('Length [mm]',fontsize=FS)
 		a51.set_yticks(np.arange(0,1.2,0.2))
 		a51.axis([-0.2, len(cbd.ROOT)-0.8, 0.1, 1])
 		#a51.set_xticklabels([])
-		a51.set_ylabel(r'$R^2$', color='k',fontsize=FS, y=-.5,x = 0.3) # e` condiviso
-		a51.set_title('Dye effect', color='k',fontsize=FS)
+		#a51.text(2,0.4,'Dye effect', color='k',fontsize=FS*0.8)
+		a51.set_ylabel(r'R$^2$ (dye)', color='k',fontsize=FS) 
 		'''
 		for spine in ('top','bottom','left','right'):
 			a51.spines[spine].set_visible(False)
@@ -766,12 +796,13 @@ class mergeComparisonsResults():
 		d_c2 = []
 		for i in xrange(0,12):
 			d_c2.append(cbd.CORR2[i][i+1])
-		a51.plot(d_c2,'k.',markersize=5)
-		a51.plot(d_c2,'k')
+		a51.plot(d_c2,'k.',markersize=10)
+		#a51.plot(d_c2,'k')
 		a51.axis([-0.2, len(cbd.CORR2)-0.8, 0.1, 1])
 		a51.set_yticks(np.arange(0.2,1.2,0.2))
 		a51.set_xticks(xrange(0,len(cbd.CORR2)-1))
-		a51.set_title('Time effect', color='k',fontsize=FS)
+		#a51.text(2,0.4,'Time effect', color='k',fontsize=FS*0.8)
+		a51.set_ylabel(r'R$^2$ (time)', color='k',fontsize=FS) 
 		for tl in a51.get_yticklabels():
 			tl.set_color('k')
 		'''
@@ -779,7 +810,7 @@ class mergeComparisonsResults():
 			a51.spines[spine].set_visible(False)
 		'''
 		a51.tick_params(labelsize=FS) 
-		a51.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
+		#a51.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
 		#a51.set_xticklabels(ROOT[1:])
 		a51.set_xticklabels(ROOT[1:13],rotation=90)
 		a51.set_xlim([-.5, len(d_c2)-.5])
@@ -956,7 +987,7 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 		FR=mpimg.imread(self.luceBluFiltroRosso)
 		FPL=mpimg.imread(self.luceBluFiltroPLung)
 		#textSize, labelSize = fontSizeOnFigures(True)
-		fW = plt.figure(figsize=(FIGSIZEx,FIGSIZEy))
+		fW = plt.figure(figsize=((3/2)*FIGSIZEx,FIGSIZEy))
 		fW.subplots_adjust(wspace=0.15,hspace=0.5)
 		aw1 = fW.add_subplot(2,3,1)
 		aw2 = fW.add_subplot(2,3,2)
@@ -1806,7 +1837,7 @@ if __name__ == '__main__':
 	SPECTRAL_RANGE = xrange(0,350) # in [Hz]
 	FIGSIZEx = 10
 	FIGSIZEy = 6
-	FONTSIZE    = 14 
+	FONTSIZE    = 11 
 	matplotlib.rcParams.update({'font.size': FONTSIZE })
 	print '~~~~~~~~~~~~\nNOTA BENE:'
 	print 'ELAB_PATH = '+ELAB_PATH
@@ -1906,8 +1937,8 @@ if __name__ == '__main__':
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
 	#simulatedAndSetup() 				# fig2				
-	creoSpettriBaffi()					# fig3			
-	#mergeComparisonsResults()			# fig4				
+	#creoSpettriBaffi()					# fig3			
+	mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
