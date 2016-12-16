@@ -31,7 +31,7 @@ def referencePanel(ax,text,x,y):
 
 
 def customaxis(ax, c_left='k', c_bottom='k', c_right='none', c_top='none',
-               lw=3, size=12, pad=8):
+               lw=1, size=12, pad=5):
 
     for c_spine, spine in zip([c_left, c_bottom, c_right, c_top],
                               ['left', 'bottom', 'right', 'top']):
@@ -930,35 +930,34 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 		FPL=mpimg.imread(self.luceBluFiltroPLung)
 		#textSize, labelSize = fontSizeOnFigures(True)
 		fW = plt.figure(figsize=(FIGSIZEx,FIGSIZEy))
+		fW.subplots_adjust(wspace=0.15,hspace=0.5)
 		aw1 = fW.add_subplot(2,3,1)
 		aw2 = fW.add_subplot(2,3,2)
 		aw3 = fW.add_subplot(2,3,3)
 		aw1.imshow(LB)
-		referencePanel(aw1,'A',-0.05, 1.05)
+		referencePanel(aw1,'A',-0.03, 1.15)
 		aw2.imshow(FPL)
-		referencePanel(aw2,'B',-0.05, 1.05)
+		referencePanel(aw2,'B',-0.03, 1.15)
 		aw3.imshow(FR)
-		referencePanel(aw3,'C',-0.05, 1.05)
+		referencePanel(aw3,'C',-0.03, 1.15)
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
 		[unvisibleAxes(ax) for ax in [aw1,aw2,aw3]] 
-		gs = gridspec.GridSpec(2,4,width_ratios=[0,3,0,1],wspace=0.3)
+		gs = gridspec.GridSpec(2,4,width_ratios=[0,3,0,1],wspace=0.4)
 		aw41 = fW.add_subplot(gs[1,1])
 		aw42 = fW.add_subplot(gs[1,3]) #,sharey=aw41)
 		panel_D(aw41)
 		customaxis(aw41,size=FS,pad=0)
-		referencePanel(aw1,'D',-0.05, -0.4)
+		referencePanel(aw1,'D',-0.03, -0.4)
 		panel_E(aw42)
 		customaxis(aw42,size=FS,pad=0)
-		referencePanel(aw1,'E',2.3, -0.4)
+		referencePanel(aw1,'E',2.2785, -0.4)
 		for a in [aw41,aw42]:
 			for spine in ['right','top']: #'left','bottom'
 				a.spines[spine].set_visible(False)
 
 		#	
-		fW.tight_layout()
-		fW.subplots_adjust(wspace=0.15,hspace=0.5)
 		if salva:
 			fW.savefig(DATA_PATH+'/elab_video/dyeEnhanceAndBehavioralEffect.pdf',dpi=300)
 		else:
