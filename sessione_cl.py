@@ -19,9 +19,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.transforms import Bbox, TransformedBbox, blended_transform_factory
 from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector, BboxConnectorPatch
-import matplotlib 
-matplotlib.rcParams.update({'font.size': 17})
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib 
 import pickle
 import os.path
 
@@ -82,7 +81,7 @@ class zoomPanel():
 			for a in [ax1,ax2]:
 				for spine in ['top','bottom','left','right']:
 					a.spines[spine].set_visible(False)
-			self.zoom_effect01(ax1, ax2, x1, x2)
+			self.zoom_effect(ax1, ax2, x1, x2)
 			plt.show()
 
 	def connect_bbox(self,bbox1, bbox2,loc1a, loc2a, loc1b, loc2b,prop_lines, prop_patches=None):
@@ -104,7 +103,7 @@ class zoomPanel():
 		return c1, c2, bbox_patch1, bbox_patch2, p
 
 
-	def zoom_effect01(self,ax1, ax2, xmin, xmax, **kwargs):
+	def zoom_effect(self,ax1, ax2, xmin, xmax, **kwargs):
 		"""
 		ax1 : the main axes
 		ax1 : the zoomed axes
@@ -126,7 +125,7 @@ class zoomPanel():
 
 		prop_patches = kwargs.copy()
 		prop_patches["ec"] = "none"
-		prop_patches["alpha"] = 0.2
+		prop_patches["alpha"] = 0.1
 
 		c1, c2, bbox_patch1, bbox_patch2, p = self.connect_bbox(mybbox1, mybbox2,loc1a=3, loc2a=2, loc1b=4, loc2b=1,prop_lines=kwargs, prop_patches=prop_patches)
 
@@ -144,8 +143,11 @@ class simulatedAndSetup():
 		# confronto spettri
 		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim_primaTuning_forse.txt' #transffunct_D21_bw1000Hz_sim.txt'  # XXX DA CONTROLLARE CON ALE 
 		a = sessione('d21','12May','_NONcolor_','puppa',(0,0,0,0),-1,True, False)
-		fromErik = DATA_PATH+'/elab_video/Setup_color_transparent_background.png'
-		SETUP=mpimg.imread(fromErik)
+		lamp    = DATA_PATH+'/elab_video/Setup_color_transparent_background_LAMP.png'
+		whisker = DATA_PATH+'/elab_video/Setup_color_transparent_background_WHISKER.png'
+		LAMP    = mpimg.imread(lamp)
+		WHISKER = mpimg.imread(whisker)
+		WHISKER = np.fliplr(WHISKER)
 		#
 		a.calcoloTransferFunction(False)
 		spettroVero = a.TFM 
@@ -153,54 +155,97 @@ class simulatedAndSetup():
 		spettroSim = spettroSim[:-2,3:]
 		# figura
 		f = plt.figure(figsize=(FIGSIZEx,2*FIGSIZEy))
-		gs  = gridspec.GridSpec(4,2,hspace=0.3)
-		gs2 = gridspec.GridSpec(7,5)
-		gs3 = gridspec.GridSpec(3,3)
-		a1 = f.add_subplot(gs[0,0])
-		a3 = f.add_subplot(gs[1,0])
-		a2 = f.add_subplot(1,2,2)
-		a2.imshow(SETUP)
-		a4  = f.add_subplot(gs2[4,3])
-		a4z = f.add_subplot(gs2[5,2])
-		Np = 4500
+		gs  = gridspec.GridSpec(4,2,width_ratios=[0.03,0.7,0,1],hspace=0.35, wspace=0.15)
+		gs2 = gridspec.GridSpec(14,4)
+		gs3 = gridspec.GridSpec(4,2,width_ratios=[0.03,1,0,1],hspace=0.35, wspace=0.15)
+		a1 = f.add_subplot(gs[0,1])
+		a3 = f.add_subplot(gs[1,1])
+		a2l = f.add_subplot(4,2,2)
+		a2l.imshow(LAMP)
+		a2w = f.add_subplot(4,2,4)
+		a2w.imshow(WHISKER)
+		a4  = f.add_subplot(gs2[12,0])
+		a4z = f.add_subplot(gs2[13,0])
+		a4n = f.add_subplot(gs2[12,1])
+		a5  = f.add_subplot(gs[2,1])
+		stacked = creoImageProcessing_Stacked()
+		def plotStacked(ax,x_offset,y_offset,stacked):
+			FS = FONTSIZE
+			ax.text(100-10,20,"Raw Image",fontsize=FS,color='white') 
+			ax.text(100+y_offset-15,20+x_offset,"Thresholding",fontsize=FS,color='white') 
+			ax.text(100+2*y_offset-30,20+2*x_offset,"Bspline modeling",fontsize=FS,color='white') 
+			ax.set_xticks([])
+			ax.set_yticks([])
+			ax.imshow(stacked,cmap='gray')
+		x_offset,y_offset = stacked.offset
+		plotStacked(a5,x_offset,y_offset,stacked.stacked)
+		Np = 400
 		s = np.random.normal(0, 1, Np)	
 		def fadeinfadeout(s):
-			for i in xrange(0,250):
-				s[i] *= 1/(1+np.exp((250-i)/50))
+			for i in xrange(0,20):
+				s[i] *= 1/(1+np.exp((20-i)/50))
 			return s
 		s = fadeinfadeout(s)
 		s = fadeinfadeout(s[::-1])
 		zoom = zoomPanel()
-		zoom.zoom_effect01(a4, a4z, 300, 350)
+		w = 60
+		x1,x2 = (Np/2-w/2,Np/2+w/2)
+		zoom.zoom_effect(a4, a4z, x1, x2)
 		# XXX TODO per fare lo zoom guarda qua  http://matplotlib.org/users/annotations_guide.html
 
 
 		t = xrange(10,Np+10,1)
-		a4.plot(t,s,linewidth=2,color='k')
-		a4z.plot(xrange(300,350),s[300:350],linewidth=2,color='k')
-		#a4.annotate('', xy=(0, 1.1), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(color='k'))
-		#a4.annotate('', xy=(0, -.1), xycoords='axes fraction', xytext=(0, 1), arrowprops=dict(color='k'))
+		a4.plot(t,s,linewidth=0.5,color='k')
+		a4z.plot(xrange(x1,x2),s[x1:x2],linewidth=0.5,color='k')
+		a4n.annotate('', xy=(0, .9), xycoords='axes fraction', xytext=(0, .1), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
+		a4n.annotate('', xy=(0, .1), xycoords='axes fraction', xytext=(0, .9), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
 			for spine in ['top', 'right','bottom','left']:
 				ax.spines[spine].set_visible(False)
-		[unvisibleAxes(ax) for ax in [a2,a4]]
-		cax1 = a1.imshow(np.log10(spettroSim[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.4,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
-		cbar1 = f.colorbar(cax1,ax=a1)
-		cax3 =a3.imshow(np.log10(spettroVero[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.4,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
-		cbar3 = f.colorbar(cax3,ax=a3)
+		[unvisibleAxes(ax) for ax in [a2l,a2w,a4,a4z,a4n,a5]]
+		cax1 = a1.imshow(np.log10(spettroSim[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.2,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
+		cax3 =a3.imshow(np.log10(spettroVero[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.2,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
+		# colorbar
+		#cbar1 = f.colorbar(cax1,ax=a1)
+		#cbar3 = f.colorbar(cax3,ax=a3)
+		def setcolorbar(acb):
+			cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation='vertical',cmap='RdBu_r')
+			cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
+			cbar.ax.tick_params(labelsize=FONTSIZE) 
+			acb.yaxis.set_ticks_position('left')
+		setcolorbar(f.add_subplot(gs3[0,0]))
+		setcolorbar(f.add_subplot(gs3[1,0]))
+		#
 		a1.set_yticks([])
 		a3.set_yticks([])
-		a1.set_ylabel(r'Base     $\longrightarrow$      Tip')
-		a1.set_xlabel('Frequency [Hz]') 
-		a3.set_ylabel(r'Base     $\longrightarrow$      Tip')
-		a3.set_xlabel('Frequency [Hz]') 
+		a1.set_xticks(xrange(0,400,100))
+		a3.set_xticks(xrange(0,400,100))
+		a1.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
+		#a1.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE) 
+		a3.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
+		a3.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE) 
 		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
 		
 	
 class creoImageProcessing_Stacked(): # 
-	def __init__(self): 
+	def __init__(self,Stampa=False): 
+		self.stacked,self.offset = self.getStacked()
+		if Stampa:
+			x_offset,y_offset = offset
+			fig = plt.figure()
+			ax = fig.add_subplot(1,1,1)		
+			FS = 22
+			ax.text(100-10,20,"Raw Image",fontsize=FS,color='white') 
+			ax.text(100+y_offset-15,20+x_offset,"Thresholding",fontsize=FS,color='white') 
+			ax.text(100+2*y_offset-30,20+2*x_offset,"Bspline modeling",fontsize=FS,color='white') 
+			ax.set_xticks([])
+			ax.set_yticks([])
+			ax.imshow(stacked,cmap='gray')
+			fig.savefig(DATA_PATH+'/elab_video/stacked.png') # <--- serve per la base della figura 2
+	
+	def getStacked(self):
 
 		elabSessione = False
 		s = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,elabSessione,False,True) # carico la sessione senza elabolarla
@@ -249,17 +294,8 @@ class creoImageProcessing_Stacked(): #
 			stacked[layer*y_offset:layer*y_offset + r.shape[0],
 					layer*x_offset:layer*x_offset + r.shape[1], 
 					...] = L*1./Layers.__len__()
+		return stacked,(x_offset,y_offset)
 		
-		fig = plt.figure()
-		ax = fig.add_subplot(1,1,1)		
-		FS = 22
-		ax.text(100-10,20,"Raw Image",fontsize=FS,color='white') 
-		ax.text(100+y_offset-15,20+x_offset,"Thresholding",fontsize=FS,color='white') 
-		ax.text(100+2*y_offset-30,20+2*x_offset,"Bspline modeling",fontsize=FS,color='white') 
-		ax.set_xticks([])
-		ax.set_yticks([])
-		ax.imshow(stacked,cmap='gray')
-		fig.savefig(DATA_PATH+'/elab_video/stacked.png') # <--- serve per la base della figura 2
 
 class stampo_lunghezza_whiskers(): # calcolo le lunghezze dei baffi e le stampo a video
 	def __init__(self,SovrascriviPickle=False,Stampa=False): 
@@ -1745,6 +1781,7 @@ if __name__ == '__main__':
 	FIGSIZEx = 10
 	FIGSIZEy = 6
 	FONTSIZE    = 14 
+	matplotlib.rcParams.update({'font.size': FONTSIZE })
 	print '~~~~~~~~~~~~\nNOTA BENE:'
 	print 'ELAB_PATH = '+ELAB_PATH
 	print 'DATA_PATH = '+DATA_PATH
@@ -1839,10 +1876,10 @@ if __name__ == '__main__':
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
 	#stampo_lunghezza_whiskers()					
-	#dyeEnhanceAndBehavioralEffect()	# fig1
+	dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	simulatedAndSetup() 				# fig2				
+	#simulatedAndSetup() 				# fig2				
 	#creoSpettriBaffi()					# fig3			
 	#mergeComparisonsResults()			# fig4				
 	
