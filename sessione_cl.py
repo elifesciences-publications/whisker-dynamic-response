@@ -161,6 +161,7 @@ class simulatedAndSetup():
 		gs3 = gridspec.GridSpec(4,2,width_ratios=[0.03,1,0,1],hspace=0.35, wspace=0.15)
 		a1 = f.add_subplot(gs[0,1])
 		a3 = f.add_subplot(gs[1,1])
+		a1.set_title(r'Log$_{10}$(TF)',fontsize=FONTSIZE)
 		customaxis(a1,size=FONTSIZE,pad=5)
 		customaxis(a3,size=FONTSIZE,pad=5)
 		a2l = f.add_subplot(4,2,2)
@@ -1947,9 +1948,9 @@ if __name__ == '__main__':
 	#dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	#simulatedAndSetup() 				# fig2				
+	simulatedAndSetup() 				# fig2				
 	#creoSpettriBaffi()					# fig3			
-	mergeComparisonsResults()			# fig4				
+	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
