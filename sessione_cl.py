@@ -13,6 +13,7 @@ import matplotlib.mlab as mlab
 import matplotlib.cm as cm
 import matplotlib.image as mpimg
 import matplotlib.patches as patches
+from matplotlib.patches import BoxStyle
 from matplotlib import gridspec
 from matplotlib.cbook import get_sample_data
 from matplotlib.figure import Figure
@@ -141,13 +142,13 @@ class zoomPanel():
 class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
-		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim_primaTuning_forse.txt' #transffunct_D21_bw1000Hz_sim.txt'  # XXX DA CONTROLLARE CON ALE 
+		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim.txt'  
 		a = sessione('d21','12May','_NONcolor_','puppa',(0,0,0,0),-1,True, False)
-		lamp    = DATA_PATH+'/elab_video/Setup_color_transparent_background_LAMP.png'
-		whisker = DATA_PATH+'/elab_video/Setup_color_transparent_background_WHISKER.png'
-		LAMP    = mpimg.imread(lamp)
-		WHISKER = mpimg.imread(whisker)
-		WHISKER = np.fliplr(WHISKER)
+		#lamp    = DATA_PATH+'/elab_video/Setup_color_transparent_background_LAMP.png'
+		#whisker = DATA_PATH+'/elab_video/Setup_color_transparent_background_WHISKER.png'
+		#LAMP    = mpimg.imread(lamp)
+		#WHISKER = mpimg.imread(whisker)
+		#WHISKER = np.fliplr(WHISKER)
 		#
 		a.calcoloTransferFunction(False)
 		spettroVero = a.TFM 
@@ -156,19 +157,18 @@ class simulatedAndSetup():
 		# figura
 		f = plt.figure(figsize=(FIGSIZEx,2*FIGSIZEy))
 		gs  = gridspec.GridSpec(4,2,width_ratios=[0.03,0.7,0,1],hspace=0.35, wspace=0.15)
-		gs2 = gridspec.GridSpec(14,4)
+		gs2 = gridspec.GridSpec(14,6)
 		gs3 = gridspec.GridSpec(4,2,width_ratios=[0.03,1,0,1],hspace=0.35, wspace=0.15)
 		a1 = f.add_subplot(gs[0,1])
 		a3 = f.add_subplot(gs[1,1])
 		customaxis(a1,size=FONTSIZE,pad=5)
 		customaxis(a3,size=FONTSIZE,pad=5)
 		a2l = f.add_subplot(4,2,2)
-		a2l.imshow(LAMP)
+		#a2l.imshow(LAMP)
 		a2w = f.add_subplot(4,2,4)
-		a2w.imshow(WHISKER)
+		#a2w.imshow(WHISKER)
 		a4  = f.add_subplot(gs2[12,0])
 		a4z = f.add_subplot(gs2[13,0])
-		a4n = f.add_subplot(gs2[12,1])
 		a5  = f.add_subplot(gs[2,1])
 		stacked = creoImageProcessing_Stacked()
 		def plotStacked(ax,x_offset,y_offset,stacked):
@@ -193,20 +193,17 @@ class simulatedAndSetup():
 		w = 60
 		x1,x2 = (Np/2-w/2,Np/2+w/2)
 		zoom.zoom_effect(a4, a4z, x1, x2)
-		# XXX TODO per fare lo zoom guarda qua  http://matplotlib.org/users/annotations_guide.html
-
-
 		t = xrange(10,Np+10,1)
 		a4.plot(t,s,linewidth=0.5,color='k')
+		a4.annotate('', xy=(-.1, .1), xycoords='axes fraction', xytext=(-.1, .9), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
+		a4.annotate('', xy=(-.1, .9), xycoords='axes fraction', xytext=(-.1, .1), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
 		a4z.plot(xrange(x1,x2),s[x1:x2],linewidth=0.5,color='k')
-		a4n.annotate('', xy=(0, .9), xycoords='axes fraction', xytext=(0, .1), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
-		a4n.annotate('', xy=(0, .1), xycoords='axes fraction', xytext=(0, .9), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
 			ax.axes.get_yaxis().set_visible(False)
 			for spine in ['top', 'right','bottom','left']:
 				ax.spines[spine].set_visible(False)
-		[unvisibleAxes(ax) for ax in [a2l,a2w,a4,a4z,a4n,a5]]
+		[unvisibleAxes(ax) for ax in [a2l,a2w,a4,a4z,a5]]
 		cax1 = a1.imshow(np.log10(spettroSim[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.2,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
 		cax3 =a3.imshow(np.log10(spettroVero[:,SPECTRAL_RANGE]),vmin=-0.4,vmax=1.2,aspect='auto', interpolation="gaussian",cmap='RdBu_r')
 		# colorbar
@@ -221,9 +218,19 @@ class simulatedAndSetup():
 		a11 = f.add_subplot(gs3[1,0])
 		setcolorbar(a01)
 		setcolorbar(a11)
-		referencePanel(a01,'A',-5	, 1.1)
-		referencePanel(a2l,'B',-0.03, 1.25)
-		referencePanel(a11,'C',-5	, 1.1)
+		# move axes
+		def moveAxes(ax,vec):
+			pos = ax.get_position()
+			pos.x0 += vec[0]
+			pos.x1 += vec[0]
+			pos.y0 += vec[1]
+			pos.y1 += vec[1]
+			ax.set_position(pos)
+			return ax
+		#a4  = moveAxes(a4 ,[.4,.51])	
+		#a4z = moveAxes(a4z,[.4,.51])	
+		#a2w = moveAxes(a2w,[.03,0])	
+		
 		#
 		a1.set_yticks([])
 		a3.set_yticks([])
@@ -232,8 +239,12 @@ class simulatedAndSetup():
 		a1.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 		a1.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE) 
 		a3.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
-		a3.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE) 
-		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf')
+		a3.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE)
+		#
+		referencePanel(a01,'A',-5	, 1.1)
+		referencePanel(a2l,'B',-0.03, 1.25)
+		referencePanel(a11,'C',-5	, 1.1)
+		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf',dpi=400)
 		
 	
 class creoImageProcessing_Stacked(): # 
@@ -692,48 +703,44 @@ class mergeComparisonsResults():
 		#
 		# axes arrangements
 		f = plt.figure(figsize=((3/2)*FIGSIZEx,FIGSIZEy))
-		gs  = gridspec.GridSpec(2,4,width_ratios=[0.03,1,1,1],hspace=0.3, wspace=0.6)
+		gs  = gridspec.GridSpec(2,4,width_ratios=[0.053,1,1,1],hspace=0.5, wspace=0.6)
 		UnDyed = f.add_subplot(gs[0,1])
 		ColorC = f.add_subplot(gs[0,2])
 		Dyed = f.add_subplot(gs[0,3])
 		TimeC = f.add_subplot(gs[1,2])
 		WhiskerGroup = f.add_subplot(gs[1,1])
-		gs2  = gridspec.GridSpec(4,3,width_ratios=[1,1,0.6],hspace=0.5)
+		gs2  = gridspec.GridSpec(5,3,width_ratios=[1,1,0.6],hspace=0.55)
 		ColorD = plt.subplot(gs2[3,2])
-		TimeSD = plt.subplot(gs2[2,2],sharey=ColorD)
+		TimeSD = plt.subplot(gs2[4,2],sharey=ColorD)
 
 		def setcolorbar(acb):
-			cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation='vertical',cmap='RdBu_r')
-			cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
+			cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation='vertical')
 			cbar.ax.tick_params(labelsize=FONTSIZE) 
 			acb.yaxis.set_ticks_position('left')
-		#a01 = f.add_subplot(gs[0,0])
-		#a11 = f.add_subplot(gs[1,0])
+		a01 = f.add_subplot(gs[0,0])
+		a11 = f.add_subplot(gs[1,0])
+		setcolorbar(a01)
+		setcolorbar(a11)
 
-
-		#ColorD = f.add_subplot(2,4,7)
-		#TimeSD = f.add_subplot(2,4,8)
 		# plot stuff
 		# self.sizeWhiskerGroups(a,WhiskerGroup,lung) # <--- sostituisco questo scatter con le matrici dei baffi simulati
 		CORR2SIM = funTemporaneoConfrontoBaffiSimulatiTraLoro()
+		lung = [int(l) for l in lung]
 		self.colorComparison(a,WhiskerGroup,lung,CORR2SIM       ,'  Sim \n  Sim'       , FS)
 		self.colorComparison(a,ColorC,lung,a.CORR2       		,'  Undyed \n  Dyed'   , FS)
 		self.colorComparison(a,UnDyed,lung,a.CORR2_undyed		,'  Undyed \n  Undyed' , FS)
 		self.colorComparison(a,Dyed  ,lung,a.CORR2_dyed  		,'  Dyed \n  Dyed'     , FS)
 
-		SDTh1 = self.getSuperDiagThs(a.CORR2_undyed,1)
-		SDTh2 = self.getSuperDiagThs(a.CORR2_undyed,2)
-		print SDTh1,SDTh2
-		errore
 
+		self.diagColComp(a,ColorD,lung,a.CORR2                                         , FS)
+		self.supradiagTimeComp(b,TimeSD                                                , FS)
+		cax = self.timeComparison(b,TimeC                       ,'  Time \n  Time'     , FS)
 
-		self.diagColComp(a,TimeSD,lung,a.CORR2                                         , FS)
-		self.supradiagTimeComp(b,ColorD                                                , FS)
-		cax = self.timeComparison(b,TimeC                                              , FS)
-
-		for ax in [UnDyed,Dyed,ColorC,WhiskerGroup,ColorD,TimeSD]: 
+		for ax in [UnDyed,Dyed,ColorC,WhiskerGroup,TimeSD]: 
 			customaxis(ax,size=FS,pad=-2)
-		customaxis(TimeC,size=FS,pad=-2)
+		customaxis(TimeC,size=FS,pad=0)
+		customaxis(ColorD,size=FS,pad=-2)
+
 			
 		v1 = a.CORR2_undyed.reshape(-1)
 		v2 = a.CORR2.reshape(-1)
@@ -743,24 +750,17 @@ class mergeComparisonsResults():
 		print 'corr2 sim vs mixed',np.power(np.corrcoef(v2,vs)[0,1],2)
 		print 'corr2 sim vs dyed',np.power(np.corrcoef(v3,vs)[0,1],2)
 		
-		'''
-		cbar2 = f.colorbar(cax,ax=WhiskerGroup)
-		cbar2.ax.tick_params(labelsize=FS)
-		cbar3 = f.colorbar(cax,ax=ColorC)
-		cbar3.ax.tick_params(labelsize=FS)
-		cbar4 = f.colorbar(cax,ax=TimeC)
-		cbar4.ax.tick_params(labelsize=FS)
-		cbar5 = f.colorbar(cax,ax=UnDyed)
-		cbar5.ax.tick_params(labelsize=FS)
-		cbar6 = f.colorbar(cax,ax=Dyed)
-		cbar6.ax.tick_params(labelsize=FS)
-		'''
 		# stampo
+		referencePanel(UnDyed      ,'A',-1, 1.15)
+		referencePanel(ColorC      ,'B',-0.35, 1.15)
+		referencePanel(Dyed        ,'C',-0.35, 1.15)
+		referencePanel(WhiskerGroup,'D',-1, 1.15)
+		referencePanel(TimeC       ,'E',-0.35, 1.15)
+		referencePanel(Dyed        ,'F',-0.35, -.51)
 		f.savefig(DATA_PATH+'/elab_video/mergeComparisonsResults_'+typeComparison+'.pdf')
 
-
 	def getSuperDiagThs(self,CORR2,k):
-		val []
+		media = 0
 		for i in range(1,len(CORR2)-k): 
 			print i
 			media += CORR2[i-k,i-k]+CORR2[i+k,i+k]
@@ -781,15 +781,24 @@ class mergeComparisonsResults():
 		#a51.set_xticklabels([])
 		#a51.text(2,0.4,'Dye effect', color='k',fontsize=FS*0.8)
 		a51.set_ylabel(r'R$^2$ (dye)', color='k',fontsize=FS) 
-		'''
-		for spine in ('top','bottom','left','right'):
-			a51.spines[spine].set_visible(False)
-		'''
 		a51.tick_params(labelsize=FS) 
 		a51.set_xticklabels(lengths,rotation=90) #cbd.ROOT[0:14],rotation=90)
 		a51.set_xlim([-.5, len(lung)-.5])
-		a51.set_ylim([0, 1])
+		#a51.set_ylim([0, 1.1])
 		#a51.axes.get_xaxis().set_visible(False)
+
+		# vediamo quanto alti sono i valori sulla diagonale rispetto agli altri
+		Colors = cm.gray(np.linspace(0, 1, CORR2.__len__()-1))
+		vals = []
+		for i in xrange(1,len(Colors)):
+			val = self.getSuperDiagThs(CORR2,i)
+			a51.plot([-.5,len(lung)-.5],[val,val],color=Colors[i])
+			a51.plot([-.5,len(lung)-.5],[val,val],color=Colors[i])
+			vals.append(val)
+		print vals
+		a51.annotate('', (5, min(vals)),(5, max(vals)),ha="right", va="center",size=10,arrowprops=dict(arrowstyle="->",connectionstyle="arc3",fc="k", ec="k",),)
+		a51.text(6,0.35,r'$\mu_{i \searrow}$',rotation=0,fontsize=1.3*FS,bbox=dict(boxstyle='round', fc='w', ec='w', alpha=0.7))
+
 
 	def supradiagTimeComp(self,cbd,a51,FS):
 		ROOT  	= [re.sub('[$]','',cbd.ROOT[i]) for i in xrange(0,cbd.ROOT.__len__()) if cbd.group3[i] == 0] # uso le regular expression per togliere i $ che mi servono per l'interpreter latex per fare il corsivo 
@@ -799,39 +808,39 @@ class mergeComparisonsResults():
 		a51.plot(d_c2,'k.',markersize=10)
 		#a51.plot(d_c2,'k')
 		a51.axis([-0.2, len(cbd.CORR2)-0.8, 0.1, 1])
-		a51.set_yticks(np.arange(0.2,1.2,0.2))
+		a51.set_yticks(np.arange(0,1.2,0.2))
 		a51.set_xticks(xrange(0,len(cbd.CORR2)-1))
 		#a51.text(2,0.4,'Time effect', color='k',fontsize=FS*0.8)
 		a51.set_ylabel(r'R$^2$ (time)', color='k',fontsize=FS) 
 		for tl in a51.get_yticklabels():
 			tl.set_color('k')
-		'''
-		for spine in ('top','bottom','left','right'):
-			a51.spines[spine].set_visible(False)
-		'''
 		a51.tick_params(labelsize=FS) 
 		#a51.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
 		#a51.set_xticklabels(ROOT[1:])
 		a51.set_xticklabels(ROOT[1:13],rotation=90)
 		a51.set_xlim([-.5, len(d_c2)-.5])
+		a51.set_ylim([0, 1.1])
 		#a51.axes.get_xaxis().set_visible(False)
 
+
+
 	def colorComparison(self,cbd,a2,lung,CORR2,text,FS):
-		lengths = [int(l) for l in lung]
 		# faccio il plot
 		cax2 = a2.imshow(np.flipud(CORR2),aspect='equal', interpolation="nearest",clim=(0,1))
 		a2.set_xticks(np.arange(len(cbd.ROOT)))
-		a2.set_xticklabels(lengths,rotation=90)#cbd.ROOT,rotation=90)
+		a2.set_xticklabels(lung,rotation=90)#cbd.ROOT,rotation=90)
 		a2.set_yticks(np.arange(len(cbd.ROOT)))
-		a2.set_yticklabels(reversed(lengths))#cbd.ROOT)
+		a2.set_yticklabels(reversed(lung))#cbd.ROOT)
 		a2.set_xlabel('Length [mm]',fontsize=FS)
 		a2.set_ylabel('Length [mm]',fontsize=FS)
 		a2.text(-.18, -.18, text,horizontalalignment='center',verticalalignment='center',rotation=45,transform=a2.transAxes,fontsize=FS)
 		a2.annotate('', xy=(-0.3, -0.3), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
 		a2.tick_params(labelsize=FS) 
+		#a2.set_xlim([0,len(lung)])
+		#a2.set_ylim([0,len(lung)])
 		return cax2
 
-	def timeComparison(self,cbd,a1,FS):
+	def timeComparison(self,cbd,a1,text,FS):
 		ROOT  	= [re.sub('[$]','',cbd.ROOT[i]) for i in xrange(0,cbd.ROOT.__len__()) if cbd.group3[i] == 0] # uso le regular expression per togliere i $ che mi servono per l'interpreter latex per fare il corsivo 
 		CORR2 	= cbd.CORR2[0:ROOT.__len__(),0:ROOT.__len__()]
 		cax1 = a1.imshow(np.flipud(CORR2),aspect='equal', interpolation="nearest",clim=(0,1))
@@ -839,8 +848,10 @@ class mergeComparisonsResults():
 		a1.set_xticklabels(ROOT,rotation=90)
 		a1.set_yticks(np.arange(len(ROOT)))
 		a1.set_yticklabels(reversed(ROOT))
-		a1.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
-		a1.set_ylabel('Time',fontsize=FS) # C3 o 37.99mm
+		a1.text(-.18, -.18, text,horizontalalignment='center',verticalalignment='center',rotation=45,transform=a1.transAxes,fontsize=FS)
+		a1.annotate('', xy=(-0.3, -0.3), xycoords='axes fraction', xytext=(0, 0), arrowprops=dict(arrowstyle="-", color='k'))
+		#a1.set_xlabel('Time',fontsize=FS) # C3 o 37.99mm
+		#a1.set_ylabel('Time',fontsize=FS) # C3 o 37.99mm
 		a1.tick_params(labelsize=FS) 
 		return cax1
 
@@ -1813,7 +1824,7 @@ class video: # ogni fideo va elaborato
 
 
 def funTemporaneoConfrontoBaffiSimulatiTraLoro(SalvaImg=False): #FIXME TODO mettere nelle figure opportunamente
-	CORR2 = np.loadtxt('/media/jaky/DATI BAFFO/elab_video/simulatedWhisker_byAle/comparisonSimWhisker_ordered.txt') #comparisonSimWhiskers_CORR2_visualInspection.txt') 
+	CORR2 = np.loadtxt('/media/jaky/DATI BAFFO/elab_video/simulatedWhisker_byAle/comparisonSimWhiskers_CORR2_visualInspection.txt') 
 	if SalvaImg: 
 		f = plt.figure()
 		a1 = f.add_subplot(1,1,1)
