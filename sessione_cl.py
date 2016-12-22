@@ -171,6 +171,7 @@ class simulatedAndSetup():
 		a4  = f.add_subplot(gs2[12,0])
 		a4z = f.add_subplot(gs2[13,0])
 		a5  = f.add_subplot(gs[2,1])
+		# panel con lo stacked dell'image processing
 		stacked = creoImageProcessing_Stacked()
 		def plotStacked(ax,x_offset,y_offset,stacked):
 			FS = FONTSIZE
@@ -182,22 +183,40 @@ class simulatedAndSetup():
 			ax.imshow(stacked,cmap='gray')
 		x_offset,y_offset = stacked.offset
 		plotStacked(a5,x_offset,y_offset,stacked.stacked)
-		Np = 400
-		s = np.random.normal(0, 1, Np)	
-		def fadeinfadeout(s):
-			for i in xrange(0,20):
-				s[i] *= 1/(1+np.exp((20-i)/50))
-			return s
-		s = fadeinfadeout(s)
-		s = fadeinfadeout(s[::-1])
+			
+		# panel con l'andamento dello shaker, ovvero l'input al sistema baffo, ovvero il punto alla base del baffo che ho stimato con il tracking
+		def getShakerTimeTrend():
+			elabSessione = False
+			sess = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,elabSessione,False,True) # carico la sessione senza elabolarla
+			sess.loadTracking() # carico i dati
+			v = sess.V[0] # prendo un video
+			traiettorie,nPunti,nCampioni = (v.wst,v.wst.__len__(),v.wst[0].__len__())
+			base = traiettorie[nPunti-1].tolist()
+			base[:2]   = [] # compatto il numero di campioni in cui il baffo sta fermo prima e dopo lo stimolo
+			base[-380:] = [] 
+			return base-np.mean(base)
+		s = getShakerTimeTrend() 
+		STD = np.std(s)
+		Np = len(s)
 		zoom = zoomPanel()
-		w = 60
+		wTime = .2 			# sec
+		w = int(wTime*2000)	# samples
 		x1,x2 = (Np/2-w/2,Np/2+w/2)
+		kkk = 100 # fattore di ragguaglio perche` lo zoom non ombreggia sui valori giusti
+		a4.plot([x1+kkk,x2-kkk],[4,4],color='k',linewidth=3)
+		a4.text(x1-500,5,str(int(wTime*1000))+' ms',fontsize=FONTSIZE*0.8)
+		a4.plot([-500,-500],[-1*STD,1*STD],color='k',linewidth=2)
+		a4.text(-1500,1,r'$\pm$1 STD', rotation=90,fontsize=FONTSIZE*0.8)
+		#a4.annotate('', xy=(x1,-1), xycoords='axes fraction', xytext=(x2,-1), arrowprops=dict(color='k',width=1,headwidth=5,headlength=5))
+		#a4.annotate('', xy=(x2,-1), xycoords='axes fraction', xytext=(x1,-1), arrowprops=dict(color='k',width=1,headwidth=5,headlength=5))
+		#a4.annotate('', xy=(-.1, .1), xycoords='axes fraction', xytext=(-.1, .9), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
+		#a4.annotate('', xy=(-.1, .9), xycoords='axes fraction', xytext=(-.1, .1), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
+		#a4z.annotate('', xy=(0,-.3), xycoords='axes fraction', xytext=(.95,-.3), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
+		#a4z.annotate('', xy=(.95,-.3), xycoords='axes fraction', xytext=(0,-.3), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
+		#a4z.text(0,0, 'ppp') #str(int(wTime*1000))+' ms') #, fontsize=FONTSIZE)
 		zoom.zoom_effect(a4, a4z, x1, x2)
 		t = xrange(10,Np+10,1)
 		a4.plot(t,s,linewidth=0.5,color='k')
-		a4.annotate('', xy=(-.1, .1), xycoords='axes fraction', xytext=(-.1, .9), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
-		a4.annotate('', xy=(-.1, .9), xycoords='axes fraction', xytext=(-.1, .1), arrowprops=dict(color='k',width=.1,headwidth=5,headlength=5))
 		a4z.plot(xrange(x1,x2),s[x1:x2],linewidth=0.5,color='k')
 		def unvisibleAxes(ax):
 			ax.axes.get_xaxis().set_visible(False)
