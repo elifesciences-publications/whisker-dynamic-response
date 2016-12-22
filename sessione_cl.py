@@ -612,15 +612,15 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
 				print a.ROOT[idx1], info.NAMEs[idx2]
 				lunghezze.append(info.lunghezza[idx2])
-			a1.set_title(r'Log$_{10}$(TF) of W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
-			a2.set_title(r'Log$_{10}$(TF) of W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
-			a3.set_title(r'Log$_{10}$(TF) of W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
-			a4.set_title(r'TF$_1$ vs TF$_2$',fontsize=FONTSIZE)										  #,fontweight='bold')
+			a1.set_title(r'Log$_{10}$(|H|) of W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a2.set_title(r'Log$_{10}$(|H|) of W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a3.set_title(r'Log$_{10}$(|H|) of W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a4.set_title(r'|H|$_1$ vs |H|$_2$',fontsize=FONTSIZE)										  #,fontweight='bold')
 			a1.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a2.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a3.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
-			a4.set_xlabel('Pixel Value',fontsize=FONTSIZE)
-			a4.set_ylabel('Pixel Value',fontsize=FONTSIZE)
+			a4.set_xlabel('|H|',fontsize=FONTSIZE)
+			a4.set_ylabel('|H|',fontsize=FONTSIZE)
 			a1.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 			a3.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 
@@ -629,14 +629,14 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			g2r = np.reshape(g2,g1.__len__()*g1[0].__len__())
 			g3r = np.reshape(g3,g1.__len__()*g1[0].__len__())
 			idx = np.random.permutation(len(g1r))[0:20000]
-			w13 = a4.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='#dbc65e',color='#dbc65e', alpha=0.4, rasterized=True)
-			w12 = a4.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='#ef725f',color='#ef725f',marker='x', alpha=0.4, rasterized=True)
-			a4.legend((w12,w13), (r'W$_1$ vs W$_2$',r'W$_1$ vs W$_3$'), scatterpoints=1,markerscale=2, loc=4,prop={'size':FONTSIZE*0.8},fontsize=FONTSIZE)
+			w13 = a4.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='g',color='g', alpha=0.4, rasterized=True)
+			w12 = a4.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='r',color='r',marker='x', alpha=0.4, rasterized=True)
+			a4.legend((w12,w13), (r'W$_1$ vs W$_2$',r'W$_1$ vs W$_3$'), scatterpoints=1,markerscale=2, loc=4,prop={'size':FONTSIZE*0.9},fontsize=FONTSIZE)
 			# regressione 
 			def getLine(g,h): 
 				slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
 				r2 = r_value**2
-				xv = [a for a in np.arange(min(h),max(h),.1)]
+				xv = [a for a in np.arange(0,18,.1)] # area che voglio rappresentare nel plot
 				yv = [a*slope+intercept for a in xv]
 				if np.sign(intercept)>0:
 					segno='+'
@@ -646,12 +646,12 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				return xv,yv,r_value**2, text
 			x12,y12,r12,pp12 = getLine(g2r,g1r)
 			x13,y13,r13,pp13 = getLine(g3r,g1r)
-			a4.plot(x12,y12,color='#6d2a2a',linewidth=2)
-			a4.plot(x13,y13,color='#6d622a',linewidth=2)
-			a4.text(12,10,pp12,fontsize=FONTSIZE*0.7)
-			a4.text(.5,18,pp13,fontsize=FONTSIZE*0.7)
-			a4.set_xlim([min(g1r),max(g1r)])
-			a4.set_ylim([min(g1r),max(g1r)])
+			a4.plot(x13,y13,color='#3D5F3A',linewidth=2)
+			a4.plot(x12,y12,color='#8B4C4B',linewidth=2)
+			a4.text(12,9,pp12,fontsize=FONTSIZE*0.9)
+			a4.text(-.2,18,pp13,fontsize=FONTSIZE*0.9)
+			a4.set_xlim([min(g1r)-.7,max(g1r)])
+			a4.set_ylim([min(g1r)-.7,max(g1r)])
 
 			referencePanel(a01,'A',-5	, 1.1)
 			referencePanel(a2 ,'B',-0.03 , 1.1)
@@ -1948,8 +1948,8 @@ if __name__ == '__main__':
 	#dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	simulatedAndSetup() 				# fig2				
-	#creoSpettriBaffi()					# fig3			
+	#simulatedAndSetup() 				# fig2				
+	creoSpettriBaffi()					# fig3			
 	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
