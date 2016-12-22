@@ -174,9 +174,9 @@ class simulatedAndSetup():
 		stacked = creoImageProcessing_Stacked()
 		def plotStacked(ax,x_offset,y_offset,stacked):
 			FS = FONTSIZE
-			ax.text(100-10,20,"Raw Image",fontsize=FS,color='white') 
-			ax.text(100+y_offset-15,20+x_offset,"Thresholding",fontsize=FS,color='white') 
-			ax.text(100+2*y_offset-30,20+2*x_offset,"Bspline modeling",fontsize=FS,color='white') 
+			ax.text(100-80,30,"Raw Image",fontsize=FS,color='white') 
+			ax.text(100+y_offset-80,30+x_offset,"Thresholding",fontsize=FS,color='white') 
+			ax.text(100+2*y_offset-80,30+2*x_offset,"B-spline model",fontsize=FS,color='white') 
 			ax.set_xticks([])
 			ax.set_yticks([])
 			ax.imshow(stacked,cmap='gray')
@@ -256,9 +256,9 @@ class creoImageProcessing_Stacked(): #
 			fig = plt.figure()
 			ax = fig.add_subplot(1,1,1)		
 			FS = 22
-			ax.text(100-10,20,"Raw Image",fontsize=FS,color='white') 
-			ax.text(100+y_offset-15,20+x_offset,"Thresholding",fontsize=FS,color='white') 
-			ax.text(100+2*y_offset-30,20+2*x_offset,"Bspline modeling",fontsize=FS,color='white') 
+			ax.text(100-80,30,"Raw Image",fontsize=FS,color='white') 
+			ax.text(100+y_offset-80,30+x_offset,"Thresholding",fontsize=FS,color='white') 
+			ax.text(100+2*y_offset-80,30+2*x_offset,"B-spline model",fontsize=FS,color='white') 
 			ax.set_xticks([])
 			ax.set_yticks([])
 			ax.imshow(stacked,cmap='gray')
@@ -298,10 +298,9 @@ class creoImageProcessing_Stacked(): #
 	
 		# plot	
 		Layers = [] 
-		Layers.append(Frame_raw)     
-		#Layers.append(Frame_blur)    
-		Layers.append(Frame_ths)     
-		Layers.append(Frame_Bspline) 
+		Layers.append(np.fliplr(Frame_raw))     
+		Layers.append(np.fliplr(Frame_ths))     
+		Layers.append(np.fliplr(Frame_Bspline)) 
 
 		x_offset, y_offset = 90, 90  # Number of pixels to offset each image.
 		r = Frame_raw
@@ -1948,8 +1947,8 @@ if __name__ == '__main__':
 	#dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	#simulatedAndSetup() 				# fig2				
-	creoSpettriBaffi()					# fig3			
+	simulatedAndSetup() 				# fig2				
+	#creoSpettriBaffi()					# fig3			
 	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
