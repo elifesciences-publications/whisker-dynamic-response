@@ -572,6 +572,20 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 		g2_to_plot = np.log10(g2)
 		g3_to_plot = np.log10(g3)
 
+
+		def getLine(g,h): 
+			slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
+			r2 = r_value**2
+			xv = [a for a in np.arange(0,18,.1)] # area che voglio rappresentare nel plot
+			yv = [a*slope+intercept for a in xv]
+			if np.sign(intercept)>0:
+				segno='+'
+			else:
+				segno=r'$-$'
+			text = 'y = '+str(np.floor(slope*100)/100)+'x'+segno+str(np.abs(np.floor(intercept*100)/100))+'\n'+r' (R$^2$ = '+str(np.floor(r2*100)/100)+')'
+			#text = 'y = '+str(slope)+'x'+segno+str(np.abs(intercept))+'\n'+r' (R$^2$ = '+str(r2)+')'
+			return xv,yv,r_value**2, text
+
 		def doFigura(a,wLog,f): 
 			'''
 			a1 = f.add_subplot(2,3,1)
@@ -584,47 +598,22 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			a6 = f.add_subplot(2,3,6)
 			'''
 			gs = gridspec.GridSpec(2,3,width_ratios=[0.03,1,1],wspace=0.3)
-			gs2 = gridspec.GridSpec(2,2,wspace=0.6)
 			a1 = f.add_subplot(gs[0,1])
 			a2 = f.add_subplot(gs[0,2])
 			a3 = f.add_subplot(gs[1,1])
-			a4 = f.add_subplot(gs2[1,1],aspect='equal')
-			def setcolorbar(acb):
-				cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation='vertical',cmap='RdBu_r')
+			def setcolorbar(acb,Orientation='horizontal'):
+				cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation=Orientation,cmap='RdBu_r')
 				cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
 				cbar.ax.tick_params(labelsize=FONTSIZE) 
 				acb.yaxis.set_ticks_position('left')
 			a01 = f.add_subplot(gs[0,0])
 			a11 = f.add_subplot(gs[1,0])
-			setcolorbar(a01)
-			setcolorbar(a11)
+			setcolorbar(a01,'vertical')
+			setcolorbar(a11,'vertical')
 			# spettri
 			cax1 = a1.imshow(g1_to_plot,aspect='auto',vmin=-0.4,vmax=1.2, interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
 			cax2 = a2.imshow(g2_to_plot,aspect='auto',vmin=-0.4,vmax=1.2, interpolation="gaussian",cmap='RdBu_r')#'OrRd')
 			cax3 = a3.imshow(g3_to_plot,aspect='auto',vmin=-0.4,vmax=1.2, interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-			'''
-			d12 = g2_to_plot-g1_to_plot
-			d13 = g3_to_plot-g1_to_plot
-			cax4 = a4.imshow(d12,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-			cax5 = a5.imshow(d13,aspect='auto', interpolation="gaussian",cmap='RdBu_r')#'OrRd')	
-			cbar1 = f.colorbar(cax1,ax=a1)
-			cbar1.set_ticks(np.arange(-4,5.1,.2))
-			cbar1.ax.tick_params(labelsize=FS)
-			cbar2 = f.colorbar(cax2,ax=a2)
-			cbar2.set_ticks(np.arange(-4,5.1,.2))
-			cbar2.ax.tick_params(labelsize=FS)
-			cbar3 = f.colorbar(cax3,ax=a3)
-			cbar3.set_ticks(np.arange(-4,5.1,.2))
-			cbar3.ax.tick_params(labelsize=FS)
-			cbar4 = f.colorbar(cax4,ax=a4)
-			cbar4.set_ticks(np.arange(-4,5.1,.2))
-			cbar4.ax.tick_params(labelsize=FS)
-			cbar5 = f.colorbar(cax5,ax=a5)
-			cbar5.set_ticks(np.arange(-4,5.1,.2))
-			cbar5.ax.tick_params(labelsize=FS)
-			a4.set_title('W1-W2',fontsize=FS)
-			a5.set_title('W1-W3',fontsize=FS)
-			'''
 			#
 			lunghezze = []
 			for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
@@ -633,65 +622,152 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			a1.set_title(r'Log$_{10}$(|H|) of W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
 			a2.set_title(r'Log$_{10}$(|H|) of W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
 			a3.set_title(r'Log$_{10}$(|H|) of W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
-			a4.set_title(r'|H|$_1$ vs |H|$_2$',fontsize=FONTSIZE)										  #,fontweight='bold')
 			a1.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a2.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a3.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
-			a4.set_xlabel('|H|',fontsize=FONTSIZE)
-			a4.set_ylabel('|H|',fontsize=FONTSIZE)
 			a1.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 			a3.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 
-			# scatter
+			# scatter plot o density plot?
 			g1r = np.reshape(g1,g1.__len__()*g1[0].__len__())
 			g2r = np.reshape(g2,g1.__len__()*g1[0].__len__())
 			g3r = np.reshape(g3,g1.__len__()*g1[0].__len__())
-			idx = np.random.permutation(len(g1r))[0:20000]
-			w13 = a4.scatter(g3r[idx],g1r[idx],s=6**2,facecolor='g',color='g', alpha=0.4, rasterized=True)
-			w12 = a4.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='r',color='r',marker='x', alpha=0.4, rasterized=True)
-			a4.legend((w12,w13), (r'W$_1$ vs W$_2$',r'W$_1$ vs W$_3$'), scatterpoints=1,markerscale=2, loc=4,prop={'size':FONTSIZE*0.9},fontsize=FONTSIZE)
-			# regressione 
-			def getLine(g,h): 
-				slope, intercept, r_value, p_value, std_err = stats.linregress(g,h)
-				r2 = r_value**2
-				xv = [a for a in np.arange(0,18,.1)] # area che voglio rappresentare nel plot
-				yv = [a*slope+intercept for a in xv]
-				if np.sign(intercept)>0:
-					segno='+'
-				else:
-					segno=r'$-$'
-				text = 'y = '+str(np.floor(slope*100)/100)+'x'+segno+str(np.abs(np.floor(intercept*100)/100))+'\n'+r' (R$^2$ = '+str(np.floor(r2*100)/100)+')'
-				return xv,yv,r_value**2, text
-			x12,y12,r12,pp12 = getLine(g2r,g1r)
-			x13,y13,r13,pp13 = getLine(g3r,g1r)
-			a4.plot(x13,y13,color='#3D5F3A',linewidth=2)
-			a4.plot(x12,y12,color='#8B4C4B',linewidth=2)
-			a4.text(12,9,pp12,fontsize=FONTSIZE*0.9)
-			a4.text(-.2,18,pp13,fontsize=FONTSIZE*0.9)
-			a4.set_xlim([min(g1r)-.7,max(g1r)])
-			a4.set_ylim([min(g1r)-.7,max(g1r)])
+			idx = np.random.permutation(len(g1r))[0:2000] #20000 
+			plotType = 'density'#'scatter' #
+			if plotType is 'scatter':
+				gs2 = gridspec.GridSpec(2,2,wspace=0.6)
+				a4 = f.add_subplot(gs2[1,1],aspect='equal')
+				a4.set_title(r'|H|$_1$ vs |H|$_2$',fontsize=FONTSIZE)										  #,fontweight='bold')
+				a4.set_xlabel('|H|',fontsize=FONTSIZE)
+				a4.set_ylabel('|H|',fontsize=FONTSIZE)
+				# scatter e regressione 
+				w12 = a4.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='r',color='r',marker='x', alpha=.4, rasterized=True)
+				x12,y12,r12,pp12 = getLine(g2r,g1r)
+				a4.plot(x12,y12,color='#8B4C4B',linewidth=2)
+				a4.text(12,9,pp12,fontsize=FONTSIZE*0.9)
+				color_g3r = 'g'
+				if color_g3r is 'g':
+					color_lg3r = '#3D5F3A'
+				if color_g3r is 'b':
+					color_lg3r = '#336699'
+				w13 = a4.scatter(g3r[idx],g1r[idx],s=6**2,facecolor=color_g3r,color=color_g3r, marker='o', alpha=.4, rasterized=True)
+				x13,y13,r13,pp13 = getLine(g3r,g1r)
+				a4.plot(x13,y13,color=color_lg3r,linewidth=2) # se blu #336699 se verde 
+				a4.text(-.2,18,pp13,fontsize=FONTSIZE*0.9)
+				a4.legend((w12,w13), (r'W$_1$ vs W$_2$',r'W$_1$ vs W$_3$'), scatterpoints=1,markerscale=2, loc=4,prop={'size':FONTSIZE*0.9},fontsize=FONTSIZE)
+				# 
+				a4.set_xlim([min(g1r)-.7,max(g1r)])
+				a4.set_ylim([min(g1r)-.7,max(g1r)])
 
-			referencePanel(a01,'A',-5	, 1.1)
-			referencePanel(a2 ,'B',-0.03 , 1.1)
-			referencePanel(a11,'C',-5	, 1.1)
-			referencePanel(a4 ,'D',-.5	, 1.1)
-			customaxis(a1,size=FONTSIZE,pad=-3)
-			customaxis(a2,size=FONTSIZE,pad=-3)
-			customaxis(a3,size=FONTSIZE,pad=-3)
-			customaxis(a4,size=FONTSIZE,pad=-3)
-			for a in [a1,a2,a3,a4]:
-				a.tick_params(labelsize=FONTSIZE) 
-			for a in [a1,a2,a3]:
-				a.set_yticks([])
-				a.set_xticks(xrange(0,400,100))
-			return a1,a2,a3,a4
+				referencePanel(a01,'A',-5	, 1.1)
+				referencePanel(a2 ,'B',-0.03 , 1.1)
+				referencePanel(a11,'C',-5	, 1.1)
+				referencePanel(a4 ,'D',-.5	, 1.1)
+				customaxis(a1,size=FONTSIZE,pad=-3)
+				customaxis(a2,size=FONTSIZE,pad=-3)
+				customaxis(a3,size=FONTSIZE,pad=-3)
+				customaxis(a4,size=FONTSIZE,pad=-3)
+				for a in [a1,a2,a3,a4]:
+					a.tick_params(labelsize=FONTSIZE) 
+				for a in [a1,a2,a3]:
+					a.set_yticks([])
+					a.set_xticks(xrange(0,400,100))
+				return a1,a2,a3,a4
 
+			if plotType is 'density':
+				props = dict(facecolor='white', edgecolor='white', alpha=0.6)
+				gs2 = gridspec.GridSpec(2,5,wspace=0.1,hspace=0)
+				a4 = f.add_subplot(gs2[1,3],aspect='equal')
+				a5 = f.add_subplot(gs2[1,4],aspect='equal')
+				x12,y12,r12,pp12 = getLine(g2r,g1r)
+				a4.plot(x12,y12,color='k',linewidth=2, alpha=0.5)  #'#8B4C4B'
+				a4.text(4.5,1,pp12,fontsize=FONTSIZE*0.7,bbox=props)
+				xy = np.vstack([g2r[idx],g1r[idx]])
+				z = stats.gaussian_kde(xy)(xy)
+				w12 = a4.scatter(g2r[idx],g1r[idx], c=z, s=2**2, edgecolor='', cmap='RdBu_r')
+				a4.set_title(r'W$_1$ vs W$_2$')
+				x13,y13,r13,pp13 = getLine(g3r,g1r)
+				a5.plot(x13,y13,color='k',linewidth=2, alpha=0.5)  #'#8B4C4B'
+				a5.text(4.5,1,pp13,fontsize=FONTSIZE*0.7,bbox=props)
+				xy = np.vstack([g3r[idx],g1r[idx]])
+				z = stats.gaussian_kde(xy)(xy)
+				w13 = a5.scatter(g3r[idx],g1r[idx], c=z, s=2**2, edgecolor='', cmap='RdBu_r')
+				a5.set_yticklabels([])
+				a5.set_title(r'W$_1$ vs W$_3$')
+				for a in [a4,a5]:
+					a.set_xlim([0,12])
+					a.set_ylim([0,12])
+					a.set_yticks(range(0,12,2))
+					a.set_xticks(range(0,12,2))
+					a.set_xlabel('|H|',fontsize=FONTSIZE)
+					posA = a.get_position()
+					a.set_position([posA.x0-0.01, posA.y0-.08, posA.width+0, posA.height+0])
+				a4.set_ylabel('|H|',fontsize=FONTSIZE)
+				wl1 = a4.scatter(-1,-1,c='b',edgecolor='b')
+				wl2 = a5.scatter(-1,-1,c='r',edgecolor='r')
+				leg_a45 = a4.legend((wl1,wl2),('One Point','Highest density'), ncol=2, loc='upper center',bbox_to_anchor=(1.1,1.5),handlelength=0.5,scatterpoints=1,frameon=False,fontsize = FONTSIZE) #,facecolor='white', edgecolor='white'))
+				#a4 = plt.gca().add_artist(leg_a45)
+				'''
+				setcolorbar(a45)
+				a45.set_xticklabels([])
+				a45.set_xlabel(r'Single Point     $\longrightarrow$      Highest density',fontsize = FONTSIZE)
+				pos45 = a45.get_position()
+				a45.set_position([pos45.x0+0, pos45.y0-.04, pos45.width+0, pos45.height+0])
+				'''
+
+				referencePanel(a01,'A',-5	, 1.1)
+				referencePanel(a2 ,'B',-0.03 , 1.1)
+				referencePanel(a11,'C',-5	, 1.1)
+				referencePanel(a4 ,'D',-0.1, 1.41)
+				padVal = -5.5
+				customaxis(a1,size=FONTSIZE,pad=-padVal)
+				customaxis(a2,size=FONTSIZE,pad=-padVal)
+				customaxis(a3,size=FONTSIZE,pad=-padVal)
+				customaxis(a4,size=FONTSIZE,pad=-padVal)
+				customaxis(a5,size=FONTSIZE,pad=-padVal)
+				return a1,a2,a3,(a4,a5)
+				
 		# faccio figura
 		f1 = plt.figure(figsize=(FIGSIZEx,FIGSIZEy))
-		f1.subplots_adjust(wspace=0.3,hspace=0.6)
+		f1.subplots_adjust(wspace=1,hspace=0.6)
 		a11,a12,a13,a14 = doFigura(a,True, f1)
 		#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
 		f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
+
+
+		# per mathew
+		if 0:
+			for rip in range(0,10):
+				f = plt.figure()
+				a4 = f.add_subplot(1,1,1,aspect='equal')
+				g1r = np.reshape(g1,g1.__len__()*g1[0].__len__())
+				g2r = np.reshape(g2,g1.__len__()*g1[0].__len__())
+				g3r = np.reshape(g3,g1.__len__()*g1[0].__len__())
+				idx = np.random.permutation(len(g1r))[0:500] #20000 
+				w12 = a4.scatter(g2r[idx],g1r[idx],s=6**2,facecolor='r',color='r',marker='x', alpha=.4, rasterized=True)
+				x12,y12,r12,pp12 = getLine(g2r[idx],g1r[idx])
+				a4.plot(x12,y12,color='#8B4C4B',linewidth=2)
+				a4.text(12,9,pp12,fontsize=FONTSIZE*0.9)
+				color_g3r = 'g'
+				if color_g3r is 'g':
+					color_lg3r = '#3D5F3A'
+				if color_g3r is 'b':
+					color_lg3r = '#336699'
+				w13 = a4.scatter(g3r[idx],g1r[idx],s=6**2,facecolor=color_g3r,color=color_g3r, marker='o', alpha=.4, rasterized=True)
+				x13,y13,r13,pp13 = getLine(g3r[idx],g1r[idx])
+				a4.plot(x13,y13,color=color_lg3r,linewidth=2) # se blu #336699 se verde 
+				a4.text(-.2,18,pp13,fontsize=FONTSIZE*0.9)
+				a4.legend((w12,w13), (r'W$_1$ vs W$_2$',r'W$_1$ vs W$_3$'), scatterpoints=1,markerscale=2, loc=4,prop={'size':FONTSIZE*0.9},fontsize=FONTSIZE)
+				a4.set_xlim([min(g1r)-.7,max(g1r)])
+				a4.set_ylim([min(g1r)-.7,max(g1r)])
+				f.savefig(DATA_PATH+'/elab_video/comparison_scatter_'+str(rip)+'.pdf')
+
+		
+
+
+
+
+
 
 
 class mergeComparisonsResults():
@@ -1966,8 +2042,8 @@ if __name__ == '__main__':
 	#dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	simulatedAndSetup() 				# fig2				
-	#creoSpettriBaffi()					# fig3			
+	#simulatedAndSetup() 				# fig2				
+	creoSpettriBaffi()					# fig3			
 	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
