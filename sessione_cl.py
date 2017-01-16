@@ -762,14 +762,6 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				a4.set_ylim([min(g1r)-.7,max(g1r)])
 				f.savefig(DATA_PATH+'/elab_video/comparison_scatter_'+str(rip)+'.pdf')
 
-		
-
-
-
-
-
-
-
 class mergeComparisonsResults():
 	def __init__(self):
 
@@ -831,11 +823,11 @@ class mergeComparisonsResults():
 		self.supradiagTimeComp(b,TimeSD                                                , FS)
 		cax = self.timeComparison(b,TimeC                       ,'  Time \n  Time'     , FS)
 
-		for ax in [UnDyed,Dyed,ColorC,WhiskerGroup,TimeSD]: 
-			customaxis(ax,size=FS,pad=-2)
-		customaxis(TimeC,size=FS,pad=0)
-		customaxis(ColorD,size=FS,pad=-2)
-
+		for ax in [UnDyed,Dyed,ColorC,WhiskerGroup]: 
+			customaxis(ax,size=FS*0.9,pad=-2)
+		customaxis(TimeC,size=FS*0.9,pad=0)
+		for ax in [ColorD,TimeSD]: 
+			customaxis(ax,size=FS*0.9,pad=-2)
 			
 		v1 = a.CORR2_undyed.reshape(-1)
 		v2 = a.CORR2.reshape(-1)
@@ -881,7 +873,6 @@ class mergeComparisonsResults():
 		a51.set_xlim([-.5, len(lung)-.5])
 		#a51.set_ylim([0, 1.1])
 		#a51.axes.get_xaxis().set_visible(False)
-
 		# vediamo quanto alti sono i valori sulla diagonale rispetto agli altri
 		Colors = cm.gray(np.linspace(0, 1, CORR2.__len__()-1))
 		vals = []
@@ -2043,8 +2034,8 @@ if __name__ == '__main__':
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
 	#simulatedAndSetup() 				# fig2				
-	creoSpettriBaffi()					# fig3			
-	#mergeComparisonsResults()			# fig4				
+	#creoSpettriBaffi()					# fig3			
+	mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
