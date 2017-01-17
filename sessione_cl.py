@@ -804,6 +804,8 @@ class mergeComparisonsResults():
 			cbar =  matplotlib.colorbar.ColorbarBase(acb,orientation='vertical')
 			cbar.ax.tick_params(labelsize=FONTSIZE) 
 			acb.yaxis.set_ticks_position('left')
+			acb.set_ylabel(r'Determination coeff. R$^2$')
+			acb.yaxis.set_label_coords(-6,0.5)
 		a01 = f.add_subplot(gs[0,0])
 		a11 = f.add_subplot(gs[1,0])
 		setcolorbar(a01)
