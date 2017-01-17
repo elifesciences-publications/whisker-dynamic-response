@@ -144,11 +144,11 @@ class simulatedAndSetup():
 		# confronto spettri
 		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim.txt'  
 		a = sessione('d21','12May','_NONcolor_','puppa',(0,0,0,0),-1,True, False)
-		#lamp    = DATA_PATH+'/elab_video/Setup_color_transparent_background_LAMP.png'
-		#whisker = DATA_PATH+'/elab_video/Setup_color_transparent_background_WHISKER.png'
-		#LAMP    = mpimg.imread(lamp)
-		#WHISKER = mpimg.imread(whisker)
-		#WHISKER = np.fliplr(WHISKER)
+		lamp    = DATA_PATH+'/elab_video/Setup_color_transparent_background_LAMP.png'
+		whisker = DATA_PATH+'/elab_video/Setup_color_transparent_background_WHISKER.png'
+		LAMP    = mpimg.imread(lamp)
+		WHISKER = mpimg.imread(whisker)
+		WHISKER = np.fliplr(WHISKER)
 		#
 		a.calcoloTransferFunction(False)
 		spettroVero = a.TFM 
@@ -157,7 +157,7 @@ class simulatedAndSetup():
 		# figura
 		f = plt.figure(figsize=(FIGSIZEx,2*FIGSIZEy))
 		gs  = gridspec.GridSpec(4,2,width_ratios=[0.03,0.7,0,1],hspace=0.35, wspace=0.15)
-		gs2 = gridspec.GridSpec(14,6)
+		gs2 = gridspec.GridSpec(18,5)
 		gs3 = gridspec.GridSpec(4,2,width_ratios=[0.03,1,0,1],hspace=0.35, wspace=0.15)
 		a1 = f.add_subplot(gs[0,1])
 		a3 = f.add_subplot(gs[1,1])
@@ -165,9 +165,9 @@ class simulatedAndSetup():
 		customaxis(a1,size=FONTSIZE,pad=5)
 		customaxis(a3,size=FONTSIZE,pad=5)
 		a2l = f.add_subplot(4,2,2)
-		#a2l.imshow(LAMP)
+		a2l.imshow(LAMP)
 		a2w = f.add_subplot(4,2,4)
-		#a2w.imshow(WHISKER)
+		a2w.imshow(WHISKER)
 		a4  = f.add_subplot(gs2[12,0])
 		a4z = f.add_subplot(gs2[13,0])
 		a5  = f.add_subplot(gs[2,1])
@@ -234,22 +234,13 @@ class simulatedAndSetup():
 			cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
 			cbar.ax.tick_params(labelsize=FONTSIZE) 
 			acb.yaxis.set_ticks_position('left')
+			acb.set_ylabel(r'Log$_{10}$(|H|)')
+			acb.yaxis.set_label_coords(-6,0.5)
+
 		a01 = f.add_subplot(gs3[0,0])
 		a11 = f.add_subplot(gs3[1,0])
 		setcolorbar(a01)
 		setcolorbar(a11)
-		# move axes
-		def moveAxes(ax,vec):
-			pos = ax.get_position()
-			pos.x0 += vec[0]
-			pos.x1 += vec[0]
-			pos.y0 += vec[1]
-			pos.y1 += vec[1]
-			ax.set_position(pos)
-			return ax
-		#a4  = moveAxes(a4 ,[.4,.51])	
-		#a4z = moveAxes(a4z,[.4,.51])	
-		#a2w = moveAxes(a2w,[.03,0])	
 		
 		#
 		a1.set_yticks([])
@@ -261,10 +252,28 @@ class simulatedAndSetup():
 		a3.set_ylabel(r'Base     $\longrightarrow$      Tip',fontsize = FONTSIZE)
 		a3.set_xlabel('Frequency [Hz]',fontsize = FONTSIZE)
 		#
-		referencePanel(a01,'A',-5	, 1.1)
-		referencePanel(a2l,'B',-0.03, 1.25)
-		referencePanel(a11,'C',-5	, 1.1)
-		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf',dpi=400)
+		posa01 = a01.get_position()
+		a01.set_position([posa01.x0-0.02, posa01.y0+0, posa01.width+0, posa01.height+0])
+		posa11 = a11.get_position()
+		a11.set_position([posa11.x0-0.02, posa11.y0+0, posa11.width+0, posa11.height+0])
+		posa1 = a1.get_position()
+		a1.set_position([posa1.x0-0.04, posa1.y0+0, posa1.width+0, posa1.height+0])
+		pos2w = a2w.get_position()
+		a2w.set_position([pos2w.x0-0.09, pos2w.y0-0, pos2w.width+0, pos2w.height+0])
+		pos2l = a2l.get_position()
+		a2l.set_position([pos2l.x0-0.03, pos2l.y0+0, pos2l.width+0, pos2l.height+0])
+		posa3 = a3.get_position()
+		a3.set_position([posa3.x0-0.04, posa3.y0+0, posa3.width+0, posa3.height+0])
+		posa5 = a5.get_position()
+		a5.set_position([posa5.x0+0.515, posa5.y0+.21, posa5.width+0, posa5.height+0])
+		for ax in [a4,a4z]:
+			pos4 = ax.get_position()
+			ax.set_position([pos4.x0+.36, pos4.y0+.335, pos4.width+0, pos4.height+0])
+			ax.patch.set_alpha(0.5)
+		referencePanel(a01,'A',-8	, 1.1)
+		referencePanel(a01,'B', 35  , 1.1)
+		referencePanel(a11,'C',-8	, 1.1)
+		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf',dpi=400,bbox_inches='tight')
 		
 	
 class creoImageProcessing_Stacked(): # 
@@ -598,7 +607,7 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			a6 = f.add_subplot(2,3,6)
 			'''
 			#f.subplots_adjust(wspace=1,hspace=0.6)
-			gs = gridspec.GridSpec(2,3,width_ratios=[0.03,1,1],wspace=0.45,hspace=0.6)
+			gs = gridspec.GridSpec(2,3,width_ratios=[0.033,1,1],wspace=0.22,hspace=0.6)
 			a1 = f.add_subplot(gs[0,1])
 			a2 = f.add_subplot(gs[0,2])
 			a3 = f.add_subplot(gs[1,1])
@@ -718,9 +727,9 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				a45.set_position([pos45.x0+0, pos45.y0-.04, pos45.width+0, pos45.height+0])
 				'''
 
-				referencePanel(a1 ,'A', -0.6 , 1.2)
+				referencePanel(a1 ,'A', -0.45 , 1.2)
 				referencePanel(a1 ,'B',  1.1 , 1.2)
-				referencePanel(a3 ,'C', -0.6 , 1.2)
+				referencePanel(a3 ,'C', -0.45 , 1.2)
 				referencePanel(a3 ,'D',  1.1 , 1.2)
 				padVal = -5.5
 				customaxis(a1,size=FONTSIZE,pad=-padVal)
@@ -733,8 +742,13 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 		# faccio figura
 		f1 = plt.figure(figsize=(FIGSIZEx,FIGSIZEy))
 		a11,a12,a13,a14 = doFigura(a,True, f1)
-		#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
-		f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
+		a11.set_yticks([])
+		a12.set_yticks([])
+		a13.set_yticks([])
+		a11.set_xticks(xrange(0,400,100))
+		a12.set_xticks(xrange(0,400,100))
+		a13.set_xticks(xrange(0,400,100))
+		f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf',bbox_inches='tight')
 
 
 		# per mathew
@@ -848,7 +862,7 @@ class mergeComparisonsResults():
 		referencePanel(WhiskerGroup,'D',-1, 1.15)
 		referencePanel(TimeC       ,'E',-0.35, 1.15)
 		referencePanel(Dyed        ,'F',-0.35, -.51)
-		f.savefig(DATA_PATH+'/elab_video/mergeComparisonsResults_'+typeComparison+'.pdf')
+		f.savefig(DATA_PATH+'/elab_video/mergeComparisonsResults_'+typeComparison+'.pdf',bbox_inches='tight')
 
 	def getSuperDiagThs(self,CORR2,k):
 		media = 0
@@ -1118,7 +1132,7 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 
 		#	
 		if salva:
-			fW.savefig(DATA_PATH+'/elab_video/dyeEnhanceAndBehavioralEffect.pdf',dpi=300)
+			fW.savefig(DATA_PATH+'/elab_video/dyeEnhanceAndBehavioralEffect.pdf',dpi=300,bbox_inches='tight')
 		else:
 			plt.show()
 
@@ -2034,12 +2048,12 @@ if __name__ == '__main__':
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
 	#stampo_lunghezza_whiskers()					
-	#dyeEnhanceAndBehavioralEffect()	# fig1
+	dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
-	#simulatedAndSetup() 				# fig2				
+	simulatedAndSetup() 				# fig2				
 	creoSpettriBaffi()					# fig3			
-	#mergeComparisonsResults()			# fig4				
+	mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
