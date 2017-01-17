@@ -597,7 +597,8 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			#a62 = plt.subplot(gs[11])
 			a6 = f.add_subplot(2,3,6)
 			'''
-			gs = gridspec.GridSpec(2,3,width_ratios=[0.03,1,1],wspace=0.3)
+			#f.subplots_adjust(wspace=1,hspace=0.6)
+			gs = gridspec.GridSpec(2,3,width_ratios=[0.03,1,1],wspace=0.45,hspace=0.6)
 			a1 = f.add_subplot(gs[0,1])
 			a2 = f.add_subplot(gs[0,2])
 			a3 = f.add_subplot(gs[1,1])
@@ -606,6 +607,8 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				cbar.ax.set_yticklabels(['']+[str(l/10.) for l in xrange(-4,14,2)])
 				cbar.ax.tick_params(labelsize=FONTSIZE) 
 				acb.yaxis.set_ticks_position('left')
+				acb.set_ylabel(r'Log$_{10}$(|H|)')
+				acb.yaxis.set_label_coords(-6,0.5)
 			a01 = f.add_subplot(gs[0,0])
 			a11 = f.add_subplot(gs[1,0])
 			setcolorbar(a01,'vertical')
@@ -619,9 +622,9 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 			for idx1,idx2 in zip([ig1,ig2,ig3],[7,11,3]):
 				print a.ROOT[idx1], info.NAMEs[idx2]
 				lunghezze.append(info.lunghezza[idx2])
-			a1.set_title(r'Log$_{10}$(|H|) of W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
-			a2.set_title(r'Log$_{10}$(|H|) of W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
-			a3.set_title(r'Log$_{10}$(|H|) of W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a1.set_title(r'whisker W$_1$ ('+str(int(lunghezze[0]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a2.set_title(r'whisker W$_2$ ('+str(int(lunghezze[1]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
+			a3.set_title(r'whisker W$_3$ ('+str(int(lunghezze[2]))+' mm)',fontsize=FONTSIZE)#,fontweight='')
 			a1.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a2.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
 			a3.set_xlabel('Frequency [Hz]',fontsize=FONTSIZE)
@@ -695,13 +698,13 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				a5.set_yticklabels([])
 				a5.set_title(r'W$_1$ vs W$_3$')
 				for a in [a4,a5]:
-					a.set_xlim([0,12])
-					a.set_ylim([0,12])
-					a.set_yticks(range(0,12,2))
-					a.set_xticks(range(0,12,2))
+					a.set_xlim([0,11])
+					a.set_ylim([0,11])
+					a.set_yticks(range(0,11,2))
+					a.set_xticks(range(0,11,2))
 					a.set_xlabel('|H|',fontsize=FONTSIZE)
 					posA = a.get_position()
-					a.set_position([posA.x0-0.01, posA.y0-.08, posA.width+0, posA.height+0])
+					a.set_position([posA.x0+0.01, posA.y0-.08, posA.width+0, posA.height+0])
 				a4.set_ylabel('|H|',fontsize=FONTSIZE)
 				wl1 = a4.scatter(-1,-1,c='b',edgecolor='b')
 				wl2 = a5.scatter(-1,-1,c='r',edgecolor='r')
@@ -715,10 +718,10 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				a45.set_position([pos45.x0+0, pos45.y0-.04, pos45.width+0, pos45.height+0])
 				'''
 
-				referencePanel(a01,'A',-5	, 1.1)
-				referencePanel(a2 ,'B',-0.03 , 1.1)
-				referencePanel(a11,'C',-5	, 1.1)
-				referencePanel(a4 ,'D',-0.1, 1.41)
+				referencePanel(a1 ,'A', -0.6 , 1.2)
+				referencePanel(a1 ,'B',  1.1 , 1.2)
+				referencePanel(a3 ,'C', -0.6 , 1.2)
+				referencePanel(a3 ,'D',  1.1 , 1.2)
 				padVal = -5.5
 				customaxis(a1,size=FONTSIZE,pad=-padVal)
 				customaxis(a2,size=FONTSIZE,pad=-padVal)
@@ -729,7 +732,6 @@ class creoSpettriBaffi(): # carico i dati per riplottare gli spettri
 				
 		# faccio figura
 		f1 = plt.figure(figsize=(FIGSIZEx,FIGSIZEy))
-		f1.subplots_adjust(wspace=1,hspace=0.6)
 		a11,a12,a13,a14 = doFigura(a,True, f1)
 		#f1.savefig(DATA_PATH+'/elab_video/DiffSpectra.pdf')
 		f1.savefig(DATA_PATH+'/elab_video/DiffTransferFunction.pdf')
@@ -2036,8 +2038,8 @@ if __name__ == '__main__':
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
 	#simulatedAndSetup() 				# fig2				
-	#creoSpettriBaffi()					# fig3			
-	mergeComparisonsResults()			# fig4				
+	creoSpettriBaffi()					# fig3			
+	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
