@@ -186,7 +186,7 @@ class simulatedAndSetup():
 			
 		# panel con l'andamento dello shaker, ovvero l'input al sistema baffo, ovvero il punto alla base del baffo che ho stimato con il tracking
 		def getShakerTimeTrend():
-			if 1: 	# estimate the shaker movement as the base of the whisker. camera resolution cause low resolution for a proper visualization of the signal. 
+			if 0: 	# estimate the shaker movement as the base of the whisker. camera resolution cause low resolution for a proper visualization of the signal. 
 					# however, it is correct to use this signal as input to each LTI system (the points from the discretization of the whisker) not to lose the GAIN of TF
 				elabSessione = False
 				sess = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,elabSessione,False,True) # carico la sessione senza elabolarla
@@ -197,6 +197,9 @@ class simulatedAndSetup():
 				base[:2]   = [] # compatto il numero di campioni in cui il baffo sta fermo prima e dopo lo stimolo
 				base[-380:] = [] 
 				return base-np.mean(base)
+			if 1:  # load the input from the shaker
+				frozenNoises = np.loadtxt(DATA_PATH+'/elab_video/camrec450_verFunc/stim/stimoli.txt')
+				return frozenNoises[0]
 			
 		s = getShakerTimeTrend() 
 		STD = np.std(s)
@@ -271,12 +274,17 @@ class simulatedAndSetup():
 		a5.set_position([posa5.x0+0.515, posa5.y0+.21, posa5.width+0, posa5.height+0])
 		for ax in [a4,a4z]:
 			pos4 = ax.get_position()
-			ax.set_position([pos4.x0+.36, pos4.y0+.335, pos4.width+0, pos4.height+0])
+			ax.set_position([pos4.x0+.36, pos4.y0+.333, pos4.width+0, pos4.height+0])
 			ax.patch.set_alpha(0.5)
 		referencePanel(a01,'A',-8	, 1.1)
 		referencePanel(a01,'B', 35  , 1.1)
 		referencePanel(a11,'C',-8	, 1.1)
-		f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf',dpi=400,bbox_inches='tight')
+		if 0: # save subplot with signal
+			print 'specific subplot'
+			#extent = ax2.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+			#f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf',dpi=400,bbox_inches='tight')
+		else:
+			f.savefig(DATA_PATH+'/elab_video/simulationAndSetup.pdf',dpi=400,bbox_inches='tight')
 		
 	
 class creoImageProcessing_Stacked(): # 
@@ -2061,12 +2069,12 @@ if __name__ == '__main__':
 	# ---- POST - PROCESSING ---- #
 	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
 	#stampo_lunghezza_whiskers(True) # to create pickle with whisker info					
-	dyeEnhanceAndBehavioralEffect()	# fig1
+	#dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
 	simulatedAndSetup() 				# fig2				
-	creoSpettriBaffi()					# fig3			
-	mergeComparisonsResults()			# fig4				
+	#creoSpettriBaffi()					# fig3			
+	#mergeComparisonsResults()			# fig4				
 	
 	print 'stampo per far fare qualcosa al main'
 
