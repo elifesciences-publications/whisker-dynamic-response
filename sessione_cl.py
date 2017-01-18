@@ -142,7 +142,7 @@ class zoomPanel():
 class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
-		fromAle = DATA_PATH+'/elab_video/simulatedWhisker_byAle/transffunct_D21_bw1000Hz_sim.txt'  
+		simulatedD21 = DATA_PATH+'/elab_video/simulatedWhisker/transffunct_D21_bw1000Hz_sim.txt'  
 		a = sessione('d21','12May','_NONcolor_','puppa',(0,0,0,0),-1,True, False)
 		lamp    = DATA_PATH+'/elab_video/Setup_color_transparent_background_LAMP.png'
 		whisker = DATA_PATH+'/elab_video/Setup_color_transparent_background_WHISKER.png'
@@ -152,7 +152,7 @@ class simulatedAndSetup():
 		#
 		a.calcoloTransferFunction(False)
 		spettroVero = a.TFM 
-		spettroSim = np.flipud(np.loadtxt(fromAle))
+		spettroSim = np.flipud(np.loadtxt(simulatedD21))
 		spettroSim = spettroSim[:-2,3:]
 		# figura
 		f = plt.figure(figsize=(FIGSIZEx,2*FIGSIZEy))
@@ -186,15 +186,18 @@ class simulatedAndSetup():
 			
 		# panel con l'andamento dello shaker, ovvero l'input al sistema baffo, ovvero il punto alla base del baffo che ho stimato con il tracking
 		def getShakerTimeTrend():
-			elabSessione = False
-			sess = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,elabSessione,False,True) # carico la sessione senza elabolarla
-			sess.loadTracking() # carico i dati
-			v = sess.V[0] # prendo un video
-			traiettorie,nPunti,nCampioni = (v.wst,v.wst.__len__(),v.wst[0].__len__())
-			base = traiettorie[nPunti-1].tolist()
-			base[:2]   = [] # compatto il numero di campioni in cui il baffo sta fermo prima e dopo lo stimolo
-			base[-380:] = [] 
-			return base-np.mean(base)
+			if 1: 	# estimate the shaker movement as the base of the whisker. camera resolution cause low resolution for a proper visualization of the signal. 
+					# however, it is correct to use this signal as input to each LTI system (the points from the discretization of the whisker) not to lose the GAIN of TF
+				elabSessione = False
+				sess = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,elabSessione,False,True) # carico la sessione senza elabolarla
+				sess.loadTracking() # carico i dati
+				v = sess.V[0] # prendo un video
+				traiettorie,nPunti,nCampioni = (v.wst,v.wst.__len__(),v.wst[0].__len__())
+				base = traiettorie[nPunti-1].tolist()
+				base[:2]   = [] # compatto il numero di campioni in cui il baffo sta fermo prima e dopo lo stimolo
+				base[-380:] = [] 
+				return base-np.mean(base)
+			
 		s = getShakerTimeTrend() 
 		STD = np.std(s)
 		Np = len(s)
@@ -1928,13 +1931,13 @@ class video: # ogni fideo va elaborato
 
 
 def funTemporaneoConfrontoBaffiSimulatiTraLoro(SalvaImg=False): #FIXME TODO mettere nelle figure opportunamente
-	CORR2 = np.loadtxt('/media/jaky/DATI BAFFO/elab_video/simulatedWhisker_byAle/comparisonSimWhiskers_CORR2_visualInspection.txt') 
+	CORR2 = np.loadtxt('/media/jaky/DATI BAFFO/elab_video/simulatedWhisker/comparisonSimWhiskers_CORR2_visualInspection.txt') 
 	if SalvaImg: 
 		f = plt.figure()
 		a1 = f.add_subplot(1,1,1)
 		cax1 = a1.imshow(CORR2,aspect='equal', interpolation="nearest",clim=(0,1))	
 		cbar1 = f.colorbar(cax1,ax=a1)
-		plt.savefig(DATA_PATH+'elab_video/simulatedWhisker_byAle/comparisonSimWhisker_ordered.pdf') #comparisonSimWhiskers_CORR2_visualInspection.pdf')
+		plt.savefig(DATA_PATH+'elab_video/simulatedWhisker/comparisonSimWhisker_ordered.pdf') #comparisonSimWhiskers_CORR2_visualInspection.pdf')
 	return CORR2 
 
 # i test vanno qui
@@ -1958,6 +1961,15 @@ if __name__ == '__main__':
 	print 'ELAB_PATH = '+ELAB_PATH
 	print 'DATA_PATH = '+DATA_PATH
 	print '~~~~~~~~~~~~\n:'
+
+
+	'''
+		INSTRUCTIONS
+
+		1) PRE - PROCESSING IS  NEEDED TO PRODUCE THE PICKLEs FROM RAW VIDEOs (pickles are precomputed and available) 
+		2) POST- PROCESSING ELABORATE FILES AND CREATE FIGURES 
+	'''
+
 
 	# ---- PRE - PROCESSING ---- #
 	# TRACKING 11 MAGGIO -- c31 nel tempo -- 
@@ -2036,18 +2048,19 @@ if __name__ == '__main__':
 	#a.checkBaseTracking()
 	#a.saveTipTF() # per Ale per fare l'ottimizzazione del modello in COMSOL
 	#funTemporaneoConfrontoBaffiSimulatiTraLoro(True) # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
-	
 
-	# ---- POST - PROCESSING ---- #
-	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	if 0: # confronto i baffi e produco delle matrici di comparazione (plot veloce di debug)
+	# CONFRONTO I BAFFI E PRODUCO LE MATRICI DI COMPARAZIONE 
+	if 0: # se ho gia` i .pickle non serve 
 		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
 		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
 		db.compareWhiskers('spettri')
 		db.compareWhiskers('transferFunction')
 		db.plotComparisons('spettri')
 		db.plotComparisons('transferFunction')
-	#stampo_lunghezza_whiskers()					
+
+	# ---- POST - PROCESSING ---- #
+	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
+	#stampo_lunghezza_whiskers(True) # to create pickle with whisker info					
 	dyeEnhanceAndBehavioralEffect()	# fig1
 	#creoImageProcessing_Stacked()		# fig2.part
 	#zoomPanel()						# fig2.part
