@@ -7,7 +7,9 @@ import numpy as np
 import scipy.interpolate as si
 import scipy.signal as signal
 import scipy.fftpack as fft
+import scipy.optimize as sopt
 from scipy import stats
+from scipy import ndimage
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import matplotlib.cm as cm
@@ -139,6 +141,7 @@ class zoomPanel():
 		return c1, c2, bbox_patch1, bbox_patch2, p
 
 
+
 class simulatedAndSetup():
 	def __init__(self):
 		# confronto spettri
@@ -198,7 +201,7 @@ class simulatedAndSetup():
 				base[-380:] = [] 
 				return base-np.mean(base)
 			if 1:  # load the input from the shaker
-				frozenNoises = np.loadtxt(DATA_PATH+'/elab_video/camrec450_verFunc/stim/stimoli.txt')
+				frozenNoises = np.loadtxt(DATA_PATH+'/camrec450_verFunc/stim/stimoli.txt')
 				return frozenNoises[0]
 			
 		s = getShakerTimeTrend() 
@@ -1105,7 +1108,7 @@ class dyeEnhanceAndBehavioralEffect(): # confronto le performance di 4 ratti, pr
 
 		# luce bianca - luce blu filtro rosso - luce blu  filtro passa lungo 
 		# 				effetto sulla behavioral performance
-		directory = DATA_PATH+'/analisi-baffo/'
+		directory = DATA_PATH+'/elab_video/'
 		self.luceBianca 		= directory+'IMG_0239.JPG'
 		self.luceBluFiltroRosso = directory+'IMG_0238.JPG'
 		self.luceBluFiltroPLung = directory+'IMG_0236.JPG'
@@ -1722,7 +1725,7 @@ class video: # ogni fideo va elaborato
 		self.videoShow = videoShow			# mostro filmato o no (debug)
 		self.justPlotRaw = justPlotRaw		# bypasso tutto per mostrare il filmato con box senza nessuna operazione
 		if processAllVideo:
-			self.computeVideoParameters() 
+			cap = self.computeVideoParameters() 
 			self.wst = np.zeros((self.N,self.maxFrame)) 	# whisker samples time per ogni cap
 			self.elaboroFilmato(cap)				# faccio il tracking
 			self.postProcessing()					# abbellisco il tracking con intorpolazione dei NaN e antialias (media mobile)
@@ -1743,6 +1746,7 @@ class video: # ogni fideo va elaborato
 		self.time = [dt*c for c in xrange(0,self.maxFrame)]	
 		self.freq = [df*c for c in xrange(0,self.maxFrame/2)]	
 		self.N = 100 # XXX era 100 									# punti equidistanziati per il tracking del baffo
+		return cap
 
 	def test_fig1(self,salva=False,name=''): 
 		ff, (a1,a2) = plt.subplots(1,2)
@@ -1948,135 +1952,234 @@ def funTemporaneoConfrontoBaffiSimulatiTraLoro(SalvaImg=False): #FIXME TODO mett
 		plt.savefig(DATA_PATH+'elab_video/simulatedWhisker/comparisonSimWhisker_ordered.pdf') #comparisonSimWhiskers_CORR2_visualInspection.pdf')
 	return CORR2 
 
-# i test vanno qui
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# supplementary figures code
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+class photobleachingTest(): #elab photobleaching images
+	def __init__(self,filesPath):
+		# load images
+		orderedList=['/image_0001_31MAR2017_9-00_50Hz_G1.bmp',\
+					'/image_0002_31MAR2017_10-00_50Hz_G1.bmp',\
+					'/image_0003_31MAR2017_11-00_50Hz_G1.bmp',\
+					'/image_0004_31MAR2017_12-00_50Hz_G1.bmp',\
+					'/image_0005_31MAR2017_13-00_50Hz_G1.bmp',\
+					'/image_0006_31MAR2017_14-00_50Hz_G1.bmp',\
+					'/image_0007_31MAR2017_15-00_50Hz_G1.bmp',\
+					'/image_0008_31MAR2017_16-00_50Hz_G1.bmp']
+		imgw = []
+		imgb = []
+		for i in orderedList:
+			print filesPath+i
+			img = cv2.imread(filesPath+i,0)
+			maskw_img = img[150:200, 200:325]
+			maskb_img = img[100:150, 200:325]
+			imgw.append(maskw_img) # here the whiskers are displayed
+			imgb.append(maskb_img) # here only background is displayed
+
+		if 0: # test ROIs
+			for i,j,name in zip(imgw,imgb,orderedList):
+				plt.subplot(211),plt.imshow(i,'gray',vmin=0,vmax=255)
+				plt.subplot(212),plt.imshow(j,'gray',vmin=0,vmax=255)
+				plt.show()
+			stop
+
+		# sum all pixel values in both ROIs
+		sumW = [] # sum pixels in whiskers' roi
+		sumB = [] # sum pixels in background's roi
+		diffWB = [] # in case light would change conditions, it will be considered (sumW-sumB) 
+		x = 0
+		for i,j in zip(imgw,imgb):
+			sumW.append(np.sum(i))
+			sumB.append(np.sum(j))
+			if x == 0:
+				diff0 = np.sum(i)-np.sum(j)
+			x+=1
+			diffwb = np.sum(i)-np.sum(j)
+			diffWB.append(diffwb*1./diff0)
+		time = np.asarray(range(0,len(diffWB)))
+		diffWB = np.asarray(diffWB)
+		# model -> dN/dt = -\lambda*N
+		# N(t) = N0*exp(-\lambda*t)
+		#      = N0*exp(-t/\tau), where \tau = 1/\lambda
+		# --> log(N(t)/N0) = -\lambda*t 
+		# proper fit parameters: N0 = 0.9619017; \lambda = -0.06709847 
+		def photobleaching(x,y):
+
+			func 	= lambda params, x: params[0]*np.exp(params[1] * x)
+			errfunc = lambda p, x, y: func(p, x) - y 
+			init_p 	= np.array((0.5, min(y)))  #bundle initial values in initial parameters
+			p, success = sopt.leastsq(errfunc, init_p.copy(), args = (x, y))
+
+			if 0:
+				f = plt.figure() 
+				a1=plt.subplot(111)
+				a1.plot(x,y)
+				xx = xrange(0,100)
+				y_fit = func(p, xx)          #create a fit with those parameters
+				a1.plot(xx,y_fit)
+				show()
+			return p
+
+		params = photobleaching(time,diffWB)
+		tau = -params[0]/params[1]
+
+		# faccio figura 
+		colors = ['b','c','r'] #cm.rainbow(np.linspace(0, 1, 4)) # 4 gruppi 
+		FS = FONTSIZE
+		fW = plt.figure(figsize=((3/2)*FIGSIZEx,FIGSIZEy))
+		fW.subplots_adjust(wspace=0.15,hspace=0.5)
+		a = fW.add_subplot(1,1,1)
+
+		Npoints = 22
+		WB  = [params[0]*np.exp(params[1]*t) for t in range(0,Npoints)]
+		WBr = [params[0] + params[1]*t for t in range(0,Npoints)]
+		dec_exp = a.plot(range(0,Npoints),WB,marker='.',markersize=10,color=colors[1],label='exponential decay')
+		dec_lin = a.plot(range(0,Npoints),WBr,'--',linewidth=2,color='0.65')
+		misure = a.plot(time,diffWB,marker='.',markersize=10,color=colors[0],label='measurement data')
+		a.annotate('', xy=(20,40), xycoords='axes fraction', xytext=(2,2), arrowprops=dict(color='k',width=1,headwidth=5,headlength=5))
+		ticks = [tau]
+		print tau
+		for i in range(0,Npoints,10):
+			ticks.append(i)
+		a.set_xticks(ticks) # niente
+		p0 = str(np.floor(params[0]*100)/100)
+		p1 = str(np.floor(params[1]*100)/100)
+		a.text(15,0.5,r"$y="+p0+" e^{"+p1+"t}$",fontsize=1.5*FS) 
+		a.annotate("Decay time",
+					xy=(tau, 0), xycoords='data',
+					xytext=(15, 0.1), textcoords='data',
+					fontsize=FS,
+					arrowprops=dict(arrowstyle="->",
+									connectionstyle="arc3"),
+					)
+
+		a.set_xlabel('Exposure time [hours]',fontsize=FS)
+		a.set_ylim([0, 1]) # niente
+		a.set_xlim([0, Npoints]) # niente
+		a.set_ylabel('Fluorescence intensity [%]', fontsize=FS)
+		customaxis(a,size=FONTSIZE,pad=10)
+		plt.legend(fontsize=FONTSIZE,bbox_to_anchor=(0.3,0.4),frameon=False) #,loc='best'
+		if 0:
+			plt.show()
+		else:
+			#fW.savefig(DATA_PATH+'/elab_video/supplementary_photobleaching.pdf',dpi=400,bbox_inches='tight')
+			fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_photobleaching.pdf')#,dpi=400,bbox_inches='tight')
+			fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_1.png')#,dpi=400,bbox_inches='tight')
+
+
+def colorationProcess(directory):
+	print directory
+	chembleaching	= directory+'chembleaching.jpg' 
+	cleaning		= directory+'cleaning.jpg' 
+	drying			= directory+'drying.jpg' 
+	isolateWhisker	= directory+'isolateWhisker.jpg' 
+	dyeApplication	= directory+'dyeApplication.jpg' 
+	testDyeing		= directory+'testDyeing.jpg'
+	CB=mpimg.imread(chembleaching)
+	CL=mpimg.imread(cleaning)
+	CL=ndimage.rotate(CL, 90, reshape=True)
+	DR=mpimg.imread(drying)
+	IW=mpimg.imread(isolateWhisker)
+	DA=mpimg.imread(dyeApplication)
+	TD=mpimg.imread(testDyeing)
+
+	print CB.shape
+	print CL.shape
+	'''
+	self.luceBianca 		= directory+'IMG_0239.JPG'
+	self.luceBluFiltroRosso = directory+'IMG_0238.JPG'
+	self.luceBluFiltroPLung = directory+'IMG_0236.JPG'
+	FR=mpimg.imread(self.luceBluFiltroRosso)
+	FPL=mpimg.imread(self.luceBluFiltroPLung)
+	#textSize, labelSize = fontSizeOnFigures(True)
+	'''
+	fW = plt.figure(figsize=((3/2)*FIGSIZEx,FIGSIZEy))
+	fW.subplots_adjust(wspace=0.15,hspace=0.5)
+	aw1 = fW.add_subplot(2,3,1)
+	aw2 = fW.add_subplot(2,3,2)
+	aw3 = fW.add_subplot(2,3,3)
+	aw4 = fW.add_subplot(2,3,4)
+	aw5 = fW.add_subplot(2,3,5)
+	aw6 = fW.add_subplot(2,3,6)
+	aw1.imshow(CB)
+	referencePanel(aw1,'A',-0.03, 1.15)
+	aw2.imshow(CL)
+	referencePanel(aw2,'B',-0.03, 1.15)
+	aw3.imshow(DR)
+	referencePanel(aw3,'C',-0.03, 1.15)
+	aw4.imshow(IW)
+	referencePanel(aw4,'D',-0.03, 1.15)
+	aw5.imshow(DA)
+	referencePanel(aw5,'E',-0.03, 1.15)
+	aw6.imshow(TD)
+	referencePanel(aw6,'F',-0.03, 1.15)
+	def unvisibleAxes(ax):
+		ax.axes.get_xaxis().set_visible(False)
+		ax.axes.get_yaxis().set_visible(False)
+	[unvisibleAxes(ax) for ax in [aw1,aw2,aw3,aw4,aw5,aw6]] 
+
+	if 0:
+		plt.show()
+	else:
+		#fW.savefig(DATA_PATH+'/elab_video/supplementary_colorationProcess.pdf',dpi=400,bbox_inches='tight')
+		fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_colorationProcess.pdf',dpi=600,bbox_inches='tight')
+		fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_2.png',dpi=600,bbox_inches='tight')
+	
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+
+
+
 if __name__ == '__main__': 
 	
-	# definitiamo i PATH come varaibili globali
+	# XXX you are in branch *shared4paper
+	
+	# define global values 
 	global ELAB_PATH 
 	global DATA_PATH 
 	global SPECTRAL_RANGE
 	global FIGSIZEx
 	global FIGSIZEy
 	global FONTSIZE
-	ELAB_PATH = os.path.abspath(__file__)[:-len(os.path.basename(__file__))] # io sono qui
-	DATA_PATH = '/media/jaky/DATI BAFFO/'
-	SPECTRAL_RANGE = xrange(0,350) # in [Hz]
+	ELAB_PATH = os.path.abspath(__file__)[:-len(os.path.basename(__file__))] 		# code path
+	DATA_PATH = '/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/temp/' # '..'																# data path
+	SPECTRAL_RANGE = xrange(0,350) # [Hz]
 	FIGSIZEx = 10
 	FIGSIZEy = 6
 	FONTSIZE    = 11 
 	matplotlib.rcParams.update({'font.size': FONTSIZE })
-	print '~~~~~~~~~~~~\nNOTA BENE:'
+	print '~~~~~~~~~~~~\nPLEASE NOTE:'
 	print 'ELAB_PATH = '+ELAB_PATH
 	print 'DATA_PATH = '+DATA_PATH
 	print '~~~~~~~~~~~~\n:'
 
+	#DEMO_TRACKING = True  		# play the demo 
+	DEMO_TRACKING = False 		# draw figures 
 
-	'''
-		INSTRUCTIONS
-
-		1) PRE - PROCESSING IS  NEEDED TO PRODUCE THE PICKLEs FROM RAW VIDEOs (pickles are precomputed and available) 
-		2) POST- PROCESSING ELABORATE FILES AND CREATE FIGURES 
-	'''
-
-
-	# ---- PRE - PROCESSING ---- #
-	# TRACKING 11 MAGGIO -- c31 nel tempo -- 
-	#sessione('c31','11May_hour1','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour1_/',(331, 625, 120, 245),32,True)   	# tracking molto bello
-	#sessione('c31','11May_hour2','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour2_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour3','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour3_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour4','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour4_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour5','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour5_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour6','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour6_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour7','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour7_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	#sessione('c31','11May_hour8','_NONcolor_',DATA_PATH+'/ratto1/c3_1/11May2016/_hour8_/',(331, 625, 120, 245),32,True,True,False)   	# tracking molto bello
-	# TRACKING 12 MAGGIO
-	#sessione('a11','12May','_NONcolor_',DATA_PATH+'/ratto1/a1_1/',(280, 630, 0, 200),32,True) #,True,False,True)
-	#sessione('a11','12May','_color_',DATA_PATH+'/ratto1/a1_1/',(280, 625, 0, 200),33,True) #,True,False,True) 		# tracking molto bello
-	#sessione('a31','12May','_NONcolor_',DATA_PATH+'/ratto1/a3_1/',(450, 629, 145, 210),32,True)
-	#sessione('a31','12May','_color_',DATA_PATH+'/ratto1/a3_1/',(450, 638, 145, 230),32,True)  		# tracking molto bello
-	#sessione('a41','12May','_NONcolor_',DATA_PATH+'/ratto1/a4_1/',(542, 634, 0, 245),29,True)
-	#sessione('a41','12May','_color_',DATA_PATH+'/ratto1/a4_1/',(542, 635, 0, 245),28,True)
-	#sessione('c11','12May','_NONcolor_',DATA_PATH+'/ratto1/c1_1/',(186, 630, 0, 245),33,True)
-	#sessione('c11','12May','_color_',DATA_PATH+'/ratto1/c1_1/',(186, 632, 0, 150),33,True)
-	#sessione('c21','12May','_NONcolor_',DATA_PATH+'/ratto1/c2_1/',(242, 617, 0, 245),32,True)
-	#sessione('c21','12May','_color_',DATA_PATH+'/ratto1/c2_1/',(242, 614, 0, 120),32,True)  		# tracking molto bello
-	#sessione('c31','12May','_NONcolor_',DATA_PATH+'/ratto1/c3_1/',(331, 625, 120, 245),32,True)   	# tracking molto bello
-	#sessione('c31','12May','_color_',DATA_PATH+'/ratto1/c3_1/',(331, 625, 150, 245),32,True) 		# l'inquadratura ogni tanto perde la punta del baffo! 
-	#sessione('c51','12May','_NONcolor_',DATA_PATH+'/ratto1/c5_1/',(480, 630, 120, 220),30,True)   	# tracking molto bello
-	#sessione('c51','12May','_color_',DATA_PATH+'/ratto1/c5_1/',(480, 625, 130, 240),30,True)   	# tracking molto bello
-	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True)		# tracking molto bello
-	#sessione('d21','12May','_color_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 120, 240),30,True)		# tracking molto bello
-	#sessione('d31','12May','_NONcolor_',DATA_PATH+'/ratto1/d3_1/',(423, 625, 140, 245),29,True)
-	#sessione('d31','12May','_color_',DATA_PATH+'/ratto1/d3_1/',(423, 622, 120, 215),32,True)		# e` comparsa una imperfezione...
-	#sessione('b11','12May','_NONcolor_',DATA_PATH+'/ratto1/b1_1/',(430, 620, 120, 245),32,True)   	
-	#sessione('b11','12May','_color_',DATA_PATH+'/ratto1/b1_1/',(460, 675, 120, 215),30,True)	   	
-	#sessione('c12','12May','_NONcolor_',DATA_PATH+'/ratto1/c1_2/',(310, 640, 70, 235),30,True)    	
-	#sessione('c12','12May','_color_',DATA_PATH+'/ratto1/c1_2/',(310, 640, 70, 235),30,True)	   
-	#sessione('c22','12May','_NONcolor_',DATA_PATH+'/ratto1/c2_2/',(280, 655, 30, 205),30,True)	
-	#sessione('c22','12May','_color_',DATA_PATH+'/ratto1/c2_2/',(260, 635, 20, 235),30,True)	
-	#sessione('c41','12May','_NONcolor_',DATA_PATH+'/ratto1/c4_1/',(390, 640, 50, 175),29,True)	
-	#sessione('c41','12May','_color_',DATA_PATH+'/ratto1/c4_1/',(390, 640, 90, 245),32,True)	
-	#sessione('d11','12May','_NONcolor_',DATA_PATH+'/ratto1/d1_1/',(90, 635, 20, 245),32,True)	
-	#sessione('d11','12May','_color_',DATA_PATH+'/ratto1/d1_1/',(110, 615, 20, 245),32,True)   	   
-	#sessione('d22','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_2/',(210, 635, 20, 245),30,True)	
-	#sessione('d22','12May','_color_',DATA_PATH+'/ratto1/d2_2/',(210, 625, 20, 205),30,True)	
-
-	# TRACKING 6 LUGLIO 
-	#sessione('a11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/a1_1/',(250+105, 605+105, 0, 200),32,True,True,False)
-	#sessione('a31','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/a3_1/',(450+105, 618+105, 0, 200),32,True,True,False)
-	#sessione('a41','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/a4_1/',(540+105, 635+105, 0, 200),30,True,True,False)
-	#sessione('c11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c1_1/',(170+100, 635+100, 0, 240),32,True,True,False)
-	#sessione('c21','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c2_1/',(260+100, 615+100, 0, 200),32,True,True,False)
-	#sessione('c31','6Jul','_color_',DATA_PATH+'/ratto1/c3_1/5Jul2016/',(230+100, 530+100, 0, 200),29,True,True,False)
-	#sessione('c51','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c5_1/',(480+100, 635+100, 0, 200),32,True,True,False)
-	#sessione('d21','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d2_1/',(300+100, 615+100, 0, 200),29,True,True,False)
-	#sessione('d31','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d3_1/',(410+100, 612+100, 100, 230),29,True,True,False)
-	#sessione('b11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/b1_1/',(430+100, 610+100, 100, 230),29,True,True,False)
-	#sessione('c12','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c1_2/',(270+100, 620+100, 100, 240),29,True,True,False)
-	#sessione('c22','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c2_2/',(220+100, 615+100, 0, 240),32,True,True,False)
-	#sessione('c41','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/c4_1/',(390+100, 625+100, 100, 200),32,True,True,False)
-	#sessione('d11','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d1_1/',(90+100, 620+100, 0, 200),32,True,True,False)
-	#sessione('d22','6Jul','_color_',DATA_PATH+'/ratto1/6Luglio/d2_2/',(210+100, 610+100, 0, 200),29,True,True,False)
-	
-	#TRACKING 2 AGOSTO
-	#sessione('c31','2Ago_senzaSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/senzaSmaltoTrasparente/',(300, 660, 50, 205),35,True,True,False) 
-	#sessione('c31','2Ago_conSmaltoTrasparente','_color_',DATA_PATH+'/ratto1/c3_1/conSmaltoTrasparente/',(260, 625, 50, 205),35,True,True,False) 
-
-	#TRACKING ACCIAIO 13 APRILE
-	#sessione('filo_acciaio','13Apr','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True) 
-
-	# CALCOLO TRANSFER FUNCTION POST TRACKING
-	#a = sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/0_acciaio_no_rot/',(260, 780, 0, 205),33,True, False)
-	#a.calcoloTransferFunction(True)
-
-	# CONTROLLO BASE STIMOLO PER OGNI WHISKER E RISPOSTA IN FREQUENZA DELLA PUNTA
-	#a = confrontoBaffiDiversi('baffi_12May','diversiBaffi',False)    
-	#a.checkTF()
-	#a.checkTipTracking() 
-	#a.checkBaseTracking()
-	#a.saveTipTF() # per Ale per fare l'ottimizzazione del modello in COMSOL
-	#funTemporaneoConfrontoBaffiSimulatiTraLoro(True) # matrice di comparazione fra baffi simulati #FIXME TODO mettere nelle figure opportunamente
-
-	# CONFRONTO I BAFFI E PRODUCO LE MATRICI DI COMPARAZIONE 
-	if 0: # se ho gia` i .pickle non serve 
-		#dt = confrontoBaffiDiversi('baffi_12May','diversiTempi',True)    
-		db = confrontoBaffiDiversi('baffi_12May','diversiBaffi',True)    
-		db.compareWhiskers('spettri')
-		db.compareWhiskers('transferFunction')
-		db.plotComparisons('spettri')
-		db.plotComparisons('transferFunction')
-
-	# ---- POST - PROCESSING ---- #
-	#sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),29,True,True,False,True)		# tracking molto bello
-	#stampo_lunghezza_whiskers(True) # to create pickle with whisker info					
-	#dyeEnhanceAndBehavioralEffect()	# fig1
-	#creoImageProcessing_Stacked()		# fig2.part
-	#zoomPanel()						# fig2.part
-	simulatedAndSetup() 				# fig2				
-	#creoSpettriBaffi()					# fig3			
-	#mergeComparisonsResults()			# fig4				
-	
-	print 'stampo per far fare qualcosa al main'
-
-
-
+	if DEMO_TRACKING: # whisker 'toShare d21 12May NONcolor' shared as demo of tracking 
+		sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),33,True,True,False,True) 
+	else:  
+		#stampo_lunghezza_whiskers(True)    # to create pickle with whisker info, which should be present already in the folder
+		#dyeEnhanceAndBehavioralEffect()		# fig1 - dyeEnhanceAndBehavioralEffect.pdf
+		#simulatedAndSetup() 				# fig2 - simulationAndSetup.pdf				
+		#creoSpettriBaffi()					# fig3 - DiffTransferFunction.pdf			
+		#mergeComparisonsResults()			# fig4 - mergeComparisonsResults_transferFunction.pdf				
+		#XXX AGGIORNA I PATH PRIMA DI CONDIVIDERE SU DRYAD
+		photobleachingTest('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/photobleaching/')		# suppl1 - bleaching.pdf
+		colorationProcess('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/colorazione/')
+		if 0: # resize image eventually
+			from PyPDF2 import PdfFileWriter, PdfFileReader
+			for i,j in zip(['dyeEnhanceAndBehavioralEffect.pdf','simulationAndSetup.pdf','DiffTransferFunction.pdf','mergeComparisonsResults_transferFunction.pdf'],[1,2,3,4]): 
+				InputPdf  = PdfFileReader(file(DATA_PATH+'/elab_video/'+i),'rb')
+				OutputPdf = PdfFileWriter()
+				for p in xrange(InputPdf.getNumPages()):
+					page = InputPdf.getPage(p)
+					page.scale(0.6,0.6)
+					OutputPdf.addPage(page)
+				with open (DATA_PATH+'/elab_video/'+'final_figure'+str(j)+'.pdf','wb') as f:
+					OutputPdf.write(f)
+			
