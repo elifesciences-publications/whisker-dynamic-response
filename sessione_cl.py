@@ -2035,9 +2035,9 @@ class photobleachingTest(): #elab photobleaching images
 		Npoints = 22
 		WB  = [params[0]*np.exp(params[1]*t) for t in range(0,Npoints)]
 		WBr = [params[0] + params[1]*t for t in range(0,Npoints)]
-		dec_exp = a.plot(range(0,Npoints),WB,marker='.',markersize=10,color=colors[1],label='exponential decay')
+		dec_exp = a.plot(range(0,Npoints),WB,marker='.',markersize=10,color=colors[1],label='Exponential decay')
 		dec_lin = a.plot(range(0,Npoints),WBr,'--',linewidth=2,color='0.65')
-		misure = a.plot(time,diffWB,marker='.',markersize=10,color=colors[0],label='measurement data')
+		misure = a.plot(time,diffWB,marker='.',markersize=10,color=colors[0],label='Measured data')
 		a.annotate('', xy=(20,40), xycoords='axes fraction', xytext=(2,2), arrowprops=dict(color='k',width=1,headwidth=5,headlength=5))
 		ticks = [tau]
 		print tau
@@ -2064,9 +2064,14 @@ class photobleachingTest(): #elab photobleaching images
 		if 0:
 			plt.show()
 		else:
-			#fW.savefig(DATA_PATH+'/elab_video/supplementary_photobleaching.pdf',dpi=400,bbox_inches='tight')
-			fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_photobleaching.pdf')#,dpi=400,bbox_inches='tight')
-			fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_1.png')#,dpi=400,bbox_inches='tight')
+			# MY DRIVE PATH
+			if os.path.isdir('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure'): 
+				fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_photobleaching.pdf')#,dpi=400,bbox_inches='tight')
+				fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_1.png')#,dpi=400,bbox_inches='tight')
+			# DRYAD PATH
+			if os.path.isdir(DATA_PATH+'/elab_video/'): 
+				fW.savefig(DATA_PATH+'/elab_video/supplementary_photobleaching.pdf')#,dpi=400,bbox_inches='tight')
+				fW.savefig(DATA_PATH+'/elab_video/supplementary_1.png')#,dpi=400,bbox_inches='tight')
 
 
 def colorationProcess(directory):
@@ -2124,8 +2129,17 @@ def colorationProcess(directory):
 		plt.show()
 	else:
 		#fW.savefig(DATA_PATH+'/elab_video/supplementary_colorationProcess.pdf',dpi=400,bbox_inches='tight')
-		fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_colorationProcess.pdf',dpi=600,bbox_inches='tight')
-		fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_2.png',dpi=600,bbox_inches='tight')
+		fW.savefig
+		fW.savefig
+
+		# MY DRIVE PATH
+		if os.path.isdir('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure'): 
+			fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_colorationProcess.pdf',dpi=600,bbox_inches='tight')
+			fW.savefig('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/supplementary_2.png',dpi=600,bbox_inches='tight')
+		# DRYAD PATH
+		if os.path.isdir(DATA_PATH+'/elab_video/'): 
+			fW.savefig(DATA_PATH+'/elab_video/supplementary_colorationProcess.pdf',dpi=600,bbox_inches='tight')
+			fW.savefig(DATA_PATH+'/elab_video/supplementary_2.png',dpi=600,bbox_inches='tight')
 	
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -2146,7 +2160,8 @@ if __name__ == '__main__':
 	global FIGSIZEy
 	global FONTSIZE
 	ELAB_PATH = os.path.abspath(__file__)[:-len(os.path.basename(__file__))] 		# code path
-	DATA_PATH = '/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/temp/' # '..'																# data path
+	DATA_PATH =  '..'																# data path (for Dryad sharing)
+	#DATA_PATH = '/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/temp/' 
 	SPECTRAL_RANGE = xrange(0,350) # [Hz]
 	FIGSIZEx = 10
 	FIGSIZEy = 6
@@ -2164,13 +2179,13 @@ if __name__ == '__main__':
 		sessione('d21','12May','_NONcolor_',DATA_PATH+'/ratto1/d2_1/',(310, 629, 50, 210),33,True,True,False,True) 
 	else:  
 		#stampo_lunghezza_whiskers(True)    # to create pickle with whisker info, which should be present already in the folder
-		#dyeEnhanceAndBehavioralEffect()		# fig1 - dyeEnhanceAndBehavioralEffect.pdf
-		#simulatedAndSetup() 				# fig2 - simulationAndSetup.pdf				
-		#creoSpettriBaffi()					# fig3 - DiffTransferFunction.pdf			
-		#mergeComparisonsResults()			# fig4 - mergeComparisonsResults_transferFunction.pdf				
-		#XXX AGGIORNA I PATH PRIMA DI CONDIVIDERE SU DRYAD
-		photobleachingTest('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/photobleaching/')		# suppl1 - bleaching.pdf
-		colorationProcess('/home/jaky/Documents/GoogleDrive/Whisker Paper/Figure/colorazione/')
+		dyeEnhanceAndBehavioralEffect()		# fig1 - dyeEnhanceAndBehavioralEffect.pdf
+		simulatedAndSetup() 				# fig2 - simulationAndSetup.pdf				
+		creoSpettriBaffi()					# fig3 - DiffTransferFunction.pdf			
+		mergeComparisonsResults()			# fig4 - mergeComparisonsResults_transferFunction.pdf				
+		#supplementary 
+		photobleachingTest('../photobleaching/') 	# path for Dryad sharing
+		colorationProcess('../colorationprocess/')
 		if 0: # resize image eventually
 			from PyPDF2 import PdfFileWriter, PdfFileReader
 			for i,j in zip(['dyeEnhanceAndBehavioralEffect.pdf','simulationAndSetup.pdf','DiffTransferFunction.pdf','mergeComparisonsResults_transferFunction.pdf'],[1,2,3,4]): 
