@@ -1885,7 +1885,7 @@ class video: # ogni fideo va elaborato
 		cv = cv.transpose()
 		return cv[0],cv[1]
 
-	def bspline(self,cv, n=100, degree=3, periodic=False):
+	def bspline(self,cv, n=100, degree=3, periodic=False):  # Script taken from http://stackoverflow.com/questions/34803197/fast-b-spline-algorithm-with-numpy-scipy
 		""" Calculate n samples on a bspline
 			cv :      Array ov control vertices
 			n  :      Number of samples to return
@@ -2058,7 +2058,7 @@ class photobleachingTest(): #elab photobleaching images
 		a.set_xlabel('Exposure time [hours]',fontsize=FS)
 		a.set_ylim([0, 1]) # niente
 		a.set_xlim([0, Npoints]) # niente
-		a.set_ylabel('Fluorescence intensity [%]', fontsize=FS)
+		a.set_ylabel('Normalized fluorescence intensity', fontsize=FS)
 		customaxis(a,size=FONTSIZE,pad=10)
 		plt.legend(fontsize=FONTSIZE,bbox_to_anchor=(0.3,0.4),frameon=False) #,loc='best'
 		if 0:
